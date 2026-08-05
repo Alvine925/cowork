@@ -1,0 +1,713 @@
+Project Overview
+
+Design and develop a modern, premium, conversion-focused corporate website for a company that provides Virtual Offices, Business Addresses, Mail Handling, Business Presence, Meeting Rooms, and Flexible Workspace Solutions.
+
+The website should immediately communicate trust, professionalism, credibility, and simplicity.
+
+This is not a coworking website.
+
+It is a Business Presence Platform that helps businesses establish a professional presence in any city without renting a traditional office.
+
+The website should feel comparable to companies like Stripe, Notion, Linear, Brex, and Deel in terms of cleanliness, spacing, typography, animations, and user experience.
+
+Overall Design Direction
+
+The design should be:
+
+Modern
+Minimal
+Elegant
+Premium
+Corporate
+Trustworthy
+Highly responsive
+Fast loading
+SEO optimized
+
+Avoid:
+
+Busy layouts
+Generic templates
+Excessive gradients
+Cartoon illustrations
+Loud colors
+Stock-looking sections
+
+Use:
+
+Plenty of white space
+Soft shadows
+Rounded corners
+Professional icons
+Beautiful typography
+Smooth animations
+Glassmorphism only where appropriate
+High-quality office imagery
+Clean cards
+Subtle hover effects
+Brand Personality
+
+The website should communicate:
+
+Trust
+Growth
+Professionalism
+Expansion
+Credibility
+Business Success
+Simplicity
+
+Visitors should immediately think:
+
+"This is where serious businesses establish their professional presence."
+
+Color Palette
+
+Primary
+
+Navy Blue (#0F2D52)
+
+Secondary
+
+White (#FFFFFF)
+
+Accent
+
+Gold (#C9A227)
+
+Background
+
+Light Gray (#F6F8FA)
+
+Text
+
+Dark Gray (#2D2D2D)
+
+Success
+
+Green (#0E9F6E)
+
+Typography
+
+Use premium modern fonts.
+
+Examples:
+
+Inter
+Manrope
+Plus Jakarta Sans
+
+Use excellent hierarchy.
+
+Large headings.
+
+Comfortable spacing.
+
+Readable body text.
+
+Website Structure
+Home
+
+Hero Section
+
+Large headline
+
+Example
+
+Establish Your Business Presence Anywhere.
+
+Supporting text explaining the service.
+
+Primary CTA
+
+Get Started
+
+Secondary CTA
+
+Book Consultation
+
+Hero image
+
+Professional office reception.
+
+Business professionals.
+
+Modern workspace.
+
+Problem Section
+
+Headline
+
+Running a Business Without a Professional Address?
+
+Pain points
+
+Working from home
+No business address
+Missing client trust
+Expensive office rent
+Difficult expanding into new towns
+Missing mail
+No meeting location
+
+Solution Section
+
+Explain how the company solves all these problems.
+
+Illustrate the process visually.
+
+Services Overview
+
+Cards
+
+Virtual Office
+Business Address
+Mail Handling
+Mail Forwarding
+Reception Services
+Meeting Rooms
+Hot Desk Access
+Dedicated Desk
+Company Registration Assistance
+Business Expansion Solutions
+
+Each links to Service Details page.
+
+Why Choose Us
+
+Grid layout
+
+Examples
+
+Professional Address
+
+Secure Mail Handling
+
+Prime Locations
+
+Flexible Packages
+
+Affordable Pricing
+
+Meeting Rooms
+
+Reception Support
+
+Fast Setup
+
+Scalable Solutions
+
+Business Growth Focus
+
+How It Works
+
+Step 1
+
+Choose your package
+
+↓
+
+Step 2
+
+Submit documents
+
+↓
+
+Step 3
+
+Verification
+
+↓
+
+Step 4
+
+Start using your address
+
+Featured Packages
+
+Beautiful pricing cards.
+
+Starter
+
+Professional
+
+Premium
+
+Enterprise
+
+Testimonials
+
+Large cards
+
+Company logos
+
+Business owners
+
+Ratings
+
+FAQ
+
+Accordion
+
+At least 20 questions.
+
+Call to Action
+
+Ready to establish your business presence?
+
+Large CTA.
+
+Footer
+
+Quick Links
+
+Services
+
+Resources
+
+Contact
+
+Socials
+
+Newsletter
+
+About Page
+
+Company Story
+
+Mission
+
+Vision
+
+Values
+
+Leadership
+
+Our Process
+
+Why We Started
+
+Growth Journey
+
+Timeline
+
+Office Photos
+
+Team Section
+
+Services Page
+
+Beautiful service cards.
+
+Each links to its own page.
+
+Individual Service Pages
+
+Each service should have
+
+Hero
+
+Problem
+
+Solution
+
+Benefits
+
+Features
+
+Pricing
+
+FAQs
+
+CTA
+
+Related Services
+
+Services include
+
+Virtual Office
+
+Business Address
+
+Mail Handling
+
+Mail Forwarding
+
+Meeting Rooms
+
+Hot Desk
+
+Dedicated Desk
+
+Reception Services
+
+Business Expansion
+
+Company Registration Assistance
+
+Pricing Page
+
+Comparison table.
+
+Feature comparison.
+
+Monthly billing.
+
+Annual billing.
+
+FAQs.
+
+Locations Page
+
+Show cities.
+
+Each city has its own page.
+
+Example
+
+Business Address in Nairobi
+
+Business Address in Kisumu
+
+Business Address in Mombasa
+
+Business Address in Nakuru
+
+Business Address in Eldoret
+
+Each page should be SEO optimized.
+
+Industries Page
+
+Solutions for
+
+Law Firms
+
+Consultants
+
+Freelancers
+
+Agencies
+
+Startups
+
+NGOs
+
+International Companies
+
+E-commerce Businesses
+
+Accounting Firms
+
+Healthcare
+
+Technology Companies
+
+Resources
+
+Blog
+
+Guides
+
+FAQs
+
+Downloads
+
+Business Tips
+
+Expansion Guides
+
+Contact Page
+
+Beautiful contact form.
+
+Fields
+
+Name
+
+Company
+
+Email
+
+Phone
+
+Location
+
+Service Interested In
+
+Message
+
+Google Maps
+
+Business Hours
+
+WhatsApp Button
+
+Email
+
+Phone
+
+Social Links
+
+Careers
+
+Open positions
+
+Company culture
+
+Benefits
+
+Application form
+
+Partners
+
+Partner logos.
+
+Become a Partner form.
+
+Testimonials Page
+
+Video testimonials.
+
+Case studies.
+
+Customer success stories.
+
+Case Studies
+
+Business Challenge
+
+Solution
+
+Outcome
+
+Metrics
+
+Privacy Policy
+
+Professional.
+
+Terms of Service
+
+Professional.
+
+Cookie Policy
+
+Professional.
+
+Refund Policy
+
+Professional.
+
+Sitemap
+
+SEO friendly.
+
+404 Page
+
+Beautiful illustration.
+
+Helpful links.
+
+UI Components
+
+Buttons
+
+Cards
+
+Pricing cards
+
+Testimonials
+
+Statistics
+
+FAQs
+
+Timeline
+
+Comparison tables
+
+Progress indicators
+
+Breadcrumbs
+
+Sticky navigation
+
+Mega menu
+
+Floating WhatsApp
+
+Floating CTA
+
+Back to top
+
+Newsletter
+
+Animations
+
+Use Framer Motion.
+
+Examples
+
+Fade
+
+Slide
+
+Scale
+
+Parallax
+
+Counters
+
+Hover animations
+
+Smooth scrolling
+
+Do not overdo animations.
+
+Images
+
+Professional office photography.
+
+Business professionals.
+
+Reception.
+
+Meeting rooms.
+
+Mail handling.
+
+Premium office environments.
+
+Icons
+
+Lucide Icons.
+
+Consistent styling.
+
+Technical Requirements
+
+Framework
+
+Next.js 15
+
+TypeScript
+
+Tailwind CSS
+
+App Router
+
+React Server Components where appropriate.
+
+Performance
+
+Lighthouse Score
+
+95+
+
+Lazy loading
+
+Image optimization
+
+Code splitting
+
+SEO optimized
+
+Fast loading
+
+SEO
+
+Every page should have
+
+Meta title
+
+Meta description
+
+Open Graph
+
+Twitter Card
+
+Structured Data
+
+Canonical URLs
+
+XML Sitemap
+
+Robots.txt
+
+Breadcrumb schema
+
+FAQ schema where applicable
+
+Organization schema
+
+LocalBusiness schema
+
+Service schema
+
+Article schema for blogs
+
+Accessibility
+
+WCAG compliant
+
+Keyboard navigation
+
+ARIA labels
+
+Proper heading hierarchy
+
+Contrast compliance
+
+Alt text
+
+Forms
+
+Validation
+
+Spam protection
+
+Success states
+
+Error handling
+
+Loading states
+
+Email notifications
+
+Admin notifications
+
+CMS
+
+Integrate a headless CMS (such as Sanity, Contentful, or Payload CMS) so non-technical staff can manage:
+
+Blog posts
+Services
+Pricing
+FAQs
+Testimonials
+Locations
+Team members
+Careers
+Homepage content
+Future-Proof Architecture
+
+Structure the project so future features can be added without major refactoring, including:
+
+Customer portal
+Virtual office dashboard
+Mail notifications
+Online payments
+Meeting room booking
+Workspace reservations
+Multi-location management
+Client authentication
+CRM integration
+Support ticketing
+Live chat
+Analytics dashboard
+Final Objective
+
+The final result should feel like a premium SaaS or fintech website rather than a typical office rental website. Every page should reinforce the core promise: helping businesses establish a professional presence, operate credibly, and expand into new markets with ease.
+
+The site should be visually striking yet restrained, highly conversion-focused, mobile-first, SEO-ready, and built to support future growth into a comprehensive Business Presence Platform. It should leave visitors with the confidence that this is the most professional, reliable, and modern provider of virtual office and business presence services in the market.

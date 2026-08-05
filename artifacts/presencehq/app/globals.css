@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Palette */
+  --color-navy: #0F2D52;
+  --color-navy-50: #EEF3FA;
+  --color-navy-100: #CFDCEF;
+  --color-navy-200: #9FB9DF;
+  --color-navy-300: #6F96CF;
+  --color-navy-400: #3F73BF;
+  --color-navy-500: #1A5296;
+  --color-navy-600: #143F74;
+  --color-navy-700: #0F2D52;
+  --color-navy-800: #0A1F3A;
+  --color-navy-900: #051022;
+
+  --color-gold: #C9A227;
+  --color-gold-50: #FDF8EC;
+  --color-gold-100: #FAEFD2;
+  --color-gold-200: #F4DFA5;
+  --color-gold-300: #EFCF78;
+  --color-gold-400: #E9BF4B;
+  --color-gold-500: #C9A227;
+  --color-gold-600: #A07E1E;
+  --color-gold-700: #785E16;
+  --color-gold-800: #503F0F;
+  --color-gold-900: #281F07;
+
+  --color-success: #0E9F6E;
+  --color-light-gray: #F6F8FA;
+  --color-dark-gray: #2D2D2D;
+
+  /* Fonts */
+  --font-sans: var(--font-inter, 'Inter', ui-sans-serif, system-ui, sans-serif);
+  --font-heading: var(--font-manrope, 'Manrope', ui-sans-serif, system-ui, sans-serif);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased bg-white text-dark-gray;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-navy {
+    background: linear-gradient(135deg, #0F2D52 0%, #1A5296 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #C9A227 0%, #E9BF4B 100%);
+  }
+
+  .text-gradient-navy {
+    background: linear-gradient(135deg, #0F2D52, #1A5296);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #C9A227, #E9BF4B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
