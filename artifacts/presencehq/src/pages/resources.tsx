@@ -1,13 +1,14 @@
+import { Link } from 'wouter'
 import { PageHero } from '@/components/ui/PageHero'
 import { CallToAction } from '@/components/home/CallToAction'
 
 const ARTICLES = [
-  { title: 'How to Register a Company in Kenya in 2024', category: 'Guide', time: '8 min read' },
-  { title: 'Why Your Business Address Matters More Than You Think', category: 'Insight', time: '5 min read' },
-  { title: 'Virtual Office vs. Co-working: Which Is Right for You?', category: 'Comparison', time: '6 min read' },
-  { title: 'KRA PIN Registration: A Step-by-Step Guide', category: 'Guide', time: '7 min read' },
-  { title: 'Building Client Trust Without a Physical Office', category: 'Insight', time: '4 min read' },
-  { title: 'Expanding Your Business to Multiple Kenyan Cities', category: 'Strategy', time: '6 min read' },
+  { title: 'How to Register a Company in Kenya in 2025', category: 'Guide', time: '11 min', slug: 'register-company-kenya-2025' },
+  { title: 'Why Your Business Address Matters More Than You Think', category: 'Insight', time: '6 min', slug: 'professional-business-address-kenya' },
+  { title: 'Virtual Office vs Physical Office: A Cost Breakdown', category: 'Comparison', time: '8 min', slug: 'virtual-office-vs-physical-office-kenya' },
+  { title: 'KYC Compliance: What the Law Requires', category: 'Compliance', time: '9 min', slug: 'kyc-compliance-kenya-businesses' },
+  { title: 'Building Client Trust Without a Physical Office', category: 'Insight', time: '8 min', slug: 'freelancer-professional-presence-kenya' },
+  { title: 'Expanding Your Business to Multiple Kenyan Cities', category: 'Strategy', time: '10 min', slug: 'expand-business-mombasa-kisumu-nakuru' },
 ]
 
 export default function ResourcesPage() {
@@ -16,18 +17,29 @@ export default function ResourcesPage() {
       <PageHero
         image="https://images.unsplash.com/photo-1553484771-371a605b060b?w=1600&auto=format&q=80"
         eyebrow="Resources"
-        title="Business Guides & Insights."
+        title="Business Guides and Insights."
         subtitle="Practical guides to help you build, register, and grow your business in Kenya."
       />
       <section className="py-24 bg-white">
-        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="container mx-auto px-6 md:px-12 max-w-3xl">
+          <div className="divide-y divide-gray-100">
             {ARTICLES.map((article, i) => (
-              <div key={i} className="p-8 border border-gray-100 rounded-xl hover:border-gold hover:shadow-sm transition-all duration-300 cursor-pointer group">
-                <span className="text-gold text-xs font-semibold uppercase tracking-wider">{article.category}</span>
-                <h3 className="text-lg font-bold font-heading text-navy mt-3 mb-2 group-hover:text-gold transition-colors leading-snug">{article.title}</h3>
-                <p className="text-dark-gray/50 text-xs">{article.time}</p>
-              </div>
+              <Link key={i} href={`/blog/${article.slug}`}>
+                <div className="group grid sm:grid-cols-4 gap-4 py-7 cursor-pointer">
+                  <div className="flex items-start gap-3">
+                    <span className="text-[10px] font-bold text-dark-gray/20 tracking-wider font-heading mt-0.5">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] font-semibold text-gold uppercase tracking-widest">{article.category}</span>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <h3 className="text-sm font-semibold font-heading text-navy group-hover:text-gold transition-colors leading-snug">
+                      {article.title}
+                    </h3>
+                    <p className="text-[11px] text-dark-gray/35 mt-1">{article.time} read</p>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>

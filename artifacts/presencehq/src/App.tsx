@@ -1,4 +1,5 @@
-import { Route, Switch, Router as WouterRouter } from 'wouter'
+import { useEffect } from 'react'
+import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter'
 import { Toaster } from 'sonner'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -43,47 +44,59 @@ import KisumuPage from '@/pages/locations/kisumu'
 import NakuruPage from '@/pages/locations/nakuru'
 import EldoretPage from '@/pages/locations/eldoret'
 
+// Scroll to top on every route change
+function ScrollToTop() {
+  const [location] = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [location])
+  return null
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/about" component={AboutPage} />
-      <Route path="/contact" component={ContactPage} />
-      <Route path="/pricing" component={PricingPage} />
-      <Route path="/testimonials" component={TestimonialsPage} />
-      <Route path="/industries" component={IndustriesPage} />
-      <Route path="/partners" component={PartnersPage} />
-      <Route path="/resources" component={ResourcesPage} />
-      <Route path="/careers" component={CareersPage} />
-      <Route path="/privacy-policy" component={PrivacyPolicyPage} />
-      <Route path="/terms-of-service" component={TermsOfServicePage} />
-      <Route path="/cookie-policy" component={CookiePolicyPage} />
-      <Route path="/refund-policy" component={RefundPolicyPage} />
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/pricing" component={PricingPage} />
+        <Route path="/testimonials" component={TestimonialsPage} />
+        <Route path="/industries" component={IndustriesPage} />
+        <Route path="/partners" component={PartnersPage} />
+        <Route path="/resources" component={ResourcesPage} />
+        <Route path="/careers" component={CareersPage} />
+        <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+        <Route path="/terms-of-service" component={TermsOfServicePage} />
+        <Route path="/cookie-policy" component={CookiePolicyPage} />
+        <Route path="/refund-policy" component={RefundPolicyPage} />
 
-      <Route path="/services" component={ServicesPage} />
-      <Route path="/services/virtual-office" component={VirtualOfficePage} />
-      <Route path="/services/business-address" component={BusinessAddressPage} />
-      <Route path="/services/mail-handling" component={MailHandlingPage} />
-      <Route path="/services/mail-forwarding" component={MailForwardingPage} />
-      <Route path="/services/meeting-rooms" component={MeetingRoomsPage} />
-      <Route path="/services/hot-desk" component={HotDeskPage} />
-      <Route path="/services/dedicated-desk" component={DedicatedDeskPage} />
-      <Route path="/services/reception-services" component={ReceptionServicesPage} />
-      <Route path="/services/business-expansion" component={BusinessExpansionPage} />
-      <Route path="/services/company-registration" component={CompanyRegistrationPage} />
+        <Route path="/services" component={ServicesPage} />
+        <Route path="/services/virtual-office" component={VirtualOfficePage} />
+        <Route path="/services/business-address" component={BusinessAddressPage} />
+        <Route path="/services/mail-handling" component={MailHandlingPage} />
+        <Route path="/services/mail-forwarding" component={MailForwardingPage} />
+        <Route path="/services/meeting-rooms" component={MeetingRoomsPage} />
+        <Route path="/services/hot-desk" component={HotDeskPage} />
+        <Route path="/services/dedicated-desk" component={DedicatedDeskPage} />
+        <Route path="/services/reception-services" component={ReceptionServicesPage} />
+        <Route path="/services/business-expansion" component={BusinessExpansionPage} />
+        <Route path="/services/company-registration" component={CompanyRegistrationPage} />
 
-      <Route path="/locations" component={LocationsPage} />
-      <Route path="/locations/nairobi" component={NairobiPage} />
-      <Route path="/locations/mombasa" component={MombasaPage} />
-      <Route path="/locations/kisumu" component={KisumuPage} />
-      <Route path="/locations/nakuru" component={NakuruPage} />
-      <Route path="/locations/eldoret" component={EldoretPage} />
+        <Route path="/locations" component={LocationsPage} />
+        <Route path="/locations/nairobi" component={NairobiPage} />
+        <Route path="/locations/mombasa" component={MombasaPage} />
+        <Route path="/locations/kisumu" component={KisumuPage} />
+        <Route path="/locations/nakuru" component={NakuruPage} />
+        <Route path="/locations/eldoret" component={EldoretPage} />
 
-      <Route path="/blog" component={BlogPage} />
-      <Route path="/blog/:slug" component={BlogPostPage} />
+        <Route path="/blog" component={BlogPage} />
+        <Route path="/blog/:slug" component={BlogPostPage} />
 
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    </>
   )
 }
 
