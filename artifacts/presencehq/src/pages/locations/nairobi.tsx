@@ -34,6 +34,32 @@ export default function NairobiPage() {
         { num: '05', title: 'Boardroom & Meeting Rooms', desc: 'Fully equipped Westlands boardrooms bookable by the hour — AV, Wi-Fi, and reception included.' },
         { num: '06', title: 'Company Registration', desc: 'End-to-end KRA PIN, business registration, and compliance — handled by our in-house specialists.' },
       ],
+      faqs: [
+        {
+          q: 'Can I open a bank account using the Westlands Business Park address?',
+          a: 'Yes. All major Kenyan banks — including KCB, Equity, Stanbic, and NCBA — accept our Westlands address for business account opening. We provide a letter of confirmation and lease agreement on request.',
+        },
+        {
+          q: 'Is a Westlands address accepted for KRA registration and PIN certification?',
+          a: 'Absolutely. Our address is fully compliant with KRA requirements. Many of our clients register their businesses and obtain their KRA PINs using the Westlands Business Park address. We provide all required documentation.',
+        },
+        {
+          q: 'How close is Westlands to JKIA and the Nairobi CBD?',
+          a: 'Westlands is approximately 12 km from Jomo Kenyatta International Airport and sits just 4 km from the Nairobi CBD along Waiyaki Way. It\'s one of the most accessible business districts in the city.',
+        },
+        {
+          q: 'Does the Westlands address work for international clients and investors?',
+          a: 'Yes — Westlands is internationally recognised as Nairobi\'s premier commercial district. International investors, UN agencies, and multinational partners are familiar with the area, which lends your business immediate credibility.',
+        },
+        {
+          q: 'Can I receive courier deliveries from DHL, FedEx, or Aramex at this address?',
+          a: 'Yes. Our reception team accepts deliveries from all major international and local courier services on your behalf. You are notified immediately upon receipt, and items are held securely or forwarded per your instructions.',
+        },
+        {
+          q: 'What happens if I need to meet a client urgently in Westlands?',
+          a: 'You can book one of our fully equipped meeting rooms or private day offices on short notice — often same-day, subject to availability. Rooms include AV, Wi-Fi, and reception support for guests.',
+        },
+      ],
     }} />
   )
 }

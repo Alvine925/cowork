@@ -34,6 +34,32 @@ export default function KisumuPage() {
         { num: '05', title: 'Meeting Rooms', desc: 'Professional boardrooms in the heart of Milimani — bookable by the hour, no membership required.' },
         { num: '06', title: 'Business Expansion', desc: 'Instant Western Kenya footprint for businesses expanding from Nairobi — same-day activation.' },
       ],
+      faqs: [
+        {
+          q: 'Can I use a Kisumu address for cross-border trade registration with Uganda or Tanzania?',
+          a: 'Yes. A Kisumu address is strategically advantageous for businesses that trade with Uganda, Tanzania, and Rwanda. East African Community (EAC) partners are familiar with Kisumu as a border-adjacent commercial hub, and the address supports cross-border documentation and licensing.',
+        },
+        {
+          q: 'Is Milimani the most prestigious area for a business address in Kisumu?',
+          a: 'Yes — Milimani is Kisumu\'s executive and residential district, housing county government offices, major banks, NGO headquarters, and leading professional service firms. A Milimani Corporate Center address signals that your business is established and credible.',
+        },
+        {
+          q: 'Does Kisumu have good connectivity for businesses needing to travel frequently?',
+          a: 'Kisumu International Airport offers daily flights to Nairobi, with connections to Kampala, Addis Ababa, and beyond. The city also sits on the main Nairobi–Uganda highway, making road travel straightforward for regional operations.',
+        },
+        {
+          q: 'Is this address suitable for NGOs and development organisations?',
+          a: 'Absolutely. Kisumu is home to a large NGO, UN, and development sector presence. Milimani Corporate Center is accepted for registration by the NGO Coordination Board, county authorities, and international donor organisations.',
+        },
+        {
+          q: 'How does the Kisumu SEZ affect my business if I use this address?',
+          a: 'The Kisumu Special Economic Zone is driving significant investment and industrial activity in the region. A Kisumu business address positions you to engage with SEZ tenants, suppliers, and government bodies overseeing the zone — a growing source of B2B opportunity.',
+        },
+        {
+          q: 'Can I receive mail from lake-based or island trading partners through this address?',
+          a: 'Yes. Our team receives all mail and packages regardless of origin. Lake Victoria island trading partners and regional operators in Uganda and Tanzania frequently send correspondence to Kisumu business addresses. We handle everything securely.',
+        },
+      ],
     }} />
   )
 }

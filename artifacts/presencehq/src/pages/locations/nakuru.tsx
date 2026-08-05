@@ -34,6 +34,32 @@ export default function NakuruPage() {
         { num: '05', title: 'Meeting Rooms', desc: 'Professional boardrooms on Kenyatta Avenue — bookable by the hour for client and partner meetings.' },
         { num: '06', title: 'Business Expansion', desc: 'Instant Rift Valley presence for Nairobi companies expanding their regional footprint.' },
       ],
+      faqs: [
+        {
+          q: 'Is Kenyatta Avenue the best address for a business in Nakuru?',
+          a: 'Yes — Kenyatta Avenue is Nakuru\'s main commercial street and the most recognised business address in the Rift Valley. Banks, county offices, and major businesses all operate along or adjacent to this corridor, making it the obvious choice for professional credibility.',
+        },
+        {
+          q: 'Can I use this address to engage with the agricultural sector in the Rift Valley?',
+          a: 'Absolutely. Nakuru is the heart of Kenya\'s dairy, horticulture, and grain industries. A Nakuru Central Business Plaza address immediately signals to agribusiness clients, cooperatives, and commodity traders that you are a serious regional player.',
+        },
+        {
+          q: 'How long does it take to drive from Nakuru to Nairobi?',
+          a: 'Nakuru is approximately 160 km from Nairobi via the Nakuru–Naivasha highway — roughly 2 hours by road. The city\'s strategic location midway between Nairobi and western Kenya makes it ideal for businesses serving both markets.',
+        },
+        {
+          q: 'Is this address accepted by Nakuru County Government for licencing?',
+          a: 'Yes. Central Business Plaza is within Nakuru\'s central business district, and the address is fully accepted for county business licencing, regulatory filings, and all devolved government dealings.',
+        },
+        {
+          q: 'Can Nairobi-based companies use this to establish a Rift Valley presence?',
+          a: 'That\'s one of the most common use cases. Companies headquartered in Nairobi use our Nakuru address to project a credible regional presence for clients, partners, and government bodies in the Rift Valley — without the cost of a physical branch office.',
+        },
+        {
+          q: 'Is Nakuru well-connected to logistics and transport infrastructure?',
+          a: 'Yes. Nakuru sits at a key junction of the Great Rift Valley Road and is served by the SGR freight corridor. It\'s a natural logistics hub for goods moving between Nairobi, Kisumu, Eldoret, and northern Kenya.',
+        },
+      ],
     }} />
   )
 }

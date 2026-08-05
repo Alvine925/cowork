@@ -32,7 +32,33 @@ export default function MombasaPage() {
         { num: '03', title: 'Mail & Package Handling', desc: 'Secure receipt, logging, and storage of all business mail — with digital scan-on-demand available same day.' },
         { num: '04', title: 'Global Mail Forwarding', desc: 'Forward parcels and documents anywhere in the world — weekly schedule or on-request.' },
         { num: '05', title: 'Meeting Rooms', desc: 'Air-conditioned, fully equipped boardrooms in Nyali — ideal for client meetings and partner negotiations.' },
-        { num: '06', title: 'Business Expansion Support', desc: 'Instant coastal footprint for Nairobi-based businesses expanding south — no lease, immediate presence.' },
+        { num: '06', title: 'Business Expansion', desc: 'Instant coastal footprint for Nairobi-based businesses expanding south — no lease, immediate presence.' },
+      ],
+      faqs: [
+        {
+          q: 'Is a Nyali address accepted by port authorities and shipping companies?',
+          a: 'Yes. Our Nyali Executive Tower address is well-recognised by the Kenya Ports Authority, shipping agencies, and freight forwarding companies. Many logistics businesses in the coastal corridor use this address as their official office.',
+        },
+        {
+          q: 'Can I use this address to deal with Mombasa County government and regulatory bodies?',
+          a: 'Absolutely. The address is fully compliant for county business registration, licencing, and regulatory filings. Nyali is a respected district and carries weight with all coastal government institutions.',
+        },
+        {
+          q: 'Is Mombasa a good base for reaching regional East African markets?',
+          a: 'Mombasa is uniquely positioned as the gateway for goods flowing into Uganda, Rwanda, South Sudan, the DRC, and Tanzania via the Northern and Central Corridors. A Mombasa address signals serious regional trade intent to partners across the region.',
+        },
+        {
+          q: 'Can tourism and hospitality businesses register at this address?',
+          a: 'Yes — many of our clients in the tourism, hotel, and hospitality sectors use Nyali Executive Tower as their registered office. The address is located within Nyali, the hub of Mombasa\'s premium tourism and entertainment corridor.',
+        },
+        {
+          q: 'How does mail handling work if I am based in Nairobi?',
+          a: 'We receive all mail on your behalf in Mombasa. You can opt for digital scanning (delivered to your inbox within 24 hours) or physical forwarding to any Kenyan or international address on a weekly basis.',
+        },
+        {
+          q: 'Is the Dongo Kundu Free Trade Zone accessible from Nyali?',
+          a: 'Yes. The Dongo Kundu Special Economic Zone is approximately 25 km from Nyali via the Southern Bypass. Businesses operating in or supplying the SEZ frequently use our Nyali address as their registered business office.',
+        },
       ],
     }} />
   )
