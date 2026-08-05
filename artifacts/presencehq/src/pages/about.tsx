@@ -242,32 +242,17 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── 4. Mission — full-bleed dark ── */}
-      <section className="relative py-36 overflow-hidden">
-        <motion.div
-          initial={{ scale: 1.06 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1800&auto=format&q=80"
-            alt="Mission"
-            className="w-full h-full object-cover"
-          />
-        </motion.div>
-        <div className="absolute inset-0 bg-navy/90" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-8 md:px-16 text-center">
+      {/* ── 4. Mission ── */}
+      <section className="py-28 bg-[#0A1F3A]">
+        <div className="max-w-5xl mx-auto px-8 md:px-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-3 mb-8"
+            className="flex items-center gap-3 mb-10"
           >
-            <Target className="w-4 h-4 text-gold" />
+            <div className="w-8 h-px bg-gold" />
             <span className="text-gold text-[10px] tracking-[0.35em] uppercase font-semibold">Our Mission</span>
           </motion.div>
           <motion.h2
@@ -275,18 +260,18 @@ export default function AboutPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-            className="text-4xl md:text-6xl font-light font-heading text-white leading-[1.1] mb-8"
+            className="text-4xl md:text-5xl font-light font-heading text-white leading-[1.15] mb-10 max-w-3xl"
           >
-            To make professional credibility <span className="italic text-gold/90">accessible to every business</span> — regardless of size, budget, or stage.
+            To make professional credibility accessible to every business — regardless of size, budget, or stage.
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-white/50 text-lg font-light max-w-2xl mx-auto leading-relaxed"
+            className="text-white/55 text-lg font-light max-w-2xl leading-relaxed"
           >
-            We provide premium addresses, mail management, meeting spaces, and reception services that give every business — from day one — the infrastructure to compete.
+            We provide premium addresses, mail management, meeting spaces, and reception services that give every business — from day one — the infrastructure to compete on equal terms with anyone.
           </motion.p>
         </div>
       </section>
