@@ -21,6 +21,8 @@ import TermsOfServicePage from '@/pages/terms-of-service'
 import CookiePolicyPage from '@/pages/cookie-policy'
 import RefundPolicyPage from '@/pages/refund-policy'
 import NotFound from '@/pages/not-found'
+import BlogPage from '@/pages/blog'
+import BlogPostPage from '@/pages/blog-post'
 
 // Service pages
 import VirtualOfficePage from '@/pages/services/virtual-office'
@@ -76,6 +78,9 @@ function Router() {
       <Route path="/locations/kisumu" component={KisumuPage} />
       <Route path="/locations/nakuru" component={NakuruPage} />
       <Route path="/locations/eldoret" component={EldoretPage} />
+
+      <Route path="/blog" component={BlogPage} />
+      <Route path="/blog/:slug" component={BlogPostPage} />
 
       <Route component={NotFound} />
     </Switch>

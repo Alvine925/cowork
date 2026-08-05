@@ -138,6 +138,7 @@ export function Navbar() {
 
           <Link href="/pricing" className={linkClasses}>Pricing</Link>
           <Link href="/about" className={linkClasses}>About</Link>
+          <Link href="/blog" className={linkClasses}>Blog</Link>
         </nav>
 
         <div className="hidden lg:flex items-center gap-6">
@@ -184,6 +185,7 @@ export function Navbar() {
                 { label: 'Locations', href: '/locations' },
                 { label: 'Pricing', href: '/pricing' },
                 { label: 'About', href: '/about' },
+                { label: 'Blog', href: '/blog' },
                 { label: 'Contact', href: '/contact' },
               ].map((item) => (
                 <Link

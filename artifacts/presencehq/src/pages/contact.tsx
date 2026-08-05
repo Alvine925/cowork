@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
 import { PageHero } from '@/components/ui/PageHero'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -16,6 +16,21 @@ const contactSchema = z.object({
 })
 
 type ContactFormValues = z.infer<typeof contactSchema>
+
+const contactDetails = [
+  {
+    Icon: MapPin,
+    label: 'Address',
+    content: 'Westlands Business Park, Waiyaki Way, Nairobi, Kenya',
+  },
+  { Icon: Phone, label: 'Phone and WhatsApp', content: '+254 700 000 000' },
+  { Icon: Mail, label: 'Email', content: 'hello@presencehq.com' },
+  {
+    Icon: Clock,
+    label: 'Business Hours',
+    content: 'Monday to Friday: 8:00 AM to 5:00 PM',
+  },
+]
 
 export default function ContactPage() {
   const {
@@ -42,100 +57,117 @@ export default function ContactPage() {
         subtitle="Ready to upgrade your business presence? Our team is here to help you find the perfect solution."
       />
 
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6 md:px-12">
-          <div className="grid lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
+      {/* Two-column layout: info left, form right */}
+      <section className="py-28 bg-light-gray">
+        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-20 items-start">
 
-            {/* Contact Info */}
-            <div className="flex flex-col gap-10">
-              <div>
-                <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-4">Headquarters</span>
-                <h3 className="text-2xl font-bold font-heading text-navy mb-4">Our Main Office</h3>
-                <p className="text-dark-gray/80 mb-8 font-light leading-relaxed">
-                  While we offer addresses across the country, our core operations team is based in our Nairobi HQ.
-                </p>
+            {/* ── Left: contact info ── */}
+            <div>
+              <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-5">
+                Reach Us
+              </span>
+              <h2 className="text-4xl md:text-5xl font-light font-heading text-navy leading-tight mb-6">
+                We&apos;d love to<br />hear from you.
+              </h2>
+              <p className="text-dark-gray/70 text-lg font-light leading-relaxed mb-14 max-w-md">
+                Whether you have a question about pricing, locations, or just want to explore your options, our team typically responds within two business hours.
+              </p>
 
-                <div className="flex flex-col gap-6">
-                  {[
-                    {
-                      Icon: MapPin,
-                      label: 'Address',
-                      content: 'Westlands Business Park\nWaiyaki Way, Nairobi, Kenya',
-                    },
-                    { Icon: Phone, label: 'Phone & WhatsApp', content: '+254 700 000 000' },
-                    { Icon: Mail, label: 'Email', content: 'hello@presencehq.com' },
-                    {
-                      Icon: Clock,
-                      label: 'Business Hours',
-                      content: 'Monday – Friday: 8:00 AM – 5:00 PM\nSaturday & Sunday: Closed',
-                    },
-                  ].map(({ Icon, label, content }, i) => (
-                    <div key={i} className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-light-gray flex items-center justify-center shrink-0">
-                        <Icon className="w-5 h-5 text-gold" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-navy text-sm uppercase tracking-wider mb-1">{label}</h4>
-                        <p className="text-dark-gray/70 text-sm font-light leading-relaxed whitespace-pre-line">{content}</p>
-                      </div>
+              <div className="flex flex-col gap-10">
+                {contactDetails.map(({ Icon, label, content }) => (
+                  <div key={label} className="flex items-start gap-5">
+                    <div className="w-11 h-11 rounded-full bg-navy/8 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-4.5 h-4.5 text-navy" strokeWidth={1.5} />
                     </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">{label}</p>
+                      <p className="text-dark-gray/80 text-sm font-light leading-relaxed">{content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="mt-16 pt-14 border-t border-dark-gray/10">
+                <p className="text-xs font-semibold uppercase tracking-widest text-dark-gray/40 mb-6">Our locations</p>
+                <div className="flex flex-wrap gap-3">
+                  {['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'].map((city) => (
+                    <span
+                      key={city}
+                      className="text-xs tracking-wider font-medium text-navy border border-navy/20 px-4 py-1.5 rounded-full"
+                    >
+                      {city}
+                    </span>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-              <h3 className="text-2xl font-bold font-heading text-navy mb-6">Send a Message</h3>
-              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Full Name *</label>
+            {/* ── Right: form ── */}
+            <div>
+              <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-5">
+                Send a Message
+              </span>
+              <h2 className="text-3xl font-light font-heading text-navy mb-10">
+                Tell us about your needs.
+              </h2>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-7">
+                {/* Name + Company */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Full Name *</label>
                     <input
                       {...register('name')}
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
-                      placeholder="Jane Doe"
+                      type="text"
+                      placeholder="Jane Mwangi"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray placeholder:text-dark-gray/30 focus:outline-none focus:border-navy transition-colors"
                     />
                     {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Company</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Company</label>
                     <input
                       {...register('company')}
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
-                      placeholder="Acme Corp"
+                      type="text"
+                      placeholder="Acme Ltd"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray placeholder:text-dark-gray/30 focus:outline-none focus:border-navy transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Email *</label>
+                {/* Email + Phone */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Email Address *</label>
                     <input
                       {...register('email')}
                       type="email"
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
-                      placeholder="jane@example.com"
+                      placeholder="jane@acme.com"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray placeholder:text-dark-gray/30 focus:outline-none focus:border-navy transition-colors"
                     />
                     {errors.email && <span className="text-xs text-red-500">{errors.email.message}</span>}
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Phone *</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Phone / WhatsApp *</label>
                     <input
                       {...register('phone')}
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
+                      type="tel"
                       placeholder="+254 7XX XXX XXX"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray placeholder:text-dark-gray/30 focus:outline-none focus:border-navy transition-colors"
                     />
                     {errors.phone && <span className="text-xs text-red-500">{errors.phone.message}</span>}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Location *</label>
+                {/* Location + Service */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Preferred Location *</label>
                     <select
                       {...register('location')}
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent bg-white"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray focus:outline-none focus:border-navy transition-colors appearance-none cursor-pointer"
                     >
                       <option value="">Select a city</option>
                       <option value="nairobi">Nairobi</option>
@@ -147,11 +179,11 @@ export default function ContactPage() {
                     </select>
                     {errors.location && <span className="text-xs text-red-500">{errors.location.message}</span>}
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-navy">Service *</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Service of Interest *</label>
                     <select
                       {...register('service')}
-                      className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent bg-white"
+                      className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray focus:outline-none focus:border-navy transition-colors appearance-none cursor-pointer"
                     >
                       <option value="">Select a service</option>
                       <option value="virtual-office">Virtual Office Package</option>
@@ -164,20 +196,23 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-navy">Message *</label>
+                {/* Message */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-navy/70">Message *</label>
                   <textarea
                     {...register('message')}
                     rows={4}
-                    className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent resize-none"
-                    placeholder="Tell us about your business needs..."
-                  ></textarea>
+                    placeholder="Tell us about your business and what you are looking for..."
+                    className="bg-white border-0 border-b border-dark-gray/20 px-0 py-3 text-sm text-dark-gray placeholder:text-dark-gray/30 focus:outline-none focus:border-navy transition-colors resize-none"
+                  />
                   {errors.message && <span className="text-xs text-red-500">{errors.message.message}</span>}
                 </div>
 
-                <Button type="submit" size="lg" className="w-full mt-2" disabled={isSubmitting}>
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
-                </Button>
+                <div className="pt-2">
+                  <Button type="submit" size="lg" disabled={isSubmitting} className="px-12">
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </Button>
+                </div>
               </form>
             </div>
           </div>
