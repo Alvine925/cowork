@@ -1,380 +1,307 @@
 import { Link } from 'wouter'
 import { motion } from 'framer-motion'
-import {
-  MapPin,
-  Building2,
-  Mail,
-  Phone,
-  CalendarCheck,
-  Wifi,
-  Car,
-  Shield,
-  Coffee,
-  Printer,
-  Users,
-  MonitorSmartphone,
-  Clock,
-  Star,
-  ArrowRight,
-  CheckCircle2,
-  Briefcase,
-  Globe,
-  TrendingUp,
-  Landmark,
-  Zap,
-  Award,
-} from 'lucide-react'
-import { PageHero } from '@/components/ui/PageHero'
+import { ArrowRight, MapPin, CheckCircle2, Zap, Shield } from 'lucide-react'
 import { FAQ } from '@/components/home/FAQ'
 import { CallToAction } from '@/components/home/CallToAction'
 
-interface LocationConfig {
+export interface LocationConfig {
   city: string
   building: string
   street: string
-  image: string
-  description: string
+  heroImage: string        // full-bleed hero photo
+  splitImage: string       // interior / office photo (split section)
+  overlayImage: string     // second full-bleed photo (why-city section)
+  tagline: string          // short punchy line e.g. "East Africa's business nerve centre."
+  description: string      // hero subtitle
+  marketIntro: string      // 2–3 sentence paragraph about the city market
+  stats: { value: string; label: string }[]
   reasons: string[]
-  stats?: { label: string; value: string }[]
-  amenities?: { icon: React.ElementType; label: string }[]
-  services?: { icon: React.ElementType; title: string; desc: string }[]
-  reasonIcons?: React.ElementType[]
+  services: { num: string; title: string; desc: string }[]
 }
 
-const DEFAULT_AMENITIES = [
-  { icon: Wifi, label: 'High-Speed Wi-Fi' },
-  { icon: Car, label: 'Secure Parking' },
-  { icon: Shield, label: '24 / 7 Security' },
-  { icon: Coffee, label: 'Executive Lounge' },
-  { icon: Printer, label: 'Print & Scan' },
-  { icon: MonitorSmartphone, label: 'AV-Equipped Rooms' },
-  { icon: Phone, label: 'Live Receptionist' },
-  { icon: Clock, label: 'Instant Activation' },
-]
-
-const DEFAULT_SERVICES = [
-  {
-    icon: Building2,
-    title: 'Virtual Office',
-    desc: 'Complete professional identity — prime address, mail management, and reception under one plan.',
-  },
-  {
-    icon: MapPin,
-    title: 'Business Address',
-    desc: 'Use our prestigious address for company registration, correspondence, and your website.',
-  },
-  {
-    icon: Mail,
-    title: 'Mail Handling',
-    desc: 'We receive, sort, and securely store all your physical mail and packages on your behalf.',
-  },
-  {
-    icon: Globe,
-    title: 'Mail Forwarding',
-    desc: 'Digital scans or physical forwarding of your mail — locally or internationally.',
-  },
-  {
-    icon: Users,
-    title: 'Meeting Rooms',
-    desc: 'Book fully equipped, boardroom-quality meeting spaces by the hour, with no membership needed.',
-  },
-  {
-    icon: Briefcase,
-    title: 'Hot Desk Access',
-    desc: 'Flexible drop-in coworking in a professional environment whenever you need it.',
-  },
-]
-
-const REASON_ICONS = [Globe, Landmark, TrendingUp, Zap, Award, Star]
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.08 },
-  }),
-}
+const inView = (delay = 0) => ({
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1], delay },
+})
 
 export function GenericLocationPage({ config }: { config: LocationConfig }) {
-  const amenities = config.amenities ?? DEFAULT_AMENITIES
-  const services = config.services ?? DEFAULT_SERVICES
-  const reasonIcons = config.reasonIcons ?? REASON_ICONS
-  const stats = config.stats ?? [
-    { value: '24 hr', label: 'Activation Time' },
-    { value: '100%', label: 'Legal Compliance' },
-    { value: 'KES 2,500', label: 'Starting From' },
-    { value: '5★', label: 'Client Rating' },
-  ]
-
   return (
     <>
-      {/* ─── Hero ─── */}
-      <PageHero
-        image={config.image}
-        eyebrow={`${config.city}, Kenya`}
-        title={config.building}
-        subtitle={config.description}
-        height="h-[80vh] min-h-[600px]"
-      >
-        <div className="flex flex-wrap gap-4 mt-8">
-          <Link
-            href="/contact"
-            className="bg-gold text-white px-8 py-3 text-sm uppercase tracking-[0.12em] font-medium hover:bg-gold-400 transition-colors flex items-center gap-2"
-          >
-            Get This Address <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/pricing"
-            className="border border-white/40 text-white px-8 py-3 text-sm uppercase tracking-[0.12em] font-medium hover:bg-white/10 transition-colors"
-          >
-            View Pricing
-          </Link>
-        </div>
-      </PageHero>
+      {/* ── 1. Full-bleed Hero ── */}
+      <section className="relative h-screen min-h-[640px] flex flex-col overflow-hidden">
+        <img
+          src={config.heroImage}
+          alt={config.city}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* strong gradient: light at top, very dark at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black/85" />
 
-      {/* ─── Stats Strip ─── */}
+        {/* vertical rule + city label pinned top-left */}
+        <div className="relative z-10 flex items-center gap-3 px-8 md:px-16 pt-36">
+          <div className="w-6 h-px bg-gold" />
+          <span className="text-gold text-[10px] tracking-[0.35em] uppercase font-semibold">
+            {config.city}, Kenya
+          </span>
+        </div>
+
+        {/* main title, bottom-left anchored */}
+        <div className="relative z-10 mt-auto px-8 md:px-16 pb-20 max-w-5xl">
+          <motion.h1
+            {...inView()}
+            className="text-5xl md:text-7xl lg:text-8xl font-light font-heading text-white leading-[1.0] mb-6"
+          >
+            {config.building}
+          </motion.h1>
+          <motion.p
+            {...inView(0.1)}
+            className="text-white/65 text-lg md:text-xl font-light max-w-xl leading-relaxed mb-10"
+          >
+            {config.description}
+          </motion.p>
+          <motion.div {...inView(0.2)} className="flex flex-wrap gap-4">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 bg-gold text-white px-8 py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-gold-400 transition-colors"
+            >
+              Claim This Address <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 border border-white/35 text-white px-8 py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-white/10 transition-colors"
+            >
+              View Pricing
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* scroll hint */}
+        <div className="absolute bottom-8 right-8 md:right-16 z-10 flex flex-col items-center gap-2">
+          <div className="w-px h-12 bg-white/20" />
+          <span className="text-white/30 text-[10px] tracking-[0.3em] uppercase rotate-90 origin-center mt-4">Scroll</span>
+        </div>
+      </section>
+
+      {/* ── 2. Stats on Navy ── */}
       <section className="bg-navy">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
-            {stats.map((s, i) => (
+        <div className="max-w-7xl mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-b border-white/10">
+            {config.stats.map((s, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
-                className="py-8 px-6 text-center"
+                {...inView(i * 0.06)}
+                className="py-10 px-6 md:px-10"
               >
-                <p className="text-gold text-2xl md:text-3xl font-bold font-heading">{s.value}</p>
-                <p className="text-white/50 text-xs uppercase tracking-widest mt-1">{s.label}</p>
+                <p className="text-gold text-3xl md:text-4xl font-bold font-heading mb-1">{s.value}</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-[0.25em]">{s.label}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Services at this Location ─── */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-          <div className="mb-14">
-            <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-3">
-              What's Available
-            </span>
-            <h2 className="text-3xl md:text-4xl font-light font-heading text-navy leading-tight max-w-2xl">
-              Everything your business needs,{' '}
-              <span className="italic font-normal">right here in {config.city}.</span>
+      {/* ── 3. Split: Photo left | Dark text right ── */}
+      <section className="flex flex-col lg:flex-row min-h-[70vh]">
+        {/* photo half */}
+        <div className="w-full lg:w-1/2 h-[50vh] lg:h-auto relative overflow-hidden">
+          <img
+            src={config.splitImage}
+            alt={`${config.city} office`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
+
+        {/* text half — dark navy, no border */}
+        <div className="w-full lg:w-1/2 bg-[#0A1F3A] flex flex-col justify-center px-10 md:px-16 lg:px-20 py-20">
+          <motion.div {...inView()}>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-px bg-gold" />
+              <span className="text-gold text-[10px] tracking-[0.35em] uppercase font-semibold">
+                The Market
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-light font-heading text-white leading-tight mb-6 max-w-md">
+              {config.tagline}
             </h2>
+            <p className="text-white/55 text-base font-light leading-relaxed max-w-md">
+              {config.marketIntro}
+            </p>
+
+            <div className="mt-10 pt-10 border-t border-white/10 flex items-center gap-4">
+              <MapPin className="w-4 h-4 text-gold shrink-0" />
+              <p className="text-white/40 text-sm">{config.building} · {config.street}</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── 4. Full-bleed overlay: Why [City] ── */}
+      <section className="relative py-32 md:py-40 overflow-hidden">
+        <img
+          src={config.overlayImage}
+          alt={`${config.city} district`}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* heavy dark overlay so text is legible */}
+        <div className="absolute inset-0 bg-navy/88" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-8 md:px-16">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-px bg-gold" />
+            <span className="text-gold text-[10px] tracking-[0.35em] uppercase font-semibold">
+              Why {config.city}?
+            </span>
+          </div>
+          <motion.h2
+            {...inView()}
+            className="text-4xl md:text-5xl font-light font-heading text-white leading-tight mb-16 max-w-2xl"
+          >
+            A strategic address that <span className="italic text-gold/90">opens doors.</span>
+          </motion.h2>
+
+          <div className="grid md:grid-cols-2 gap-x-20 gap-y-0">
+            {config.reasons.map((reason, i) => (
+              <motion.div
+                key={i}
+                {...inView(i * 0.07)}
+                className="flex items-start gap-5 py-6 border-b border-white/10"
+              >
+                <CheckCircle2 className="w-4 h-4 text-gold shrink-0 mt-1" />
+                <p className="text-white/75 font-light text-base leading-relaxed">{reason}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Services — editorial numbered list on white ── */}
+      <section className="py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-8 md:px-16">
+          <div className="flex items-center gap-4 mb-16">
+            <span className="text-navy text-[10px] tracking-[0.35em] uppercase font-semibold whitespace-nowrap">
+              Available Here
+            </span>
+            <div className="flex-1 h-px bg-gray-100" />
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100 border border-gray-100">
-            {services.map((svc, i) => {
-              const Icon = svc.icon
-              return (
-                <motion.div
-                  key={i}
-                  custom={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: '-60px' }}
-                  className="bg-white p-8 group hover:bg-navy transition-colors duration-300"
-                >
-                  <div className="w-11 h-11 rounded-full bg-gold/10 flex items-center justify-center mb-5 group-hover:bg-gold/20 transition-colors">
-                    <Icon className="w-5 h-5 text-gold" />
-                  </div>
-                  <h3 className="text-navy font-heading font-semibold text-lg mb-2 group-hover:text-white transition-colors">
+          <div className="grid lg:grid-cols-2 gap-x-20">
+            {config.services.map((svc, i) => (
+              <motion.div
+                key={i}
+                {...inView(i * 0.06)}
+                className="group flex items-start gap-6 py-7 border-b border-gray-100 hover:border-gold/30 transition-colors"
+              >
+                <span className="text-gray-200 font-mono text-xs tracking-widest shrink-0 mt-1 group-hover:text-gold transition-colors">
+                  {svc.num}
+                </span>
+                <div>
+                  <h3 className="text-navy font-heading font-semibold text-lg mb-1 group-hover:text-gold transition-colors">
                     {svc.title}
                   </h3>
-                  <p className="text-dark-gray/60 text-sm font-light leading-relaxed group-hover:text-white/60 transition-colors">
-                    {svc.desc}
-                  </p>
-                </motion.div>
-              )
-            })}
+                  <p className="text-dark-gray/50 text-sm font-light leading-relaxed">{svc.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Why This City — Icon Cards ─── */}
-      <section className="py-24 bg-light-gray">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: heading + reason cards */}
-            <div>
-              <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-3">
-                Why {config.city}?
+      {/* ── 6. Split: text on dark left | street photo right ── */}
+      <section className="flex flex-col lg:flex-row min-h-[60vh]">
+        {/* dark text half */}
+        <div className="w-full lg:w-1/2 bg-navy flex flex-col justify-center px-10 md:px-16 lg:px-20 py-20">
+          <motion.div {...inView()}>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-px bg-gold" />
+              <span className="text-gold text-[10px] tracking-[0.35em] uppercase font-semibold">
+                Included As Standard
               </span>
-              <h2 className="text-3xl md:text-4xl font-light font-heading text-navy leading-tight mb-10">
-                A strategic address that{' '}
-                <span className="italic">opens doors.</span>
-              </h2>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                {config.reasons.map((reason, i) => {
-                  const Icon = reasonIcons[i % reasonIcons.length]
-                  return (
-                    <motion.div
-                      key={i}
-                      custom={i}
-                      variants={fadeUp}
-                      initial="hidden"
-                      whileInView="show"
-                      viewport={{ once: true, margin: '-60px' }}
-                      className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4 items-start shadow-sm hover:shadow-md hover:border-gold/30 transition-all"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-navy/5 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-navy" />
-                      </div>
-                      <p className="text-dark-gray text-sm font-light leading-relaxed pt-1">{reason}</p>
-                    </motion.div>
-                  )
-                })}
-              </div>
             </div>
-
-            {/* Right: premium address card */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              {/* Decorative accent */}
-              <div className="absolute -top-4 -left-4 w-full h-full border-2 border-gold/20 rounded-3xl pointer-events-none" />
-
-              <div className="bg-navy rounded-3xl overflow-hidden relative z-10">
-                {/* Card header */}
-                <div className="px-8 pt-8 pb-6 border-b border-white/10">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-gold" />
-                    </div>
-                    <span className="text-gold text-xs uppercase tracking-[0.25em] font-semibold">
-                      Your Address
-                    </span>
-                  </div>
-                  <h3 className="text-white text-xl font-heading font-semibold mt-3">
-                    {config.building}
-                  </h3>
-                  <p className="text-white/50 text-sm mt-1">
-                    {config.street}, {config.city}, Kenya
-                  </p>
-                </div>
-
-                {/* Card body details */}
-                <div className="px-8 py-6 space-y-5">
-                  {[
-                    { label: 'Building', value: config.building },
-                    { label: 'Street', value: config.street },
-                    { label: 'City', value: `${config.city}, Kenya` },
-                  ].map((d, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <span className="text-white/40 text-xs uppercase tracking-widest">{d.label}</span>
-                      <span className="text-white text-sm font-medium">{d.value}</span>
-                    </div>
-                  ))}
-
-                  <div className="flex items-center gap-2 pt-3 border-t border-white/10">
-                    <CalendarCheck className="w-4 h-4 text-gold" />
-                    <span className="text-white/60 text-sm">Available for immediate registration</span>
-                  </div>
-                </div>
-
-                {/* CTA row */}
-                <div className="px-8 pb-8">
-                  <Link
-                    href="/contact"
-                    className="w-full flex items-center justify-center gap-2 bg-gold text-white py-3.5 text-sm uppercase tracking-[0.12em] font-medium hover:bg-gold-400 transition-colors rounded-xl"
-                  >
-                    Claim This Address <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Amenities Grid ─── */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-          <div className="mb-14 text-center">
-            <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-3">
-              Facilities
-            </span>
-            <h2 className="text-3xl md:text-4xl font-light font-heading text-navy">
-              Premium amenities, <span className="italic">included.</span>
+            <h2 className="text-3xl md:text-4xl font-light font-heading text-white leading-tight mb-10">
+              Premium facilities, <span className="italic">no surcharge.</span>
             </h2>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {amenities.map((a, i) => {
-              const Icon = a.icon
-              return (
-                <motion.div
+            <div className="grid grid-cols-2 gap-x-8 gap-y-0">
+              {[
+                'High-Speed Wi-Fi',
+                'Secure Parking',
+                '24 / 7 Security',
+                'Executive Lounge',
+                'Print & Scan',
+                'AV-Equipped Rooms',
+                'Live Receptionist',
+                'Instant Activation',
+              ].map((item, i) => (
+                <div
                   key={i}
-                  custom={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: '-40px' }}
-                  className="flex flex-col items-center gap-3 py-8 px-4 rounded-2xl border border-gray-100 bg-light-gray hover:border-gold/40 hover:bg-gold/5 transition-all group"
+                  className="flex items-center gap-3 py-3.5 border-b border-white/10 text-white/65 text-sm font-light"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm group-hover:border-gold/30 transition-colors">
-                    <Icon className="w-5 h-5 text-navy group-hover:text-gold transition-colors" />
-                  </div>
-                  <span className="text-dark-gray text-xs font-medium text-center">{a.label}</span>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Trust Bar ─── */}
-      <section className="py-16 bg-navy">
-        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div>
-              <h3 className="text-white text-2xl font-heading font-light mb-2">
-                Ready to establish your {config.city} presence?
-              </h3>
-              <p className="text-white/50 text-sm font-light">
-                Activate your address in under 24 hours. No lease. No long-term commitment.
-              </p>
+                  <div className="w-1 h-1 rounded-full bg-gold shrink-0" />
+                  {item}
+                </div>
+              ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+
+            <div className="mt-12">
               <Link
                 href="/contact"
-                className="bg-gold text-white px-7 py-3 text-sm uppercase tracking-[0.12em] font-medium hover:bg-gold-400 transition-colors whitespace-nowrap flex items-center gap-2"
+                className="inline-flex items-center gap-2 bg-gold text-white px-7 py-3 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-gold-400 transition-colors"
               >
-                Get Started <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/pricing"
-                className="border border-white/30 text-white px-7 py-3 text-sm uppercase tracking-[0.12em] font-medium hover:bg-white/10 transition-colors whitespace-nowrap"
-              >
-                See Pricing
+                Get Started <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-          </div>
+          </motion.div>
+        </div>
 
-          <div className="grid grid-cols-3 gap-6 mt-12 pt-10 border-t border-white/10">
-            {[
-              { icon: CheckCircle2, text: 'No hidden fees or surprises' },
-              { icon: Zap, text: 'Activated within 24 hours' },
-              { icon: Shield, text: 'Fully legal & compliant address' },
-            ].map((item, i) => {
-              const Icon = item.icon
-              return (
-                <div key={i} className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-gold shrink-0" />
-                  <span className="text-white/60 text-sm font-light">{item.text}</span>
+        {/* photo half */}
+        <div className="w-full lg:w-1/2 h-[50vh] lg:h-auto relative overflow-hidden">
+          <img
+            src={config.heroImage}
+            alt={config.city}
+            className="absolute inset-0 w-full h-full object-cover object-center scale-105"
+            style={{ filter: 'brightness(0.75)' }}
+          />
+          {/* subtle gold tint overlay */}
+          <div className="absolute inset-0 bg-gold/10 mix-blend-multiply" />
+        </div>
+      </section>
+
+      {/* ── 7. CTA Banner ── */}
+      <section className="relative py-28 overflow-hidden">
+        <img
+          src={config.splitImage}
+          alt="office"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'brightness(0.3) saturate(0.4)' }}
+        />
+        <div className="absolute inset-0 bg-navy/70" />
+
+        <div className="relative z-10 max-w-5xl mx-auto px-8 md:px-16 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-light font-heading text-white mb-3">
+              Ready to establish your <span className="text-gold italic">{config.city}</span> presence?
+            </h2>
+            <p className="text-white/50 font-light">Activate your address in under 24 hours. No lease, no long-term commitment.</p>
+            <div className="flex items-center gap-6 mt-6">
+              {[
+                { Icon: Zap, text: 'Activated in 24 hrs' },
+                { Icon: Shield, text: 'Legally compliant' },
+              ].map(({ Icon, text }, i) => (
+                <div key={i} className="flex items-center gap-2 text-white/50 text-sm">
+                  <Icon className="w-4 h-4 text-gold" /> {text}
                 </div>
-              )
-            })}
+              ))}
+            </div>
+          </div>
+          <div className="shrink-0">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 bg-gold text-white px-9 py-4 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-gold-400 transition-colors whitespace-nowrap"
+            >
+              Claim This Address <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
