@@ -205,7 +205,7 @@ export default function InsightsPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-br from-navy/30 to-navy/10" />
                 </div>
-                <div className="lg:col-span-2 bg-light-gray flex flex-col justify-center px-10 py-12">
+                <div className="lg:col-span-2 bg-white flex flex-col justify-center px-10 py-12">
                   <div className="flex items-center gap-3 mb-5">
                     <span className="text-[9px] font-bold uppercase tracking-widest text-white bg-gold px-2.5 py-1">Featured</span>
                     <Tag category={featured.category} />
@@ -237,7 +237,7 @@ export default function InsightsPage() {
                 className={`text-[10px] font-semibold uppercase tracking-widest px-4 py-1.5 transition-colors duration-200 ${
                   activeCategory === cat
                     ? 'bg-navy text-white'
-                    : 'bg-light-gray text-navy/60 hover:text-navy'
+                    : 'bg-white text-navy/60 hover:text-navy border border-gray-100'
                 }`}
               >
                 {cat}

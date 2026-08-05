@@ -42,7 +42,7 @@ export default function VirtualOfficePage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {FEATURES.map((feature, idx) => (
-              <div key={idx} className="flex gap-4 p-6 bg-light-gray rounded-xl border border-gray-100 hover:border-gold hover:shadow-sm transition-all duration-300">
+              <div key={idx} className="flex gap-4 p-6 bg-white rounded-xl border border-gray-100 hover:border-gold hover:shadow-sm transition-all duration-300">
                 <CheckCircle2 className="w-6 h-6 text-gold shrink-0 mt-0.5" />
                 <p className="font-medium text-navy text-sm leading-relaxed">{feature}</p>
               </div>

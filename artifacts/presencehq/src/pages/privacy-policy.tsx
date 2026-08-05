@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
 
           <h2>1. Introduction and Who We Are</h2>
           <p>
-            PresenceHQ Limited ("PresenceHQ", "we", "us", or "our") is a company incorporated in Kenya that provides virtual office, mail handling, meeting room, and related professional services. Our registered office is at Westlands Business Park, Waiyaki Way, Nairobi, Kenya.
+            PresenceHQ Limited ("PresenceHQ", "we", "us", or "our") is a company incorporated in Kenya that provides virtual office services and optional add-ons to businesses across Kenya. Our registered office is at Westlands Business Park, Waiyaki Way, Nairobi, Kenya.
           </p>
           <p>
             This Privacy Policy explains how we collect, use, store, and share personal data about you when you visit our website, sign up for our services, communicate with us, or visit any of our physical locations. It applies to all clients, visitors, and contacts of PresenceHQ.
@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
             <li>Activating and administering your PresenceHQ subscription and any associated services.</li>
             <li>Verifying your identity and business details as required by Kenyan KYC regulations.</li>
             <li>Notifying you of mail and parcels received at your registered address.</li>
-            <li>Processing and confirming meeting room bookings.</li>
+            <li>Managing any optional add-on services you have subscribed to, such as additional mail forwarding or workspace access.</li>
             <li>Answering calls in your company name and relaying messages as per your instructions.</li>
           </ul>
 

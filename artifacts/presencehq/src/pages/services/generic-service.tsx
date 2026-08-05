@@ -41,7 +41,7 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
             </div>
             <div className="grid gap-4">
               {config.features.map((feature, idx) => (
-                <div key={idx} className="flex gap-4 p-5 bg-light-gray rounded-xl border border-gray-100 hover:border-gold transition-colors">
+                <div key={idx} className="flex gap-4 p-5 bg-white rounded-xl border border-gray-100 hover:border-gold transition-colors">
                   <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                   <p className="font-medium text-navy text-sm">{feature}</p>
                 </div>

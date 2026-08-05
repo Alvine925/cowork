@@ -19,7 +19,7 @@ export default function TermsOfServicePage() {
 
           <h2>1. About PresenceHQ and These Terms</h2>
           <p>
-            PresenceHQ Limited ("PresenceHQ", "we", "us", or "our") is a company incorporated under the laws of Kenya, providing virtual office services, business address registration, mail handling, meeting room access, and related professional services across Kenya.
+            PresenceHQ Limited ("PresenceHQ", "we", "us", or "our") is a company incorporated under the laws of Kenya, providing virtual office services and optional add-ons to businesses across Kenya.
           </p>
           <p>
             By signing up for a PresenceHQ plan, using our website at presencehq.com, or accessing any of our services, you ("the Client" or "you") agree to be bound by these Terms of Service. These terms constitute a legally binding agreement between you and PresenceHQ. If you do not agree to these terms, you may not use our services.
@@ -31,10 +31,10 @@ export default function TermsOfServicePage() {
           <h2>2. Services Provided</h2>
           <p>PresenceHQ offers the following categories of services, each subject to availability in your selected location:</p>
           <ul>
-            <li><strong>Virtual Office Packages:</strong> A combination of a prestigious business address, mail handling, a dedicated local phone number with call answering, and access to meeting rooms and hot desks on an as-needed basis.</li>
+            <li><strong>Virtual Office:</strong> Our core service — a prestigious business address you can use for company registration, banking, and correspondence, with mail handling and a dedicated phone number with call answering included. Optional add-ons such as workspace access can be added to any plan.</li>
             <li><strong>Business Address Registration:</strong> Use of a PresenceHQ address in Nairobi, Mombasa, Kisumu, Nakuru, or Eldoret as your official registered business address for government filings, banking, and correspondence.</li>
             <li><strong>Mail Handling and Forwarding:</strong> Receipt, sorting, scanning, and forwarding of physical mail and parcels delivered to your PresenceHQ address. Packages exceeding 5 kg or 50 cm in any dimension may be subject to additional storage fees.</li>
-            <li><strong>Meeting Rooms:</strong> Bookable private meeting rooms and boardrooms at selected locations, available by the hour or half-day. Bookings are subject to availability and must be made at least 24 hours in advance unless otherwise agreed in writing.</li>
+            <li><strong>Workspace Add-ons:</strong> Optional bookable workspace access at selected locations, available by the hour or half-day subject to availability and advance notice as agreed in writing.</li>
             <li><strong>Hot Desks and Dedicated Desks:</strong> Flexible or reserved desk space in our coworking environments at participating locations.</li>
             <li><strong>Reception Services:</strong> A trained receptionist who answers calls in your company name, greets visitors at your registered address, and relays messages according to your instructions.</li>
             <li><strong>Company Registration Assistance:</strong> Guidance and document preparation support for registering a business with the Registrar of Companies in Kenya. Note that PresenceHQ is not a law firm and does not provide legal advice. We assist with document preparation only.</li>

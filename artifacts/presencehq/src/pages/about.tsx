@@ -294,7 +294,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-gold/10 mix-blend-multiply" />
         </motion.div>
 
-        <div className="w-full lg:w-1/2 bg-light-gray flex flex-col justify-center px-10 md:px-16 lg:px-20 py-20">
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center px-10 md:px-16 lg:px-20 py-20">
           <motion.div
             variants={stagger}
             initial="hidden"

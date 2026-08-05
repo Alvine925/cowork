@@ -58,7 +58,7 @@ export default function ContactPage() {
       />
 
       {/* Two-column layout: info left, form right */}
-      <section className="py-28 bg-light-gray">
+      <section className="py-28 bg-white">
         <div className="container mx-auto px-6 md:px-12 max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-20 items-start">
 

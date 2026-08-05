@@ -15,7 +15,7 @@ const REASONS = [
 
 export function WhyChooseUs() {
   return (
-    <section className="flex flex-col lg:flex-row min-h-screen bg-light-gray">
+    <section className="flex flex-col lg:flex-row min-h-screen bg-white">
       <div className="w-full lg:w-1/2 relative h-[50vh] lg:h-auto min-h-[400px]">
         <img
           src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&auto=format&q=80"

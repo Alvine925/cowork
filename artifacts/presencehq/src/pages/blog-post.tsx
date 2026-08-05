@@ -800,7 +800,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       {/* Prev / Next navigation */}
       {(prevPost || nextPost) && (
-        <section className="py-16 bg-light-gray border-t border-gray-100">
+        <section className="py-16 bg-white border-t border-gray-100">
           <div className="container mx-auto px-6 md:px-12 max-w-4xl grid sm:grid-cols-2 gap-6">
             {prevPost && (
               <Link href={`/blog/${prevPost.slug}`}>
