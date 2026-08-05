@@ -3,60 +3,31 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
-import { cn, formatPrice } from '@/lib/utils'
-import { SectionHeader } from '@/components/ui/SectionHeader'
-import { Button } from '@/components/ui/Button'
 
-const PACKAGES = [
+const PLANS = [
   {
-    name: "Starter",
-    description: "For freelancers and early-stage startups needing a credible address.",
-    monthlyPrice: 2500,
-    features: [
-      "Prime Business Address",
-      "Mail & Package Handling",
-      "Email Notifications for Mail",
-      "Access to Coworking (Pay per use)",
-      "Standard Reception Services"
-    ]
+    name: 'Starter',
+    price: '2,500',
+    features: ['Prime Business Address', 'Mail & Package Handling', 'Email Notifications', 'Standard Reception'],
+    featured: false
   },
   {
-    name: "Professional",
-    description: "The complete virtual office for growing businesses and consultants.",
-    monthlyPrice: 5500,
-    isPopular: true,
-    features: [
-      "Everything in Starter",
-      "2 Hours Meeting Room / month",
-      "Dedicated Local Phone Number",
-      "Call Answering & Forwarding",
-      "Mail Forwarding (Weekly)"
-    ]
+    name: 'Professional',
+    price: '5,500',
+    features: ['Everything in Starter', '2 Hrs Meeting Room/mo', 'Dedicated Phone Number', 'Mail Forwarding (Weekly)'],
+    featured: true
   },
   {
-    name: "Premium",
-    description: "For established companies needing regular physical workspace.",
-    monthlyPrice: 9500,
-    features: [
-      "Everything in Professional",
-      "5 Hours Meeting Room / month",
-      "Hot Desk Access (3x / week)",
-      "Company Registration Support",
-      "Priority Mail Forwarding (Daily)"
-    ]
+    name: 'Premium',
+    price: '9,500',
+    features: ['Everything in Pro', '5 Hrs Meeting Room/mo', 'Hot Desk Access (3x/wk)', 'Priority Mail Forwarding'],
+    featured: false
   },
   {
-    name: "Enterprise",
-    description: "Custom solutions for teams and international expansions.",
-    monthlyPrice: null, // Custom
-    features: [
-      "Everything in Premium",
-      "Dedicated Desks / Private Office",
-      "Unlimited Meeting Room Access",
-      "Custom Call Scripts & Reception",
-      "Dedicated Account Manager"
-    ]
+    name: 'Enterprise',
+    price: 'Custom',
+    features: ['Everything in Premium', 'Dedicated Desks', 'Unlimited Meeting Rooms', 'Dedicated Account Manager'],
+    featured: false
   }
 ]
 
@@ -64,110 +35,93 @@ export function FeaturedPackages() {
   const [isAnnual, setIsAnnual] = useState(true)
 
   return (
-    <section className="py-24 bg-light-gray" id="pricing">
-      <div className="container mx-auto px-4 md:px-6">
-        <SectionHeader 
-          eyebrow="Pricing"
-          title="Transparent, Scaleable Pricing"
-          subtitle="No hidden fees. No long-term leases. Choose the plan that fits your current needs."
-          className="mb-12"
-        />
-
-        <div className="flex justify-center mb-16">
-          <div className="bg-white p-1.5 rounded-full border border-gray-200 inline-flex items-center relative">
-            <button
-              onClick={() => setIsAnnual(false)}
-              className={cn(
-                "px-6 py-2 rounded-full text-sm font-semibold transition-colors relative z-10",
-                !isAnnual ? "text-white" : "text-dark-gray hover:text-navy"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsAnnual(true)}
-              className={cn(
-                "px-6 py-2 rounded-full text-sm font-semibold transition-colors relative z-10 flex items-center gap-2",
-                isAnnual ? "text-white" : "text-dark-gray hover:text-navy"
-              )}
-            >
-              Annually <span className={cn("text-[10px] uppercase px-2 py-0.5 rounded-full bg-success/20 text-success", isAnnual && "bg-white/20 text-white")}>2 Mos Free</span>
-            </button>
-            
-            {/* Background pill */}
-            <motion.div 
-              className="absolute top-1.5 bottom-1.5 w-[50%] bg-navy rounded-full z-0"
-              initial={false}
-              animate={{
-                left: isAnnual ? "50%" : "6px",
-                width: isAnnual ? "calc(50% - 6px)" : "calc(50% - 6px)"
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          </div>
+    <section className="bg-[#0F2D52] py-24 text-white">
+      <div className="container mx-auto px-6 md:px-12">
+        
+        {/* Header */}
+        <div className="mb-16">
+          <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-4">
+            Pricing
+          </span>
+          <h2 className="text-4xl md:text-5xl font-light font-[family-name:var(--font-heading)] mb-4">
+            Simple, transparent pricing.
+          </h2>
+          <p className="text-white/60 text-lg font-light max-w-xl">
+            Choose the package that fits your business needs. Scale up instantly.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {PACKAGES.map((pkg, i) => (
+        {/* Toggle */}
+        <div className="flex items-center gap-4 mb-16">
+          <button 
+            onClick={() => setIsAnnual(false)}
+            className={`text-sm tracking-widest uppercase transition-colors ${!isAnnual ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+          >
+            Monthly
+          </button>
+          <div 
+            className="w-12 h-6 rounded-full bg-white/10 relative cursor-pointer"
+            onClick={() => setIsAnnual(!isAnnual)}
+          >
+            <motion.div 
+              className="w-4 h-4 rounded-full bg-white absolute top-1"
+              initial={false}
+              animate={{ left: isAnnual ? '1.5rem' : '0.25rem' }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            />
+          </div>
+          <button 
+            onClick={() => setIsAnnual(true)}
+            className={`text-sm tracking-widest uppercase transition-colors ${isAnnual ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+          >
+            Annual
+          </button>
+        </div>
+
+        {/* Table Layout */}
+        <div className="flex flex-col xl:flex-row w-full overflow-hidden rounded-lg">
+          {PLANS.map((plan, i) => (
             <div 
               key={i} 
-              className={cn(
-                "rounded-2xl p-8 flex flex-col border transition-all duration-300 relative",
-                pkg.isPopular 
-                  ? "bg-navy text-white border-navy shadow-xl scale-105 z-10 lg:-mx-2" 
-                  : "bg-white text-dark-gray border-gray-200 hover:border-gold hover:shadow-lg"
-              )}
+              className={`flex-1 flex flex-col p-8 lg:p-10 ${i !== PLANS.length - 1 ? 'xl:border-r xl:border-white/10 border-b xl:border-b-0 border-white/10' : ''}`}
             >
-              {pkg.isPopular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gold text-navy text-xs font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-sm">
-                  Most Popular
-                </div>
-              )}
-              
-              <h3 className={cn("text-2xl font-bold mb-2", pkg.isPopular ? "text-white" : "text-navy")}>
-                {pkg.name}
+              <h3 className="text-white/50 text-xs tracking-widest uppercase mb-4">
+                {plan.name}
               </h3>
-              <p className={cn("text-sm mb-6 min-h-[40px]", pkg.isPopular ? "text-white/70" : "text-dark-gray/70")}>
-                {pkg.description}
-              </p>
               
-              <div className="mb-8">
-                {pkg.monthlyPrice ? (
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-bold font-[family-name:var(--font-heading)]">
-                      {isAnnual ? formatPrice(pkg.monthlyPrice * 10) : formatPrice(pkg.monthlyPrice)}
-                    </span>
-                    <span className={cn("text-sm mb-1", pkg.isPopular ? "text-white/60" : "text-gray-500")}>
-                      / {isAnnual ? 'yr' : 'mo'}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-4xl font-bold font-[family-name:var(--font-heading)]">
-                    Custom
-                  </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold font-[family-name:var(--font-heading)] text-white">
+                  {plan.price === 'Custom' ? 'Custom' : (isAnnual ? (parseInt(plan.price.replace(',','')) * 10).toLocaleString() : plan.price)}
+                </span>
+                {plan.price !== 'Custom' && (
+                  <span className="text-white/40 text-xs ml-2">/ {isAnnual ? 'yr' : 'mo'}</span>
                 )}
               </div>
 
-              <div className="flex-1 flex flex-col gap-4 mb-8">
-                {pkg.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <Check className={cn("w-5 h-5 shrink-0", pkg.isPopular ? "text-gold" : "text-success")} />
-                    <span className="text-sm">{feature}</span>
+              <div className="w-full border-t border-gold mb-6"></div>
+
+              <div className="flex-1 flex flex-col mb-10">
+                {plan.features.map((feature, idx) => (
+                  <div key={idx} className="border-b border-white/10 py-3 text-white/60 text-sm font-light">
+                    {feature}
                   </div>
                 ))}
               </div>
 
-              <Link href="/contact" className="mt-auto">
-                <Button 
-                  variant={pkg.isPopular ? "gold" : "outline"} 
-                  className={cn("w-full", pkg.isPopular ? "" : "border-gray-200 hover:border-navy hover:bg-navy hover:text-white")}
-                >
-                  {pkg.monthlyPrice ? "Get Started" : "Contact Sales"}
-                </Button>
+              <Link 
+                href="/contact"
+                className={`w-full py-4 text-sm text-center uppercase tracking-widest transition-colors ${
+                  plan.featured 
+                    ? 'bg-gold text-white hover:bg-gold-400' 
+                    : 'border border-white/30 text-white hover:bg-white hover:text-navy'
+                }`}
+              >
+                {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
               </Link>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   )

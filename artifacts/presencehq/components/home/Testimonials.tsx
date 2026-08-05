@@ -1,108 +1,52 @@
 'use client'
 
-import { useState } from 'react'
-import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react'
-import { SectionHeader } from '@/components/ui/SectionHeader'
-
-const TESTIMONIALS = [
-  {
-    name: "Sarah M.",
-    role: "Founder, TechFlow Kenya",
-    quote: "PresenceHQ allowed us to register our company with a prime Westlands address. The mail handling and reception services make us look like a massive enterprise to our clients.",
-    initial: "S"
-  },
-  {
-    name: "James K.",
-    role: "Managing Partner, K&A Law",
-    quote: "As a boutique law firm, credibility is everything. Using PresenceHQ's meeting rooms for client consultations has been a game-changer. Impeccable service.",
-    initial: "J"
-  },
-  {
-    name: "Amina Hassan",
-    role: "Freelance Consultant",
-    quote: "I used to meet clients in coffee shops. Now I book a premium meeting room at PresenceHQ. My close rate has doubled because I present a much more professional image.",
-    initial: "A"
-  },
-  {
-    name: "David O.",
-    role: "Director, Global Logistics Hub",
-    quote: "Expanding into Mombasa was seamless. We didn't need to sign a lease or hire admin staff. PresenceHQ provided the instant infrastructure we needed to start operating.",
-    initial: "D"
-  }
-]
+import Image from 'next/image'
 
 export function Testimonials() {
-  const [activeIndex, setActiveIndex] = useState(0)
-
-  const next = () => setActiveIndex((current) => (current === TESTIMONIALS.length - 1 ? 0 : current + 1))
-  const prev = () => setActiveIndex((current) => (current === 0 ? TESTIMONIALS.length - 1 : current - 1))
-
   return (
-    <section className="py-24 bg-white overflow-hidden">
-      <div className="container mx-auto px-4 md:px-6">
-        <SectionHeader 
-          eyebrow="Testimonials"
-          title="What Our Clients Say"
-          className="mb-16"
+    <section className="relative w-full min-h-[600px] flex items-center justify-center py-32 overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1600&auto=format&q=80"
+          alt="Meeting room abstract"
+          fill
+          className="object-cover"
         />
+        <div className="absolute inset-0 bg-black/65"></div>
+      </div>
 
-        <div className="max-w-4xl mx-auto relative">
-          {/* Large Quote Icon */}
-          <div className="absolute -top-10 -left-10 text-gray-100 z-0">
-            <Quote className="w-32 h-32 rotate-180" />
+      <div className="container mx-auto px-6 relative z-10 text-white text-center flex flex-col items-center">
+        
+        <div className="text-6xl text-gold font-[family-name:var(--font-heading)] leading-none mb-6 select-none">
+          "
+        </div>
+        
+        <blockquote className="max-w-3xl text-2xl md:text-3xl font-light font-[family-name:var(--font-heading)] italic leading-relaxed mb-8">
+          PresenceHQ gave our startup instant credibility. Clients assumed we had a full office in Nairobi from day one.
+        </blockquote>
+        
+        <div className="flex flex-col items-center">
+          <p className="text-white text-sm font-medium uppercase tracking-widest">Sarah M.</p>
+          <p className="text-white/50 text-xs mt-1">Founder, Nexus Tech</p>
+          <div className="w-8 border-t border-white/30 my-8"></div>
+        </div>
+
+        {/* Other short mentions */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+          <div className="text-center">
+            <p className="text-white/40 text-xs italic">"Flawless mail handling."</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-widest mt-1">— David K., Consultant</p>
           </div>
-
-          <div className="relative z-10 bg-white border border-gray-100 rounded-3xl p-8 md:p-12 shadow-xl shadow-gray-200/50">
-            <div className="flex flex-col items-center text-center gap-8">
-              <div className="flex items-center gap-1">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="w-5 h-5 fill-gold text-gold" />
-                ))}
-              </div>
-
-              <p className="text-xl md:text-2xl lg:text-3xl text-navy font-medium leading-relaxed italic">
-                "{TESTIMONIALS[activeIndex].quote}"
-              </p>
-
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-navy text-white flex items-center justify-center text-xl font-bold">
-                  {TESTIMONIALS[activeIndex].initial}
-                </div>
-                <div>
-                  <h4 className="font-bold text-navy">{TESTIMONIALS[activeIndex].name}</h4>
-                  <p className="text-sm text-dark-gray/60">{TESTIMONIALS[activeIndex].role}</p>
-                </div>
-              </div>
-            </div>
+          <div className="text-center">
+            <p className="text-white/40 text-xs italic">"The meeting rooms are spectacular."</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-widest mt-1">— Elena R., Law Firm</p>
           </div>
-
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button 
-              onClick={prev}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-navy hover:bg-navy hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
-              aria-label="Previous testimonial"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="flex gap-2">
-              {TESTIMONIALS.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-colors ${idx === activeIndex ? 'bg-navy' : 'bg-gray-200 hover:bg-gray-300'}`}
-                  aria-label={`Go to testimonial ${idx + 1}`}
-                />
-              ))}
-            </div>
-            <button 
-              onClick={next}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-navy hover:bg-navy hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
-              aria-label="Next testimonial"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          <div className="text-center">
+            <p className="text-white/40 text-xs italic">"Scaleable without the overhead."</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-widest mt-1">— James T., Agency</p>
           </div>
         </div>
+        
       </div>
     </section>
   )

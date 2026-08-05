@@ -1,107 +1,60 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { SectionHeader } from '@/components/ui/SectionHeader'
-import { Home, MapPin, XOctagon, Receipt, Map, MailX, Users } from 'lucide-react'
 
 const PAIN_POINTS = [
-  {
-    icon: Home,
-    title: "Working from home lacks credibility",
-    description: "Using a residential address on your business cards and website signals you are a small or informal operation."
-  },
-  {
-    icon: MapPin,
-    title: "No professional address",
-    description: "Without a prime commercial location, winning corporate contracts and high-value clients becomes significantly harder."
-  },
-  {
-    icon: XOctagon,
-    title: "Clients don't trust PO Boxes",
-    description: "Banks, government agencies, and serious partners often reject PO Boxes for official registration and correspondence."
-  },
-  {
-    icon: Receipt,
-    title: "Traditional office rent is too expensive",
-    description: "Signing a 2-year lease for an office you barely use drains capital that should go into growing your business."
-  },
-  {
-    icon: Map,
-    title: "Hard to expand to new cities",
-    description: "Testing new markets like Mombasa or Kisumu is risky when it requires setting up physical infrastructure first."
-  },
-  {
-    icon: MailX,
-    title: "Missing important mail",
-    description: "Important documents, legal notices, and packages get lost or delayed without a dedicated reception team."
-  },
-  {
-    icon: Users,
-    title: "No place for professional meetings",
-    description: "Hosting client pitches in noisy coffee shops undermines your authority and breaches confidentiality."
-  }
+  "Working from home looks unprofessional to high-value clients.",
+  "Lack of a prime address hurts your credibility and brand image.",
+  "Missing out on client trust because you don't have a physical presence.",
+  "Expensive commercial rent and long-term leases drain your capital.",
+  "Inability to expand to new cities without massive upfront investment.",
+  "Missing important physical mail and legal documents.",
+  "No suitable, impressive location to host client meetings or pitches."
 ]
 
 export function Problem() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  }
-
   return (
-    <section className="py-24 bg-navy text-white">
-      <div className="container mx-auto px-4 md:px-6">
-        <SectionHeader 
-          eyebrow="The Challenge"
-          title="Running a Business Without a Professional Address?"
-          subtitle="The hidden costs of working from home or coffee shops are costing you deals, credibility, and growth."
-          dark
-          className="mb-16"
-        />
-
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
-          {PAIN_POINTS.map((point, index) => (
-            <motion.div 
-              key={index}
-              variants={item}
-              className="bg-navy-800/50 border border-white/10 rounded-xl p-6 flex flex-col gap-4 hover:bg-navy-700/50 transition-colors"
-            >
-              <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                <point.icon className="w-6 h-6 text-gold" />
-              </div>
-              <h3 className="font-bold text-lg">{point.title}</h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                {point.description}
-              </p>
-            </motion.div>
-          ))}
+    <section className="bg-[#0a0a0a] text-white py-32 overflow-hidden">
+      <div className="container mx-auto px-6 md:px-12">
+        <div className="flex flex-col lg:flex-row gap-20">
           
-          <motion.div 
-            variants={item}
-            className="bg-gold border border-gold-400 rounded-xl p-6 flex flex-col gap-4 text-navy justify-center items-center text-center"
-          >
-            <h3 className="font-bold text-xl">Sound familiar?</h3>
-            <p className="text-navy/80 text-sm font-medium">
-              It doesn't have to be this way. See how PresenceHQ solves this.
-            </p>
-          </motion.div>
-        </motion.div>
+          {/* Left Column */}
+          <div className="w-full lg:w-[45%]">
+            <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-8">
+              The Challenge
+            </span>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl md:text-5xl font-light font-[family-name:var(--font-heading)] leading-snug"
+            >
+              Running a business without a professional address costs you clients.
+            </motion.h2>
+          </div>
+
+          {/* Right Column */}
+          <div className="w-full lg:w-[55%] lg:pl-16 flex flex-col justify-center">
+            {PAIN_POINTS.map((point, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                className="border-t border-white/10"
+              >
+                <div className="py-4 text-white/60 text-sm font-light">
+                  {point}
+                </div>
+              </motion.div>
+            ))}
+            {/* Final bottom border */}
+            <div className="border-t border-white/10"></div>
+          </div>
+
+        </div>
       </div>
     </section>
   )

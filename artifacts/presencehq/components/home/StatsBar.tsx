@@ -2,68 +2,77 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import Image from 'next/image'
 
-interface StatProps {
-  end: number
-  suffix?: string
-  label: string
-  duration?: number
-}
-
-function AnimatedCounter({ end, suffix = '', label, duration = 2000 }: StatProps) {
+function Counter({ end, suffix = "" }: { end: number, suffix?: string }) {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-50px" })
 
   useEffect(() => {
-    if (!isInView) return
+    if (isInView) {
+      let start = 0
+      const duration = 2000 // 2 seconds
+      const increment = end / (duration / 16) // 60fps
+      
+      const timer = setInterval(() => {
+        start += increment
+        if (start >= end) {
+          setCount(end)
+          clearInterval(timer)
+        } else {
+          setCount(Math.floor(start))
+        }
+      }, 16)
 
-    let startTime: number | null = null
-    let animationFrame: number
-
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      
-      // Easing function (easeOutQuart)
-      const easeProgress = 1 - Math.pow(1 - progress, 4)
-      
-      setCount(Math.floor(easeProgress * end))
-      
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(step)
-      }
+      return () => clearInterval(timer)
     }
-
-    animationFrame = requestAnimationFrame(step)
-
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration, isInView])
+  }, [end, isInView])
 
   return (
-    <div ref={ref} className="flex flex-col items-center justify-center text-center">
-      <div className="text-4xl md:text-5xl font-bold text-gold mb-2 font-[family-name:var(--font-heading)]">
-        {count}{suffix}
-      </div>
-      <div className="text-sm md:text-base font-medium text-white/80 uppercase tracking-wider">
-        {label}
-      </div>
-    </div>
+    <span ref={ref}>
+      {count}{suffix}
+    </span>
   )
 }
 
+const STATS = [
+  { num: 500, suffix: "+", label: "Businesses" },
+  { num: 5, suffix: "", label: "Cities" },
+  { num: 10, suffix: "+", label: "Services" },
+  { num: 98, suffix: "%", label: "Satisfaction" },
+]
+
 export function StatsBar() {
   return (
-    <section className="py-20 bg-navy relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-      
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-          <AnimatedCounter end={500} suffix="+" label="Businesses Served" />
-          <AnimatedCounter end={5} label="Prime Locations" />
-          <AnimatedCounter end={10} suffix="+" label="Services Offered" />
-          <AnimatedCounter end={98} suffix="%" label="Client Satisfaction" />
+    <section className="relative w-full h-[400px] overflow-hidden flex items-center justify-center">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&auto=format&q=80"
+          alt="Modern architecture"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-0">
+          {STATS.map((stat, i) => (
+            <div 
+              key={i}
+              className={`flex flex-col items-center flex-1 w-full text-center ${
+                i !== STATS.length - 1 ? 'md:border-r md:border-white/20' : ''
+              }`}
+            >
+              <div className="text-white text-4xl md:text-5xl font-bold font-[family-name:var(--font-heading)] mb-2">
+                <Counter end={stat.num} suffix={stat.suffix} />
+              </div>
+              <div className="text-white/60 text-xs tracking-widest uppercase">
+                {stat.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

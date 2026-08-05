@@ -1,51 +1,52 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
-import { ShieldCheck, Clock, XOctagon } from 'lucide-react'
 
 export function CallToAction() {
   return (
-    <section className="py-24 bg-navy relative overflow-hidden text-white">
-      {/* Background elements */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-navy-600/30 to-transparent pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-r from-gold/10 to-transparent pointer-events-none"></div>
-      
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 font-[family-name:var(--font-heading)] leading-tight text-balance">
-            Ready to Establish Your Business Presence?
-          </h2>
-          <p className="text-lg md:text-xl text-white/80 mb-10 text-balance max-w-2xl">
-            Join hundreds of ambitious businesses looking professional, operating efficiently, and growing faster with PresenceHQ.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
-            <Link href="/pricing" className="w-full sm:w-auto">
-              <Button variant="gold" size="lg" className="w-full text-base py-6 px-10">
-                Choose Your Package
-              </Button>
-            </Link>
-            <Link href="/contact" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full text-base py-6 px-10 bg-transparent border-white text-white hover:bg-white/10">
-                Talk to Sales
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-2xl text-left sm:text-center pt-8 border-t border-white/10">
-            <div className="flex items-center sm:flex-col gap-3 sm:gap-2">
-              <ShieldCheck className="w-5 h-5 text-gold shrink-0" />
-              <span className="text-sm font-medium text-white/90">No Setup Fees</span>
-            </div>
-            <div className="flex items-center sm:flex-col gap-3 sm:gap-2">
-              <XOctagon className="w-5 h-5 text-gold shrink-0" />
-              <span className="text-sm font-medium text-white/90">Cancel Anytime</span>
-            </div>
-            <div className="flex items-center sm:flex-col gap-3 sm:gap-2">
-              <Clock className="w-5 h-5 text-gold shrink-0" />
-              <span className="text-sm font-medium text-white/90">24hr Activation</span>
-            </div>
-          </div>
+    <section className="relative w-full min-h-[500px] flex items-center justify-center py-32 overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&q=80"
+          alt="Modern office building facade"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#0F2D52]/80"></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
+        
+        <span className="text-gold tracking-[0.4em] text-xs font-semibold uppercase block mb-6">
+          Ready?
+        </span>
+        
+        <h2 className="text-4xl md:text-5xl font-light font-[family-name:var(--font-heading)] text-white mb-4">
+          Establish your business presence today.
+        </h2>
+        
+        <p className="text-white/60 text-base font-light max-w-lg mx-auto mb-10">
+          Join hundreds of companies that trust us with their professional image and infrastructure.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row items-center gap-6 mb-10">
+          <Link 
+            href="/contact"
+            className="bg-gold text-white px-10 py-4 text-sm uppercase tracking-widest font-medium hover:bg-gold-400 transition-colors w-full sm:w-auto"
+          >
+            Get Started
+          </Link>
+          <Link 
+            href="/contact"
+            className="border border-white/40 text-white px-10 py-4 text-sm uppercase tracking-widest font-medium hover:bg-white hover:text-[#0F2D52] transition-colors w-full sm:w-auto"
+          >
+            Book Consultation
+          </Link>
         </div>
+
+        <p className="text-white/40 text-xs tracking-wide uppercase">
+          No setup fees &middot; Cancel anytime &middot; 24-hour activation
+        </p>
+
       </div>
     </section>
   )

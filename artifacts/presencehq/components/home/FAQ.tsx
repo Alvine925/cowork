@@ -1,79 +1,62 @@
 'use client'
 
 import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronDown } from 'lucide-react'
-import { SectionHeader } from '@/components/ui/SectionHeader'
 
 const FAQS = [
   {
-    question: "Can I use the address to register my company?",
-    answer: "Yes, our Business Address and Virtual Office packages provide you with a legally recognized commercial address that can be used for company registration, bank accounts, and tax purposes."
+    q: "Can I use the address for company registration?",
+    a: "Yes, our business address packages allow you to use our prime locations as your registered office address for government filings, KRA, and official documents."
   },
   {
-    question: "How long does it take to get set up?",
-    answer: "Once you select a package and submit the required compliance documents (ID and company registration if applicable), your account is typically activated within 2-4 hours."
+    q: "How does mail handling work?",
+    a: "When mail arrives for your company, our reception signs for it and stores it securely. Depending on your plan, we will notify you via email, hold it for pickup, scan the contents, or physically forward it to your designated address."
   },
   {
-    question: "How does mail handling work?",
-    answer: "We receive your mail and packages at our reception. Depending on your plan, we will notify you via email, hold them securely for pickup, or scan and forward them to you digitally."
+    q: "Are the meeting rooms included in all packages?",
+    a: "Meeting rooms are included in our Professional and Premium plans. Starter plan users can book meeting rooms on a pay-as-you-go basis at a discounted member rate."
   },
   {
-    question: "Do I have to sign a long-term lease?",
-    answer: "No. PresenceHQ operates on flexible terms. You can choose month-to-month billing and cancel at any time, or opt for an annual plan to receive a discount."
+    q: "How fast can my virtual office be set up?",
+    a: "Account activation takes less than 24 hours once we receive your signed agreement and standard KYC (Know Your Customer) documents."
   },
   {
-    question: "Can I use the meeting rooms if I only have a Starter plan?",
-    answer: "Yes, Starter plan members can book meeting rooms and hot desks on a pay-as-you-go basis at preferred member rates."
-  },
-  {
-    question: "Are there any hidden setup fees?",
-    answer: "No. We believe in transparent pricing. There are no setup fees, activation costs, or hidden charges. You only pay the advertised package price."
+    q: "Do I have to sign a long-term lease?",
+    a: "No. Our services operate on flexible rolling contracts. You can choose month-to-month billing or opt for an annual plan to receive two months free."
   }
 ]
 
 export function FAQ() {
   return (
-    <section className="py-24 bg-light-gray">
-      <div className="container mx-auto px-4 md:px-6">
-        <SectionHeader 
-          eyebrow="FAQ"
-          title="Frequently Asked Questions"
-          subtitle="Everything you need to know about setting up your business presence."
-          className="mb-16"
-        />
+    <section className="bg-white py-24">
+      <div className="max-w-4xl mx-auto px-6 md:px-8">
+        
+        <span className="text-gold tracking-[0.3em] text-xs font-semibold uppercase block mb-4">
+          FAQ
+        </span>
+        <h2 className="text-4xl font-light font-[family-name:var(--font-heading)] text-gray-900 mb-16">
+          Common questions.
+        </h2>
 
-        <div className="max-w-3xl mx-auto">
-          <Accordion.Root type="single" collapsible className="flex flex-col gap-4">
-            {FAQS.map((faq, i) => (
-              <Accordion.Item 
-                key={i} 
-                value={`item-${i}`}
-                className="bg-white border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-navy focus-within:ring-offset-2"
-              >
-                <Accordion.Header>
-                  <Accordion.Trigger className="w-full flex items-center justify-between px-6 py-5 text-left text-navy font-bold hover:text-gold transition-colors [&[data-state=open]>svg]:rotate-180">
-                    {faq.question}
-                    <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
-                  </Accordion.Trigger>
-                </Accordion.Header>
-                <Accordion.Content className="px-6 pb-5 pt-0 text-dark-gray/80 text-sm leading-relaxed overflow-hidden data-[state=closed]:animate-[slideUp_300ms_ease-out] data-[state=open]:animate-[slideDown_300ms_ease-out]">
-                  {faq.answer}
-                </Accordion.Content>
-              </Accordion.Item>
-            ))}
-          </Accordion.Root>
-        </div>
+        <Accordion.Root type="single" collapsible className="w-full">
+          {FAQS.map((faq, i) => (
+            <Accordion.Item key={i} value={`item-${i}`} className="border-b border-gray-100">
+              <Accordion.Header>
+                <Accordion.Trigger className="w-full flex items-center justify-between py-5 text-left text-gray-900 text-base font-medium group transition-colors hover:text-gold outline-none">
+                  {faq.q}
+                  <span className="text-gray-400 group-data-[state=open]:hidden">+</span>
+                  <span className="text-gray-400 hidden group-data-[state=open]:block">−</span>
+                </Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <p className="text-gray-500 text-sm font-light leading-relaxed pb-5 pr-8">
+                  {faq.a}
+                </p>
+              </Accordion.Content>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+
       </div>
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes slideDown {
-          from { height: 0; opacity: 0; }
-          to { height: var(--radix-accordion-content-height); opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { height: var(--radix-accordion-content-height); opacity: 1; }
-          to { height: 0; opacity: 0; }
-        }
-      `}} />
     </section>
   )
 }
