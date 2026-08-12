@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Contract performance:</strong> Processing necessary to fulfil the service agreement between you and Paper Street.</li>
             <li><strong>Legal obligation:</strong> Processing required by Kenyan law, including KYC, anti-money laundering, and tax obligations.</li>
             <li><strong>Legitimate interests:</strong> Processing for fraud prevention, service improvement, and direct marketing of similar services to existing clients, where these interests are not overridden by your rights.</li>
-            <li><strong>Consent:</strong> Where we rely on consent (for example, for certain marketing communications), you may withdraw your consent at any time by contacting us at privacy@paperstreet.co.ke.</li>
+            <li><strong>Consent:</strong> Where we rely on consent (for example, for certain marketing communications), you may withdraw your consent at any time by contacting us at privacy@paperstreet.africa.</li>
           </ul>
 
           <h2>5. How We Share Your Information</h2>
@@ -176,7 +176,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Right to withdraw consent:</strong> Where processing is based on consent, you may withdraw consent at any time without affecting the lawfulness of processing prior to withdrawal.</li>
           </ul>
           <p>
-            To exercise any of these rights, email us at <a href="mailto:privacy@paperstreet.co.ke">privacy@paperstreet.co.ke</a> with your name, email address, and a description of your request. We will respond within 21 days. If you are not satisfied with our response, you have the right to lodge a complaint with the Office of the Data Protection Commissioner of Kenya.
+            To exercise any of these rights, email us at <a href="mailto:privacy@paperstreet.africa">privacy@paperstreet.africa</a> with your name, email address, and a description of your request. We will respond within 21 days. If you are not satisfied with our response, you have the right to lodge a complaint with the Office of the Data Protection Commissioner of Kenya.
           </p>
 
           <h2>10. International Data Transfers</h2>
@@ -186,7 +186,7 @@ export default function PrivacyPolicyPage() {
 
           <h2>11. Children's Privacy</h2>
           <p>
-            Our services are intended for use by businesses and individuals aged 18 and above. We do not knowingly collect personal data from anyone under the age of 18. If you believe we have inadvertently collected data from a minor, please contact us immediately at privacy@paperstreet.co.ke and we will delete it promptly.
+            Our services are intended for use by businesses and individuals aged 18 and above. We do not knowingly collect personal data from anyone under the age of 18. If you believe we have inadvertently collected data from a minor, please contact us immediately at privacy@paperstreet.africa and we will delete it promptly.
           </p>
 
           <h2>12. Updates to This Policy</h2>
@@ -199,7 +199,7 @@ export default function PrivacyPolicyPage() {
             If you have any questions, concerns, or complaints about this Privacy Policy or how we handle your personal data, please contact our Data Protection Officer:
           </p>
           <ul>
-            <li><strong>Email:</strong> privacy@paperstreet.co.ke</li>
+            <li><strong>Email:</strong> privacy@paperstreet.africa</li>
             <li><strong>Phone:</strong> +254 700 000 000</li>
             <li><strong>Postal address:</strong> Data Protection Officer, Paper Street, Westlands Business Park, Waiyaki Way, Nairobi, Kenya</li>
           </ul>

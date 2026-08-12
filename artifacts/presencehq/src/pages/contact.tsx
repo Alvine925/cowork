@@ -24,7 +24,7 @@ const contactDetails = [
     content: 'Westlands Business Park, Waiyaki Way, Nairobi, Kenya',
   },
   { Icon: Phone, label: 'Phone and WhatsApp', content: '+254 700 000 000' },
-  { Icon: Mail, label: 'Email', content: 'hello@paperstreet.co.ke' },
+  { Icon: Mail, label: 'Email', content: 'hello@paperstreet.africa' },
   {
     Icon: Clock,
     label: 'Business Hours',

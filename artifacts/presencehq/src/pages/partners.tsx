@@ -50,7 +50,7 @@ export default function PartnersPage() {
           </div>
 
           <a
-            href="mailto:partners@paperstreet.co.ke"
+            href="mailto:partners@paperstreet.africa"
             className="inline-block bg-navy text-white px-10 py-3.5 text-xs uppercase tracking-widest hover:bg-navy-600 transition-colors"
           >
             Contact Our Partnerships Team

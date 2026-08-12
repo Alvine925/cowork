@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Link } from 'wouter'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -82,6 +82,7 @@ export function Hero() {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const [direction, setDirection] = useState(1) // 1 = forward, -1 = backward
+  const shouldReduceMotion = useReducedMotion()
 
   const go = useCallback(
     (index: number, dir: number) => {
@@ -130,12 +131,31 @@ export function Hero() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.9, ease: 'easeInOut' }}
         >
-          <img
+          <motion.img
+            key={`image-${current}`}
             src={slide.image}
             alt=""
             className="w-full h-full object-cover"
+            initial={shouldReduceMotion ? { scale: 1 } : { scale: 1.08, x: direction > 0 ? '-2%' : '2%', y: '-1%' }}
+            animate={
+              shouldReduceMotion
+                ? { scale: 1 }
+                : { scale: 1.16, x: direction > 0 ? '2%' : '-2%', y: '1%' }
+            }
+            transition={{ duration: AUTOPLAY_MS / 1000 + 1.4, ease: 'linear' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25" />
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25"
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: [0.92, 1, 0.92] }}
+            transition={shouldReduceMotion ? undefined : { duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {!shouldReduceMotion && (
+            <motion.div
+              className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-2xl"
+              animate={{ x: ['0%', '430%'] }}
+              transition={{ duration: 8, repeat: Infinity, repeatDelay: 2, ease: 'easeInOut' }}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
 

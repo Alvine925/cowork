@@ -103,7 +103,11 @@ export function FeaturedPackages() {
               </div>
 
               <p className="text-white/40 text-xs leading-relaxed mb-6">
-                Monthly security deposit: <span className="text-white/70">KES {plan.deposit.toLocaleString()}</span>
+                {isAnnual ? (
+                  <span className="text-white/70">No security deposit for annual plans.</span>
+                ) : (
+                  <>Monthly security deposit: <span className="text-white/70">KES {plan.deposit.toLocaleString()}</span></>
+                )}
               </p>
 
               <Link

@@ -58,7 +58,7 @@ export function Footer() {
               Nairobi, Kenya
             </p>
             <p className="text-xs text-white/40 mt-2">+254 700 000 000</p>
-            <p className="text-xs text-white/40">hello@paperstreet.co.ke</p>
+            <p className="text-xs text-white/40">hello@paperstreet.africa</p>
           </div>
         </div>
 

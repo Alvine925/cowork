@@ -39,6 +39,7 @@ The site presents Paper Street virtual office memberships, business address and 
 ## User preferences
 
 - Brand name: Paper Street.
+- Public domain: paperstreet.africa.
 - Pricing and membership terms must follow the uploaded Basic, Professional, and Premium package document.
 
 ## Gotchas
