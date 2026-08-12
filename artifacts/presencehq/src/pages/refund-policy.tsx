@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
           <h2>2. Refunds</h2>
           <p>Setup fees (if any) and services already rendered are non-refundable. If you cancel a prepaid annual plan, we will calculate the prorated amount based on the standard monthly rate for the months used, and refund the remaining balance within 14 business days.</p>
           <h2>3. Contact</h2>
-          <p>To request a refund or cancellation, email <a href="mailto:billing@presencehq.com">billing@presencehq.com</a> with your account details.</p>
+          <p>To request a refund or cancellation, email <a href="mailto:billing@paperstreet.co.ke">billing@paperstreet.co.ke</a> with your account details.</p>
         </div>
       </section>
     </>

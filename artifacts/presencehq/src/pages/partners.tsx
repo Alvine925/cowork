@@ -4,7 +4,7 @@ import { CallToAction } from '@/components/home/CallToAction'
 const PROGRAMS = [
   {
     title: 'Referral Partners',
-    desc: 'Earn competitive commissions for every client you introduce to PresenceHQ. Ideal for accountants, lawyers, and business advisors who serve SMEs.',
+    desc: 'Earn competitive commissions for every client you introduce to Paper Street. Ideal for accountants, lawyers, and business advisors who serve SMEs.',
   },
   {
     title: 'Integration Partners',
@@ -29,7 +29,7 @@ export default function PartnersPage() {
         <div className="container mx-auto px-6 md:px-12 max-w-4xl">
           <div className="mb-14 max-w-2xl">
             <span className="text-gold tracking-[0.3em] text-[10px] font-semibold uppercase block mb-3">Partner Program</span>
-            <h2 className="text-2xl font-light font-heading text-navy mb-5">Become a PresenceHQ Partner</h2>
+            <h2 className="text-2xl font-light font-heading text-navy mb-5">Become a Paper Street Partner</h2>
             <p className="text-dark-gray/65 font-light text-sm leading-relaxed">
               We work with accountants, lawyers, business consultants, and technology providers who serve SMEs in Kenya. Our partner program lets you offer business presence solutions to your clients while earning referral commissions.
             </p>
@@ -50,7 +50,7 @@ export default function PartnersPage() {
           </div>
 
           <a
-            href="mailto:partners@presencehq.com"
+            href="mailto:partners@paperstreet.co.ke"
             className="inline-block bg-navy text-white px-10 py-3.5 text-xs uppercase tracking-widest hover:bg-navy-600 transition-colors"
           >
             Contact Our Partnerships Team

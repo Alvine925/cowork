@@ -14,7 +14,7 @@ export function Testimonials() {
         <div className="text-6xl text-gold font-heading leading-none mb-6 select-none">"</div>
 
         <blockquote className="max-w-3xl text-2xl md:text-3xl font-light font-heading italic leading-relaxed mb-8">
-          PresenceHQ gave our startup instant credibility. Clients assumed we had a full office in Nairobi from day one.
+          Paper Street gave our startup instant credibility. Clients assumed we had a full office in Nairobi from day one.
         </blockquote>
 
         <div className="flex flex-col items-center">

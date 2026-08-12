@@ -15,7 +15,7 @@ export default function EldoretPage() {
       stats: [
         { value: 'Top 5', label: 'Largest City in Kenya' },
         { value: '80%', label: 'Uganda Imports via This Corridor' },
-        { value: 'KES 2,500', label: 'Starting From / Month' },
+        { value: 'KES 4,200', label: 'Starting From / Month' },
         { value: '24 hr', label: 'Address Activation' },
       ],
       reasons: [

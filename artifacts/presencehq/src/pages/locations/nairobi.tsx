@@ -15,7 +15,7 @@ export default function NairobiPage() {
       stats: [
         { value: '#1', label: 'Business Hub in East Africa' },
         { value: '100+', label: 'Multinationals Headquartered Here' },
-        { value: 'KES 2,500', label: 'Starting From / Month' },
+        { value: 'KES 4,200', label: 'Starting From / Month' },
         { value: '24 hr', label: 'Address Activation' },
       ],
       reasons: [

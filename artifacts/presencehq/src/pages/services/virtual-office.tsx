@@ -233,7 +233,7 @@ export default function VirtualOfficePage() {
           >
             {[
               { num: '< 24 hrs', label: 'Setup Time' },
-              { num: 'KES 2,500', label: 'Starting From / Month' },
+              { num: 'KES 4,200', label: 'Starting From / Month' },
               { num: '0', label: 'Leases to Sign' },
             ].map((s, i) => (
               <motion.div key={i} variants={up}>

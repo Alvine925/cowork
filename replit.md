@@ -1,10 +1,11 @@
-# [Project name]
+# Paper Street
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Paper Street is a Kenya-focused virtual office platform offering professional business addresses, mail handling, and flexible workspace memberships.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/presencehq run dev` — run the Paper Street website (managed workflow supplies `PORT` and `BASE_PATH`)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -22,23 +23,27 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/presencehq/src/pages/pricing.tsx` — pricing page with onboarding requirements and payment structure
+- `artifacts/presencehq/src/components/home/FeaturedPackages.tsx` — Basic, Professional, and Premium membership cards
+- `attached_assets/Pasted-Virtual-Office-Packages-Basic-Professional-Premium-Annu_1786539761576.txt` — user-provided pricing source
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The Paper Street site remains in the imported React/Vite workspace; no framework or package migration was performed.
+- Annual and monthly prices are represented directly from the supplied terms; monthly deposits are shown separately and are not added to the recurring price.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The site presents Paper Street virtual office memberships, business address and mail services, flexible workspace offerings, locations, contact/onboarding information, and legal policies.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Brand name: Paper Street.
+- Pricing and membership terms must follow the uploaded Basic, Professional, and Premium package document.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The Vite config requires `PORT` and `BASE_PATH`; use the managed artifact workflow or provide both variables for manual commands.
 
 ## Pointers
 

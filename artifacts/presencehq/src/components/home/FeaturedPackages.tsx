@@ -4,27 +4,27 @@ import { Link } from 'wouter'
 
 const PLANS = [
   {
-    name: 'Starter',
-    price: '2,500',
-    features: ['Prime Business Address', 'Mail & Package Handling', 'Email Notifications', 'Standard Reception'],
+    name: 'Basic',
+    annual: 42000,
+    monthly: 4200,
+    deposit: 8400,
+    features: ['Professional business address in Kisumu', 'Mail and document receiving', 'Mail notifications', 'Secure mail storage', 'Mail collection and basic handling', 'Address use on approved business materials', 'Customer support'],
     featured: false,
   },
   {
     name: 'Professional',
-    price: '5,500',
-    features: ['Everything in Starter', '2 Hrs Meeting Room/mo', 'Dedicated Phone Number', 'Mail Forwarding (Weekly)'],
+    annual: 60000,
+    monthly: 6000,
+    deposit: 12000,
+    features: ['Everything in Basic', 'Coworking and desk access', 'Meeting room access', 'Document scanning', 'Business phone/WhatsApp option', 'Visitor reception', 'Priority mail handling', 'Mail forwarding at applicable charges'],
     featured: true,
   },
   {
     name: 'Premium',
-    price: '9,500',
-    features: ['Everything in Pro', '5 Hrs Meeting Room/mo', 'Hot Desk Access (3x/wk)', 'Priority Mail Forwarding'],
-    featured: false,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    features: ['Everything in Premium', 'Dedicated Desks', 'Unlimited Meeting Rooms', 'Dedicated Account Manager'],
+    annual: 120000,
+    monthly: 12000,
+    deposit: 24000,
+    features: ['Everything in Professional', 'Increased coworking and desk access', 'Increased meeting room access', 'Mail forwarding allowance', 'Dedicated business phone/WhatsApp option', 'Client meeting support', 'Document scanning and handling', 'Priority customer support', 'More flexible facility access'],
     featured: false,
   },
 ]
@@ -43,7 +43,7 @@ export function FeaturedPackages() {
             Simple, transparent pricing.
           </h2>
           <p className="text-white/60 text-lg font-light max-w-xl">
-            Choose the package that fits your business needs. Scale up instantly.
+            Choose the virtual office membership that fits your business needs. Annual customers get the best available rate; monthly customers keep the flexibility they need.
           </p>
         </div>
 
@@ -73,24 +73,23 @@ export function FeaturedPackages() {
           </button>
         </div>
 
-        <div className="flex flex-col xl:flex-row w-full overflow-hidden rounded-lg border border-white/10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 w-full overflow-hidden rounded-lg border border-white/10">
           {PLANS.map((plan, i) => (
             <div
               key={i}
-              className={`flex-1 flex flex-col p-8 lg:p-10 ${i !== PLANS.length - 1 ? 'xl:border-r xl:border-white/10 border-b xl:border-b-0 border-white/10' : ''}`}
+              className={`flex flex-col p-8 lg:p-10 ${i !== PLANS.length - 1 ? 'lg:border-r lg:border-white/10 border-b lg:border-b-0 border-white/10' : ''}`}
             >
-              <h3 className="text-white/50 text-xs tracking-widest uppercase mb-4">{plan.name}</h3>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-white/50 text-xs tracking-widest uppercase">{plan.name}</h3>
+                {plan.featured && (
+                  <span className="text-[10px] uppercase tracking-widest text-navy bg-gold px-2 py-1 rounded-sm">Most popular</span>
+                )}
+              </div>
               <div className="mb-6">
                 <span className="text-4xl font-bold font-heading text-white">
-                  {plan.price === 'Custom'
-                    ? 'Custom'
-                    : isAnnual
-                    ? (parseInt(plan.price.replace(',', '')) * 10).toLocaleString()
-                    : plan.price}
+                  KES {(isAnnual ? plan.annual : plan.monthly).toLocaleString()}
                 </span>
-                {plan.price !== 'Custom' && (
-                  <span className="text-white/40 text-xs ml-2">/ {isAnnual ? 'yr' : 'mo'}</span>
-                )}
+                <span className="text-white/40 text-xs ml-2">/ {isAnnual ? 'yr' : 'mo'}</span>
               </div>
 
               <div className="w-full border-t border-gold mb-6"></div>
@@ -103,6 +102,10 @@ export function FeaturedPackages() {
                 ))}
               </div>
 
+              <p className="text-white/40 text-xs leading-relaxed mb-6">
+                Monthly security deposit: <span className="text-white/70">KES {plan.deposit.toLocaleString()}</span>
+              </p>
+
               <Link
                 href="/contact"
                 className={`w-full py-4 text-sm text-center uppercase tracking-widest transition-colors block ${
@@ -111,7 +114,7 @@ export function FeaturedPackages() {
                     : 'border border-white/30 text-white hover:bg-white hover:text-navy'
                 }`}
               >
-                {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                Get Started
               </Link>
             </div>
           ))}

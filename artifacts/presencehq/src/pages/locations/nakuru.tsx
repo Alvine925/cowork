@@ -15,7 +15,7 @@ export default function NakuruPage() {
       stats: [
         { value: 'Top 4', label: 'Largest City in Kenya' },
         { value: '#1', label: 'Rift Valley Commercial Hub' },
-        { value: 'KES 2,500', label: 'Starting From / Month' },
+        { value: 'KES 4,200', label: 'Starting From / Month' },
         { value: '24 hr', label: 'Address Activation' },
       ],
       reasons: [

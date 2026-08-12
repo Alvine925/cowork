@@ -28,7 +28,7 @@ const slides = [
         <span className="text-gold italic">Nairobi.</span>
       </>
     ),
-    body: 'Register your business at Upper Hill, Westlands, or Karen — Kenya\'s most sought-after commercial districts — from KES 2,500/month.',
+    body: 'Register your business at a professional Paper Street address in Kisumu from KES 4,200/month.',
     primary: { label: 'View Locations', href: '/locations' },
     secondary: { label: 'See Pricing', href: '/pricing' },
   },
@@ -70,7 +70,7 @@ const slides = [
         <span className="text-gold italic">Your Costs.</span>
       </>
     ),
-    body: 'From sole traders to regional enterprises — PresenceHQ flexes with you. Start small, expand across Kenya as you grow.',
+    body: 'From sole traders to growing enterprises — Paper Street flexes with you. Start small, expand your presence as you grow.',
     primary: { label: 'View Plans', href: '/pricing' },
     secondary: { label: 'Talk to Us', href: '/contact' },
   },

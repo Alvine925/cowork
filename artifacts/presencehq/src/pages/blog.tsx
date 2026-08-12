@@ -185,7 +185,7 @@ export default function InsightsPage() {
       <PageHero
         image="https://images.unsplash.com/photo-1455849318743-b2233052fcff?w=1600&auto=format&q=80"
         eyebrow="Insights"
-        title="The PresenceHQ Journal."
+        title="The Paper Street Journal."
         subtitle="Business guides, compliance updates, and practical advice for entrepreneurs operating in Kenya."
         height="h-[50vh] min-h-[360px]"
       />

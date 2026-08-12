@@ -80,7 +80,7 @@ export function Navbar() {
     <>
       <header className={navCls}>
         <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
-          <Link href="/" className={logoCls}>PRESENCEHQ</Link>
+          <Link href="/" className={logoCls}>PAPER STREET</Link>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-8">

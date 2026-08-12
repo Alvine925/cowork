@@ -19,13 +19,13 @@ export default function PrivacyPolicyPage() {
 
           <h2>1. Introduction and Who We Are</h2>
           <p>
-            PresenceHQ Limited ("PresenceHQ", "we", "us", or "our") is a company incorporated in Kenya that provides virtual office services and optional add-ons to businesses across Kenya. Our registered office is at Westlands Business Park, Waiyaki Way, Nairobi, Kenya.
+            Paper Street ("Paper Street", "we", "us", or "our") provides virtual office services and optional add-ons to businesses across Kenya. Our office is at Westlands Business Park, Waiyaki Way, Nairobi, Kenya.
           </p>
           <p>
-            This Privacy Policy explains how we collect, use, store, and share personal data about you when you visit our website, sign up for our services, communicate with us, or visit any of our physical locations. It applies to all clients, visitors, and contacts of PresenceHQ.
+            This Privacy Policy explains how we collect, use, store, and share personal data about you when you visit our website, sign up for our services, communicate with us, or visit any of our physical locations. It applies to all clients, visitors, and contacts of Paper Street.
           </p>
           <p>
-            PresenceHQ is committed to protecting your personal information in accordance with the Kenya Data Protection Act, 2019, and any implementing regulations issued thereunder. We are registered as a data controller with the Office of the Data Protection Commissioner (ODPC) of Kenya.
+            Paper Street is committed to protecting your personal information in accordance with the Kenya Data Protection Act, 2019, and any implementing regulations issued thereunder. We are registered as a data controller with the Office of the Data Protection Commissioner (ODPC) of Kenya.
           </p>
 
           <h2>2. Information We Collect</h2>
@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
 
           <h3>3.1 Providing and Managing Your Services</h3>
           <ul>
-            <li>Activating and administering your PresenceHQ subscription and any associated services.</li>
+            <li>Activating and administering your Paper Street subscription and any associated services.</li>
             <li>Verifying your identity and business details as required by Kenyan KYC regulations.</li>
             <li>Notifying you of mail and parcels received at your registered address.</li>
             <li>Managing any optional add-on services you have subscribed to, such as additional mail forwarding or workspace access.</li>
@@ -93,10 +93,10 @@ export default function PrivacyPolicyPage() {
           <h2>4. Legal Basis for Processing</h2>
           <p>We process your personal data on the following legal grounds under the Kenya Data Protection Act:</p>
           <ul>
-            <li><strong>Contract performance:</strong> Processing necessary to fulfil the service agreement between you and PresenceHQ.</li>
+            <li><strong>Contract performance:</strong> Processing necessary to fulfil the service agreement between you and Paper Street.</li>
             <li><strong>Legal obligation:</strong> Processing required by Kenyan law, including KYC, anti-money laundering, and tax obligations.</li>
             <li><strong>Legitimate interests:</strong> Processing for fraud prevention, service improvement, and direct marketing of similar services to existing clients, where these interests are not overridden by your rights.</li>
-            <li><strong>Consent:</strong> Where we rely on consent (for example, for certain marketing communications), you may withdraw your consent at any time by contacting us at privacy@presencehq.com.</li>
+            <li><strong>Consent:</strong> Where we rely on consent (for example, for certain marketing communications), you may withdraw your consent at any time by contacting us at privacy@paperstreet.co.ke.</li>
           </ul>
 
           <h2>5. How We Share Your Information</h2>
@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
 
           <h3>5.3 Business Transfers</h3>
           <p>
-            If PresenceHQ is involved in a merger, acquisition, or sale of all or a portion of its assets, your personal data may be transferred as part of that transaction. We will provide notice via email or a prominent notice on our website prior to your data being transferred and subject to a different privacy policy.
+            If Paper Street is involved in a merger, acquisition, or sale of all or a portion of its assets, your personal data may be transferred as part of that transaction. We will provide notice via email or a prominent notice on our website prior to your data being transferred and subject to a different privacy policy.
           </p>
 
           <h3>5.4 With Your Consent</h3>
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
 
           <h2>7. Data Security</h2>
           <p>
-            PresenceHQ implements a range of technical and organisational measures to protect your personal data from unauthorised access, loss, misuse, disclosure, alteration, or destruction, including:
+            Paper Street implements a range of technical and organisational measures to protect your personal data from unauthorised access, loss, misuse, disclosure, alteration, or destruction, including:
           </p>
           <ul>
             <li>Encryption of data in transit using TLS 1.2 or higher.</li>
@@ -176,7 +176,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Right to withdraw consent:</strong> Where processing is based on consent, you may withdraw consent at any time without affecting the lawfulness of processing prior to withdrawal.</li>
           </ul>
           <p>
-            To exercise any of these rights, email us at <a href="mailto:privacy@presencehq.com">privacy@presencehq.com</a> with your name, email address, and a description of your request. We will respond within 21 days. If you are not satisfied with our response, you have the right to lodge a complaint with the Office of the Data Protection Commissioner of Kenya.
+            To exercise any of these rights, email us at <a href="mailto:privacy@paperstreet.co.ke">privacy@paperstreet.co.ke</a> with your name, email address, and a description of your request. We will respond within 21 days. If you are not satisfied with our response, you have the right to lodge a complaint with the Office of the Data Protection Commissioner of Kenya.
           </p>
 
           <h2>10. International Data Transfers</h2>
@@ -186,7 +186,7 @@ export default function PrivacyPolicyPage() {
 
           <h2>11. Children's Privacy</h2>
           <p>
-            Our services are intended for use by businesses and individuals aged 18 and above. We do not knowingly collect personal data from anyone under the age of 18. If you believe we have inadvertently collected data from a minor, please contact us immediately at privacy@presencehq.com and we will delete it promptly.
+            Our services are intended for use by businesses and individuals aged 18 and above. We do not knowingly collect personal data from anyone under the age of 18. If you believe we have inadvertently collected data from a minor, please contact us immediately at privacy@paperstreet.co.ke and we will delete it promptly.
           </p>
 
           <h2>12. Updates to This Policy</h2>
@@ -199,9 +199,9 @@ export default function PrivacyPolicyPage() {
             If you have any questions, concerns, or complaints about this Privacy Policy or how we handle your personal data, please contact our Data Protection Officer:
           </p>
           <ul>
-            <li><strong>Email:</strong> privacy@presencehq.com</li>
+            <li><strong>Email:</strong> privacy@paperstreet.co.ke</li>
             <li><strong>Phone:</strong> +254 700 000 000</li>
-            <li><strong>Postal address:</strong> Data Protection Officer, PresenceHQ Limited, Westlands Business Park, Waiyaki Way, Nairobi, Kenya</li>
+            <li><strong>Postal address:</strong> Data Protection Officer, Paper Street, Westlands Business Park, Waiyaki Way, Nairobi, Kenya</li>
           </ul>
           <p>
             If you are not satisfied with our response to your complaint, you have the right to contact the Office of the Data Protection Commissioner of Kenya at <a href="https://www.odpc.go.ke" target="_blank" rel="noopener noreferrer">www.odpc.go.ke</a>.

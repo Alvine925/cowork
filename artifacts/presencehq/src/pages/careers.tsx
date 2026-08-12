@@ -14,7 +14,7 @@ export default function CareersPage() {
       <PageHero
         image="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1600&auto=format&q=80"
         eyebrow="Careers"
-        title="Join the PresenceHQ Team."
+        title="Join the Paper Street Team."
         subtitle="Help us build the operating system for professional business presence across Africa."
       />
       <section className="py-24 bg-white">
@@ -31,7 +31,7 @@ export default function CareersPage() {
                   <p className="text-dark-gray/50 text-xs mt-1 font-light">{job.dept} · {job.location} · {job.type}</p>
                 </div>
                 <a
-                  href="mailto:careers@presencehq.com"
+                  href="mailto:careers@paperstreet.co.ke"
                   className="shrink-0 border border-navy text-navy text-[11px] px-6 py-2 hover:bg-navy hover:text-white transition-colors uppercase tracking-wider font-medium w-fit"
                 >
                   Apply
@@ -41,7 +41,7 @@ export default function CareersPage() {
           </div>
           <p className="text-dark-gray/40 text-xs mt-12 font-light">
             Do not see a role that fits? Send your CV to{' '}
-            <a href="mailto:careers@presencehq.com" className="text-gold hover:underline">careers@presencehq.com</a>
+            <a href="mailto:careers@paperstreet.co.ke" className="text-gold hover:underline">careers@paperstreet.co.ke</a>
           </p>
         </div>
       </section>

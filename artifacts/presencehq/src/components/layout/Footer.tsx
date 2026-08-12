@@ -6,7 +6,7 @@ export function Footer() {
       {/* Decorative large background text */}
       <div className="absolute top-0 right-0 -translate-y-1/4 select-none pointer-events-none">
         <span className="text-[120px] md:text-[200px] font-bold text-white/5 tracking-tighter leading-none font-heading">
-          PRESENCEHQ
+          PAPER STREET
         </span>
       </div>
 
@@ -14,7 +14,7 @@ export function Footer() {
         {/* Row 1 */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-12">
           <Link href="/" className="text-2xl font-bold tracking-[0.2em] uppercase text-white font-heading">
-            PRESENCEHQ
+            PAPER STREET
           </Link>
           <nav className="flex flex-wrap items-center gap-6 md:gap-10">
             {['Services', 'Locations', 'Pricing', 'About', 'Contact'].map((item) => (
@@ -58,14 +58,14 @@ export function Footer() {
               Nairobi, Kenya
             </p>
             <p className="text-xs text-white/40 mt-2">+254 700 000 000</p>
-            <p className="text-xs text-white/40">hello@presencehq.com</p>
+            <p className="text-xs text-white/40">hello@paperstreet.co.ke</p>
           </div>
         </div>
 
         {/* Bottom Row */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-white/5">
           <p className="text-xs text-white/20">
-            &copy; {new Date().getFullYear()} PresenceHQ. All rights reserved.
+            &copy; {new Date().getFullYear()} Paper Street. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/privacy-policy" className="text-xs text-white/20 hover:text-white transition-colors">Privacy Policy</Link>

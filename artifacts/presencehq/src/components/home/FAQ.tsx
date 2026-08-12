@@ -11,15 +11,23 @@ const FAQS = [
   },
   {
     q: 'Are the meeting rooms included in all packages?',
-    a: 'Meeting rooms are included in our Professional and Premium plans. Starter plan users can book meeting rooms on a pay-as-you-go basis at a discounted member rate.',
+    a: 'Meeting room access is included in the Professional and Premium plans, alongside coworking/desk access. Basic members can ask about available add-on access.',
   },
   {
     q: 'How fast can my virtual office be set up?',
     a: 'Account activation takes less than 24 hours once we receive your signed agreement and standard KYC (Know Your Customer) documents.',
   },
   {
+    q: 'What do I pay when I choose monthly billing?',
+    a: 'Monthly customers pay the first month’s subscription plus a two-month security deposit. For example, Professional starts with KES 18,000: KES 6,000 for the first month and KES 12,000 as the deposit.',
+  },
+  {
+    q: 'What documents are required to get started?',
+    a: 'Registered companies provide their certificate of incorporation or registration, company registration documents, valid ID or passport for at least two directors, company contact details, and the details of the authorized account manager.',
+  },
+  {
     q: 'Do I have to sign a long-term lease?',
-    a: 'No. Our services operate on flexible rolling contracts. You can choose month-to-month billing or opt for an annual plan to receive two months free.',
+    a: 'No. Choose annual billing for the best available rate, or monthly billing for more flexibility. Annual customers pay the full 12 months upfront and do not pay a security deposit under the current plan terms.',
   },
 ]
 

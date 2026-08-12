@@ -36,7 +36,7 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>What a Virtual Office Actually Costs</h2>
       <p>
-        A PresenceHQ virtual office package starts from KES 4,500 per month and includes a prestigious business address, mail handling, a dedicated phone number with call answering, and access to meeting rooms on a pay-per-use basis. The premium package, which includes more meeting room hours and priority mail handling, is KES 12,000 per month.
+        A Paper Street virtual office package starts from KES 4,200 per month and includes a professional business address, mail handling, and customer support. Professional and Premium memberships add workspace access, meeting rooms, scanning, and priority handling.
       </p>
       <p>
         Even at the premium tier, the annual cost is KES 144,000. That is a saving of over KES 1.85 million per year compared with a modest physical office in the same area.
@@ -99,7 +99,7 @@ const articleContent: Record<string, React.ReactNode> = {
         <li>KRA PIN certificates for each director and shareholder (if they do not have a PIN, they must register at iTax before proceeding).</li>
         <li>A memorandum and articles of association (the BRS portal provides a standard template that covers most businesses).</li>
         <li>The proposed share structure: how many shares, at what nominal value, and who holds what percentage.</li>
-        <li>Details of the registered office address (this is where PresenceHQ can help, as our addresses are accepted as registered office addresses by the BRS).</li>
+        <li>Details of the registered office address (this is where Paper Street can help, as our addresses are accepted as registered office addresses by the BRS).</li>
       </ul>
 
       <h2>Step 4: Submit the Application Online</h2>
@@ -132,7 +132,7 @@ const articleContent: Record<string, React.ReactNode> = {
         If your documents are in order and you work through the process efficiently, a private limited company can be fully registered and operational in 7 to 14 days. The most common delays are caused by mismatches between the name on an ID and the name on a KRA PIN, or missing director information.
       </p>
       <p>
-        PresenceHQ's company registration assistance service handles all document preparation and eCitizen submissions on your behalf, including follow-up with the BRS on your application status. Contact us to get started.
+        Paper Street's company registration assistance service handles all document preparation and eCitizen submissions on your behalf, including follow-up with the BRS on your application status. Contact us to get started.
       </p>
     </>
   ),
@@ -151,7 +151,7 @@ const articleContent: Record<string, React.ReactNode> = {
         Contrast that with "Suite 400, Westlands Business Park, Waiyaki Way, Nairobi." The same mental process fires in the opposite direction. The business appears established, professional, and worth engaging with seriously.
       </p>
       <p>
-        This is not a minor effect. PresenceHQ clients regularly report that upgrading to a professional address accelerated their ability to get meetings with larger companies, pass supplier vetting processes, and open bank accounts without being asked to justify their business legitimacy at length.
+        This is not a minor effect. Paper Street clients regularly report that upgrading to a professional address accelerated their ability to get meetings with larger companies, pass supplier vetting processes, and open bank accounts without being asked to justify their business legitimacy at length.
       </p>
 
       <h2>What a Business Address Actually Unlocks</h2>
@@ -163,31 +163,31 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h3>Government Tenders and Procurement</h3>
       <p>
-        The Public Procurement and Asset Disposal Act requires that businesses tendering for government contracts have a verifiable physical address. A professional business address satisfies this requirement. For tenders above certain thresholds, site visits may be conducted, and PresenceHQ provides a staffed reception to receive visitors.
+        The Public Procurement and Asset Disposal Act requires that businesses tendering for government contracts have a verifiable physical address. A professional business address satisfies this requirement. For tenders above certain thresholds, site visits may be conducted, and Paper Street provides a staffed reception to receive visitors.
       </p>
 
       <h3>Company Registration</h3>
       <p>
-        The Business Registration Service requires a registered office address for all limited companies. PresenceHQ addresses are accepted as registered office addresses by the BRS.
+        The Business Registration Service requires a registered office address for all limited companies. Paper Street addresses are accepted as registered office addresses by the BRS.
       </p>
 
       <h3>Regulatory Licences</h3>
       <p>
-        Sector regulators including the CBK, CMA, and IRA require companies to have a verifiable business address. Some licences specifically require an address in a commercial building, which a PresenceHQ address satisfies.
+        Sector regulators including the CBK, CMA, and IRA require companies to have a verifiable business address. Some licences specifically require an address in a commercial building, which a Paper Street address satisfies.
       </p>
 
       <h2>Five Cities, One Professional Standard</h2>
       <p>
-        PresenceHQ provides professional business addresses in Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret. Each address is in a recognised commercial area, not in a residential estate or a shared co-working space that is listed at a different name. When someone searches the address, they find a real commercial building with professional staff.
+        Paper Street provides professional business addresses in Kenya. Each address is in a recognised commercial area, not in a residential estate or a shared co-working space that is listed at a different name. When someone searches the address, they find a real commercial building with professional staff.
       </p>
       <p>
         This matters particularly for businesses expanding beyond Nairobi. Having an address in Mombasa signals to coastal clients and partners that you are present in their market, not just emailing from Nairobi.
       </p>
 
-      <h2>What Is Included with a PresenceHQ Business Address</h2>
+      <h2>What Is Included with a Paper Street Business Address</h2>
       <p>A business address subscription includes:</p>
       <ul>
-        <li>Use of the PresenceHQ address as your official business address for all correspondence, banking, government filings, and marketing materials.</li>
+        <li>Use of the Paper Street address as your official business address for all correspondence, banking, government filings, and marketing materials.</li>
         <li>Mail receipt, notification within one business day, and storage for up to 30 days.</li>
         <li>Access to a staffed reception to receive visitors and parcels on your behalf.</li>
         <li>Option to add mail scanning and forwarding, phone answering, and meeting room access.</li>
@@ -257,9 +257,9 @@ const articleContent: Record<string, React.ReactNode> = {
         <li><strong>Talent:</strong> Moi University and a growing technical and vocational training sector produce graduates in engineering, agriculture, and business. Talent costs are lower than Nairobi.</li>
       </ul>
 
-      <h2>How PresenceHQ Supports Your Expansion</h2>
+      <h2>How Paper Street Supports Your Expansion</h2>
       <p>
-        Rather than committing to a physical lease in a city you are still exploring, a PresenceHQ address in Mombasa, Kisumu, Nakuru, or Eldoret lets you establish a credible local presence immediately. You get a local address for government filings and banking, a local phone number answered in your company name, and meeting room access for when you are in town. As your revenue from that market grows, the decision to invest in a physical office becomes data-driven rather than speculative.
+        Rather than committing to a physical lease in a city you are still exploring, a Paper Street address lets you establish a credible local presence immediately. You get a local address for government filings and banking, a local phone number answered in your company name, and meeting room access for when you are in town. As your revenue from that market grows, the decision to invest in a physical office becomes data-driven rather than speculative.
       </p>
     </>
   ),
@@ -299,7 +299,7 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>What Professional Mail Handling Provides</h2>
       <p>
-        A PresenceHQ mail handling service provides the following for all mail received at your registered address:
+        A Paper Street mail handling service provides the following for all mail received at your registered address:
       </p>
       <ul>
         <li><strong>Same-day notification:</strong> You receive an email or SMS notification within one business day of any mail arriving, including the sender name and a brief description.</li>
@@ -331,7 +331,7 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>1. Choose the Right Location for Your Guest, Not for Yourself</h2>
       <p>
-        Select a meeting location that is convenient for your client or investor, not the one closest to your home or favourite coffee shop. A client coming from Karen should not have to cross the city to get to Gigiri. PresenceHQ has meeting rooms in multiple Nairobi locations, so you can match the venue to where your guest is coming from.
+        Select a meeting location that is convenient for your client or investor, not the one closest to your home or favourite coffee shop. A client coming from Karen should not have to cross the city to get to Gigiri. Paper Street has meeting rooms in multiple locations, so you can match the venue to where your guest is coming from.
       </p>
 
       <h2>2. Book in Advance and Confirm the Day Before</h2>
@@ -503,7 +503,7 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>The Cost Difference</h2>
       <p>
-        Hot desks are priced lower, typically 30 to 50 percent less than dedicated desks. At PresenceHQ, hot desk access is available from KES 2,500 per day or on a monthly pass basis. Dedicated desks are priced as a monthly subscription with priority access guaranteed.
+        Hot desks are priced lower, typically 30 to 50 percent less than dedicated desks. At Paper Street, hot desk access is available on a monthly pass basis. Dedicated desks are priced as a monthly subscription with priority access guaranteed.
       </p>
       <p>
         The cost-effectiveness calculation depends on frequency of use. If you need workspace fewer than 15 days per month, a hot desk day pass or a flexible monthly pass will almost always be cheaper than a dedicated desk. Beyond 20 days per month, a dedicated desk becomes more economical and operationally simpler.
@@ -538,12 +538,12 @@ const articleContent: Record<string, React.ReactNode> = {
         This is the single most impactful step. Operating as a sole proprietor signals to corporate procurement teams that you are a freelancer. Operating as a limited company signals that you are a business. The difference in how you are treated in vendor vetting processes, negotiations, and payment terms is significant.
       </p>
       <p>
-        Company registration in Kenya costs approximately KES 10,650 in government fees. PresenceHQ's company registration assistance handles the paperwork for a flat fee. The psychological and commercial return on this investment is disproportionate.
+        Company registration in Kenya costs approximately KES 10,650 in government fees. Paper Street's company registration assistance handles the paperwork for a flat fee. The psychological and commercial return on this investment is disproportionate.
       </p>
 
       <h2>2. Get a Professional Business Address</h2>
       <p>
-        Your company's registered address is publicly visible via the Business Registration Service. If it is your home address in a residential estate, anyone who looks up your company sees it. A PresenceHQ address in Westlands, Kilimani, or another recognised commercial area changes the profile of your company immediately.
+        Your company's registered address is publicly visible via the Business Registration Service. If it is your home address in a residential estate, anyone who looks up your company sees it. A Paper Street address in a recognised commercial area changes the profile of your company immediately.
       </p>
       <p>
         This also allows you to separate your personal residential address from your business operations entirely, which is good for privacy and professionalism.
@@ -556,12 +556,12 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>4. Set Up a Phone Number That Answers Professionally</h2>
       <p>
-        If a procurement officer calls your number and reaches a personal voicemail greeting with your first name, that is another signal that you are not operating at a business level. A PresenceHQ dedicated business line, answered with your company name by a trained receptionist, changes that signal entirely. Calls are taken during business hours and messages are relayed to you via email or WhatsApp.
+        If a procurement officer calls your number and reaches a personal voicemail greeting with your first name, that is another signal that you are not operating at a business level. A Paper Street dedicated business line, answered with your company name by a trained receptionist, changes that signal entirely. Calls are taken during business hours and messages are relayed to you via email or WhatsApp.
       </p>
 
       <h2>5. Build a Simple, Professional Website</h2>
       <p>
-        A website does not need to be elaborate. A clean, well-written site with your services, credentials, and a contact form is sufficient. Include your PresenceHQ address in the footer. List your company registration number. Link to your LinkedIn profile. These small details signal legitimacy to anyone evaluating you as a supplier.
+        A website does not need to be elaborate. A clean, well-written site with your services, credentials, and a contact form is sufficient. Include your Paper Street address in the footer. List your company registration number. Link to your LinkedIn profile. These small details signal legitimacy to anyone evaluating you as a supplier.
       </p>
 
       <h2>6. Use a Contract Template for Every Engagement</h2>
@@ -576,7 +576,7 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>8. Book Meeting Rooms for Client Meetings</h2>
       <p>
-        When a client wants to meet, book a PresenceHQ meeting room rather than proposing a coffee shop. A boardroom meeting signals seriousness. It also gives you a neutral, professional venue where you control the environment and the equipment. The per-hour cost of a meeting room is negligible against the value of the impression it creates.
+        When a client wants to meet, book a Paper Street meeting room rather than proposing a coffee shop. A boardroom meeting signals seriousness. It also gives you a neutral, professional venue where you control the environment and the equipment. The per-hour cost of a meeting room is negligible against the value of the impression it creates.
       </p>
     </>
   ),
@@ -669,14 +669,14 @@ const articleContent: Record<string, React.ReactNode> = {
 
       <h2>What a Virtual Receptionist Actually Does</h2>
       <p>
-        A PresenceHQ reception service provides you with a trained, professional receptionist who answers calls in your company name during business hours. The experience from the caller's perspective is identical to calling a company with a full-time front desk.
+        A Paper Street reception service provides you with a trained, professional receptionist who answers calls in your company name during business hours. The experience from the caller's perspective is identical to calling a company with a full-time front desk.
       </p>
       <p>
         Specifically, the service works as follows:
       </p>
       <ul>
         <li>You provide us with a brief about your business: your company name, the services you offer, frequently asked questions, and any specific instructions for handling calls (for example, "if a client calls about an outstanding invoice, take a message and say the accounts team will call back within two hours").</li>
-        <li>All inbound calls to your dedicated business number are answered by a PresenceHQ receptionist with a greeting in your company name.</li>
+        <li>All inbound calls to your dedicated business number are answered by a Paper Street receptionist with a greeting in your company name.</li>
         <li>The receptionist handles routine enquiries, takes detailed messages, and relays them to you via email or WhatsApp within minutes.</li>
         <li>For calls that require your direct involvement, the receptionist can attempt to transfer the call to your mobile number or take a callback number.</li>
         <li>You receive a daily call log summarising all calls received.</li>
@@ -695,7 +695,7 @@ const articleContent: Record<string, React.ReactNode> = {
         A professional receptionist does more than answer calls. They are the first human voice a potential client hears. The warmth, competence, and professionalism of that interaction shapes the client's perception of your entire organisation before they have seen your office, your website, or your proposal. A receptionist who answers confidently in your company name, handles the enquiry gracefully, and relays a detailed message creates a stronger impression than a brilliant pitch delivered two days later in response to a voicemail.
       </p>
       <p>
-        For businesses that receive physical visitors at a PresenceHQ address, the receptionist also greets and announces visitors, signs for deliveries, and ensures your guests are welcomed appropriately. The experience of being greeted professionally at a staffed reception in a quality building is one of the most effective ways to elevate a client's perception of your business at minimal cost.
+        For businesses that receive physical visitors at a Paper Street address, the receptionist also greets and announces visitors, signs for deliveries, and ensures your guests are welcomed appropriately. The experience of being greeted professionally at a staffed reception in a quality building is one of the most effective ways to elevate a client's perception of your business at minimal cost.
       </p>
     </>
   ),
@@ -763,7 +763,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             </div>
             <div>
               <p className="font-semibold text-navy text-sm">{post.author}</p>
-              <p className="text-dark-gray/50 text-xs">{post.authorRole}, PresenceHQ</p>
+              <p className="text-dark-gray/50 text-xs">{post.authorRole}, Paper Street</p>
             </div>
           </div>
 
@@ -786,7 +786,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               Establish your professional presence today.
             </h3>
             <p className="text-white/60 text-sm font-light mb-8 max-w-md mx-auto">
-              Join hundreds of Kenyan businesses that trust PresenceHQ for their business address, mail handling, and flexible workspace needs.
+              Join Kenyan businesses that trust Paper Street for their business address, mail handling, and flexible workspace needs.
             </p>
             <Link
               href="/contact"

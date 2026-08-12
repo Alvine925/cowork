@@ -15,7 +15,7 @@ export default function MombasaPage() {
       stats: [
         { value: '#1', label: 'Port in East Africa' },
         { value: '30M+', label: 'Tonnes Cargo / Year' },
-        { value: 'KES 2,500', label: 'Starting From / Month' },
+        { value: 'KES 4,200', label: 'Starting From / Month' },
         { value: '24 hr', label: 'Address Activation' },
       ],
       reasons: [

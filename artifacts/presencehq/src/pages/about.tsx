@@ -35,8 +35,8 @@ const PERSONAS = [
   {
     tag: 'Freelancer & Consultant',
     headline: 'Stop letting a home address cost you the deal.',
-    body: "You're brilliant at what you do. Your address shouldn't be the reason a client hesitates. A PresenceHQ address gives your proposal the same credibility as a firm ten times your size — from day one.",
-    cta: 'Start for KES 2,500 / month',
+    body: "You're brilliant at what you do. Your address shouldn't be the reason a client hesitates. A Paper Street address gives your proposal the same credibility as a firm ten times your size — from day one.",
+    cta: 'Start for KES 4,200 / month',
   },
   {
     tag: 'Startup & New Business',
@@ -53,7 +53,7 @@ const PERSONAS = [
   {
     tag: 'Regional & Enterprise',
     headline: 'A presence in every Kenyan market that matters.',
-    body: "Multinationals and regional enterprises use PresenceHQ to plant flags in secondary cities ahead of physical expansion. Low commitment, high credibility — the way smart brands grow across East Africa.",
+    body: "Growing businesses use Paper Street to plant flags in new markets ahead of physical expansion. Low commitment, high credibility — the way smart brands grow across East Africa.",
     cta: 'Talk to our enterprise team',
   },
 ]
@@ -90,7 +90,7 @@ export default function AboutPage() {
         <motion.div style={{ y: heroY }} className="absolute inset-0 scale-110">
           <img
             src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1800&auto=format&q=85"
-            alt="PresenceHQ team"
+            alt="Paper Street team"
             className="w-full h-full object-cover"
           />
         </motion.div>
@@ -205,7 +205,7 @@ export default function AboutPage() {
         >
           <img
             src="https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?w=1200&auto=format&q=85"
-            alt="PresenceHQ founders"
+            alt="Paper Street founders"
             className="absolute inset-0 w-full h-full object-cover"
           />
         </motion.div>
@@ -232,10 +232,10 @@ export default function AboutPage() {
                 Same problem. Different scale. The professional address — something that should be table stakes — was gatekeeping opportunity for businesses of every size.
               </p>
               <p>
-                PresenceHQ was built to tear down that wall. Not just for the startup chasing Series A, but for the freelancer pitching their first retainer. Not just for the regional enterprise opening its fifth office, but for the salon owner who wants their business to feel real.
+                Paper Street was built to tear down that wall. Not just for the startup chasing Series A, but for the freelancer pitching their first retainer. Not just for the regional enterprise opening its fifth office, but for the salon owner who wants their business to feel real.
               </p>
               <p>
-                Today, over 500 businesses across five Kenyan cities use PresenceHQ as their professional home — from solo operators to multi-city SMEs to international firms entering the East African market.
+              Today, businesses across Kenya use Paper Street as their professional home — from solo operators to multi-city SMEs to international firms entering the East African market.
               </p>
             </motion.div>
           </motion.div>
@@ -312,7 +312,7 @@ export default function AboutPage() {
               We envision a business landscape where the freelancer in Kisumu has the same professional standing as the law firm in Westlands. Where a business registered in Nakuru can win contracts in Dubai. Where growing to five cities takes five conversations, not five years.
             </motion.p>
             <motion.p variants={up} className="text-dark-gray/60 text-base font-light leading-relaxed max-w-md mb-10">
-              PresenceHQ is building the infrastructure layer that makes this possible — starting with Kenya's five major cities and expanding wherever East African ambition takes us.
+              Paper Street is building the infrastructure layer that makes this possible — starting with Kenya and expanding wherever East African ambition takes us.
             </motion.p>
             <motion.div variants={up}>
               <Link
@@ -430,7 +430,7 @@ export default function AboutPage() {
               <span className="italic text-gold/90">whatever size you are?</span>
             </h2>
             <p className="text-white/50 font-light max-w-md">
-              Join 500+ Kenyan businesses that trust PresenceHQ with their professional identity. Start small. Stay as long as you need. Grow on your terms.
+              Join Kenyan businesses that trust Paper Street with their professional identity. Start small. Stay as long as you need. Grow on your terms.
             </p>
           </motion.div>
           <motion.div variants={up} className="shrink-0 flex flex-col sm:flex-row gap-4">

@@ -15,7 +15,7 @@ export default function KisumuPage() {
       stats: [
         { value: 'Top 3', label: 'Fastest-Growing Kenyan Cities' },
         { value: '4+', label: 'Countries in Trade Reach' },
-        { value: 'KES 2,500', label: 'Starting From / Month' },
+        { value: 'KES 4,200', label: 'Starting From / Month' },
         { value: '24 hr', label: 'Address Activation' },
       ],
       reasons: [
