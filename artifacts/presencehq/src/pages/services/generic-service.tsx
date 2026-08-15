@@ -31,6 +31,11 @@ interface ServiceStep {
   detail: string
 }
 
+interface ServiceDetail {
+  label: string
+  detail: string
+}
+
 export interface ServiceConfig {
   eyebrow: string
   title: string
@@ -45,6 +50,9 @@ export interface ServiceConfig {
   stats?: ServiceStat[]
   process?: ServiceStep[]
   faqs?: ServiceFaq[]
+  operational?: ServiceDetail[]
+  detailsTitle?: string
+  detailsIntro?: string
 }
 
 interface ServiceProfile {
@@ -60,6 +68,9 @@ interface ServiceProfile {
   stats: ServiceStat[]
   process: ServiceStep[]
   faqs: ServiceFaq[]
+  operational: ServiceDetail[]
+  detailsTitle: string
+  detailsIntro: string
 }
 
 const defaultProfile: ServiceProfile = {
@@ -98,6 +109,13 @@ const defaultProfile: ServiceProfile = {
       answer: 'No. Paper Street services are designed to give you a professional operating base without the cost and inflexibility of a conventional lease.',
     },
   ],
+  operational: [
+    { label: 'A clear brief', detail: 'We confirm your business details, preferred location and how you want the service used before activation.' },
+    { label: 'A named point of contact', detail: 'Your questions go to a real Paper Street team member who knows your setup and can keep things moving.' },
+    { label: 'Room to change', detail: 'Add workspace, forwarding or reception support later without rebuilding your operating base.' },
+  ],
+  detailsTitle: 'The useful part is how it works day to day.',
+  detailsIntro: 'Paper Street is designed around the small operational moments that make a business feel reliable.',
 }
 
 const profiles: Record<string, Partial<ServiceProfile>> = {
@@ -296,13 +314,17 @@ function getProfile(config: ServiceConfig) {
     stats: config.stats ?? custom.stats ?? defaultProfile.stats,
     process: config.process ?? custom.process ?? defaultProfile.process,
     faqs: config.faqs ?? custom.faqs ?? defaultProfile.faqs,
+    operational: config.operational ?? custom.operational ?? defaultProfile.operational,
+    detailsTitle: config.detailsTitle ?? custom.detailsTitle ?? defaultProfile.detailsTitle,
+    detailsIntro: config.detailsIntro ?? custom.detailsIntro ?? defaultProfile.detailsIntro,
   }
 }
 
-function ActionLink({ href, children, inverse = false }: { href: string; children: ReactNode; inverse?: boolean }) {
+function ActionLink({ href, children, inverse = false, testId }: { href: string; children: ReactNode; inverse?: boolean; testId?: string }) {
   return (
     <Link
       href={href}
+      data-testid={testId}
       className={`group inline-flex items-center justify-center gap-3 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-all duration-300 sm:px-7 ${
         inverse
           ? 'border border-white/35 text-white hover:border-gold hover:bg-white/10'
@@ -319,6 +341,7 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const profile = getProfile(config)
   const features = config.features.slice(0, 8)
+  const contactHref = `/contact?service=${encodeURIComponent(config.title.replace('.', ''))}`
 
   return (
     <main className="overflow-hidden bg-[#fbfaf7] text-dark-gray">
@@ -337,8 +360,8 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
               {config.subtitle}
             </motion.p>
             <motion.div variants={reveal} className="mt-9 flex flex-wrap gap-3">
-              <ActionLink href="/contact">Talk to our team</ActionLink>
-              <ActionLink href="/pricing" inverse>Explore pricing</ActionLink>
+              <ActionLink href={contactHref} testId="link-service-contact">Talk to our team</ActionLink>
+              <ActionLink href={`/pricing?service=${encodeURIComponent(config.title.replace('.', ''))}`} inverse testId="link-service-pricing">Explore pricing</ActionLink>
             </motion.div>
             <motion.div variants={reveal} className="mt-12 flex items-center gap-4 text-xs text-white/48">
               <div className="flex -space-x-2">
@@ -522,7 +545,28 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
               <MessageCircle className="h-4 w-4 text-gold" />
               Not sure which option is right? We will help you work it out.
             </div>
-            <ActionLink href="/contact">Start a conversation</ActionLink>
+            <ActionLink href={contactHref}>Start a conversation</ActionLink>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="bg-[#f7f3ea] py-24 sm:py-32">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 sm:px-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24 lg:px-16">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-70px' }} variants={stagger}>
+            <motion.p variants={reveal} className="mb-5 text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">In practice</motion.p>
+            <motion.h2 variants={reveal} className="font-heading text-4xl font-light leading-[1.05] text-navy sm:text-5xl">{profile.detailsTitle}</motion.h2>
+            <motion.p variants={reveal} className="mt-6 max-w-sm text-sm font-light leading-7 text-dark-gray/58">{profile.detailsIntro}</motion.p>
+          </motion.div>
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-70px' }} variants={stagger} className="border-t border-navy/15">
+            {profile.operational.map((detail, index) => (
+              <motion.div key={detail.label} variants={reveal} className="grid gap-3 border-b border-navy/15 py-7 sm:grid-cols-[0.34fr_0.66fr] sm:gap-8">
+                <div className="flex items-start gap-3">
+                  <span className="font-heading text-xl text-gold">0{index + 1}</span>
+                  <h3 className="pt-1 text-sm font-semibold text-navy">{detail.label}</h3>
+                </div>
+                <p className="text-sm font-light leading-7 text-dark-gray/62">{detail.detail}</p>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
@@ -534,7 +578,7 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
             <motion.h2 variants={reveal} className="font-heading text-3xl font-light leading-tight text-navy sm:text-4xl">Clarity before commitment.</motion.h2>
             <motion.p variants={reveal} className="mt-6 max-w-sm text-sm font-light leading-7 text-dark-gray/55">If you are still weighing it up, send us a note. A useful answer is better than a hard sell.</motion.p>
             <motion.div variants={reveal} className="mt-8">
-              <Link href="/contact" className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-navy">
+              <Link href={contactHref} data-testid="link-ask-team" className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-navy">
                 Ask our team <MoveUpRight className="h-4 w-4 text-gold transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Link>
             </motion.div>
@@ -548,13 +592,15 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
                     aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${index}`}
+                    data-testid={`button-faq-${index}`}
                     className="flex w-full items-center justify-between gap-5 py-6 text-left"
                   >
                     <span className="font-heading text-base font-semibold text-navy sm:text-lg">{faq.question}</span>
                     <ChevronDown className={`h-5 w-5 shrink-0 text-gold transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                    <div className="overflow-hidden">
+                    <div id={`faq-answer-${index}`} className="overflow-hidden">
                       <p className="max-w-2xl pb-6 pr-8 text-sm font-light leading-7 text-dark-gray/58">{faq.answer}</p>
                     </div>
                   </div>
@@ -575,8 +621,8 @@ export function GenericServicePage({ config }: { config: ServiceConfig }) {
             <motion.p variants={reveal} className="mt-5 max-w-xl text-sm leading-7 text-navy/65">{profile.audience}</motion.p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="flex shrink-0 flex-wrap gap-3">
-            <ActionLink href="/contact">Get a recommendation</ActionLink>
-            <Link href="/pricing" className="group inline-flex items-center gap-3 border border-navy/25 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white sm:px-7">
+             <ActionLink href={contactHref}>Get a recommendation</ActionLink>
+             <Link href={`/pricing?service=${encodeURIComponent(config.title.replace('.', ''))}`} data-testid="link-bottom-pricing" className="group inline-flex items-center gap-3 border border-navy/25 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy transition-colors hover:border-navy hover:bg-navy hover:text-white sm:px-7">
               View pricing <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </motion.div>

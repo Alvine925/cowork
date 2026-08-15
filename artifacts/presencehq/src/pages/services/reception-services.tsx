@@ -18,6 +18,13 @@ export default function ReceptionServicesPage() {
           'Bilingual staff (English & Swahili)',
           'Monthly call logs and reports',
         ],
+        detailsTitle: 'Your front desk, briefed properly.',
+        detailsIntro: 'Good reception is not a script. We learn the names, tone and routing preferences that help every caller or visitor feel expected.',
+        operational: [
+          { label: 'Set your call brief', detail: 'Share your company name, pronunciation, opening hours, escalation contacts and the messages that should reach you first.' },
+          { label: 'Answer with context', detail: 'Calls are greeted in your company name and messages are captured clearly, with English and Swahili support available.' },
+          { label: 'Review the pattern', detail: 'Monthly reporting helps you see call volumes, common requests and where your customer experience can improve.' },
+        ],
       }}
     />
   )

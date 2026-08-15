@@ -18,6 +18,13 @@ export default function BusinessAddressPage() {
           'Access to physical mail and package handling',
           'Monthly notification of received mail',
         ],
+        detailsTitle: 'An address that stands up to scrutiny.',
+        detailsIntro: 'Use it consistently across your registrations, correspondence and customer-facing materials. We help you keep the details accurate as your business changes.',
+        operational: [
+          { label: 'Choose the right location', detail: 'We confirm the available Paper Street location and the address format to use for your registration, website and stationery.' },
+          { label: 'Use it consistently', detail: 'Keep one dependable business address across KRA records, bank applications, invoices and official correspondence.' },
+          { label: 'Stay informed', detail: 'Mail is received by the team, logged and reported so you know what has arrived before deciding whether to collect, scan or forward it.' },
+        ],
       }}
     />
   )

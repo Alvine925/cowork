@@ -18,6 +18,13 @@ export default function MailHandlingPage() {
           'Digital photo scan of envelope available on request',
           'Dedicated mail log and history',
         ],
+        detailsTitle: 'A quiet system behind every delivery.',
+        detailsIntro: 'The value is not only receiving mail. It is knowing what arrived, when it arrived and where it is until you are ready for it.',
+        operational: [
+          { label: 'Receive and verify', detail: 'The reception team checks the addressee, records the arrival and signs for registered items or packages where required.' },
+          { label: 'Notify the same day', detail: 'You receive a clear notification with the item type and collection or forwarding options, subject to the agreed service level.' },
+          { label: 'Store securely', detail: 'Items are kept in an organised, access-controlled area until you collect them or instruct us to scan or forward them.' },
+        ],
       }}
     />
   )

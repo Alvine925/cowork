@@ -18,6 +18,13 @@ export default function MeetingRoomsPage() {
           'Complimentary water and coffee',
           'Professional reception to greet your guests',
         ],
+        detailsTitle: 'A room arranged around the meeting.',
+        detailsIntro: 'Tell us who is coming and what the session needs to achieve. We prepare the practical details so you can focus on the conversation.',
+        operational: [
+          { label: 'Pick the right room', detail: 'Choose a compact room for focused work or a larger presentation setup for up to 20 guests, subject to location availability.' },
+          { label: 'Arrive ready', detail: 'Your room is prepared with WiFi, display equipment, whiteboard supplies and refreshments before the first guest arrives.' },
+          { label: 'Add support when needed', detail: 'Ask about guest reception, extra setup time, refreshments or recurring bookings for a predictable client experience.' },
+        ],
       }}
     />
   )

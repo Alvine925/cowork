@@ -33,6 +33,9 @@ const contactDetails = [
 ]
 
 export default function ContactPage() {
+  const searchParams = new URLSearchParams(window.location.search)
+  const requestedService = searchParams.get('service')?.toLowerCase().replace(/\s+/g, '-')
+  const requestedPlan = searchParams.get('plan')
   const {
     register,
     handleSubmit,
@@ -40,6 +43,10 @@ export default function ContactPage() {
     reset,
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      service: requestedService ?? '',
+      message: requestedPlan ? `I am interested in the ${requestedPlan} membership.` : '',
+    },
   })
 
   const onSubmit = async (_data: ContactFormValues) => {

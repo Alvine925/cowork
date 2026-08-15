@@ -18,6 +18,13 @@ export default function BusinessExpansionPage() {
           'Coordinated mail handling across locations',
           'Scale up or down as you grow',
         ],
+        detailsTitle: 'A measured first step into a new market.',
+        detailsIntro: 'Test demand, begin local conversations and create a credible signal before committing to a permanent footprint.',
+        operational: [
+          { label: 'Choose the market', detail: 'We map the location, address and local contact needs around the city or cities you are exploring.' },
+          { label: 'Launch a local presence', detail: 'Set up address, phone and reception details in a coordinated way, with one account manager keeping the rollout together.' },
+          { label: 'Learn before scaling', detail: 'Keep the footprint lean while you test demand, then add desks, rooms or a larger location when the evidence supports it.' },
+        ],
       }}
     />
   )

@@ -18,6 +18,13 @@ export default function CompanyRegistrationPage() {
           'Business permit assistance',
           'Ongoing registered office service included',
         ],
+        detailsTitle: 'Formation support that respects the details.',
+        detailsIntro: 'We help organise the practical route to incorporation while making clear where legal or regulatory advice belongs with our qualified partners.',
+        operational: [
+          { label: 'Prepare the information', detail: 'We confirm the proposed company details, directors, shareholders, contacts and the documents needed for the registration route.' },
+          { label: 'Coordinate the filing', detail: 'Our legal and business advisory partners guide the submission and keep you informed about follow-up requests or missing details.' },
+          { label: 'Keep the office live', detail: 'Once incorporated, continue with a registered office and mail-handling setup so official correspondence has somewhere dependable to go.' },
+        ],
       }}
     />
   )

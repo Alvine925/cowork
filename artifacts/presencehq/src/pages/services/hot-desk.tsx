@@ -18,6 +18,13 @@ export default function HotDeskPage() {
           'Complimentary tea and coffee',
           'Discounted access to meeting rooms',
         ],
+        detailsTitle: 'Drop in without losing your working rhythm.',
+        detailsIntro: 'Hot desk access is for the days when the kitchen table is not enough, but a permanent commitment is more than you need.',
+        operational: [
+          { label: 'Book your day', detail: 'Confirm your preferred day and location with the team, then arrive during standard access hours with your identification.' },
+          { label: 'Settle in quickly', detail: 'Choose an available desk, connect to the fibre network and use communal printing and shared amenities without a complicated check-in.' },
+          { label: 'Make the day count', detail: 'Use the environment for focused work, calls and collaboration, with discounted meeting room access when privacy matters.' },
+        ],
       }}
     />
   )

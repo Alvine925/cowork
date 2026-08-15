@@ -18,6 +18,13 @@ export default function DedicatedDeskPage() {
           'Business address and mail handling included',
           'Discounted meeting room bookings',
         ],
+        detailsTitle: 'A permanent setup, without a private-office lease.',
+        detailsIntro: 'Dedicated desk members get continuity: a reserved place for their daily tools, plus access to the wider Paper Street environment when the work expands.',
+        operational: [
+          { label: 'Make it yours', detail: 'We allocate your reserved desk and confirm storage, access and any equipment requirements before your first working day.' },
+          { label: 'Work on your schedule', detail: 'Key-card access supports early starts, late finishes and the flexible working patterns that small teams often need.' },
+          { label: 'Use the wider base', detail: 'Move into a meeting room for a client conversation, use mail support and keep your business address in one capable place.' },
+        ],
       }}
     />
   )
