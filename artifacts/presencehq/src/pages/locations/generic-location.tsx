@@ -4,12 +4,7 @@ import {
   motion,
   useScroll,
   useTransform,
-  useInView,
-  useMotionValue,
-  useSpring,
-  animate,
 } from 'framer-motion'
-import { useEffect } from 'react'
 import * as Accordion from '@radix-ui/react-accordion'
 import { ArrowRight, MapPin, CheckCircle2, Zap, Shield, Plus, Minus } from 'lucide-react'
 import { CallToAction } from '@/components/home/CallToAction'
@@ -33,30 +28,6 @@ export interface LocationConfig {
   reasons: string[]
   services: { num: string; title: string; desc: string }[]
   faqs: LocationFaq[]
-}
-
-/* ── Animated counter ── */
-function AnimatedNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-60px' })
-  const count = useMotionValue(0)
-  const rounded = useSpring(count, { duration: 1200, bounce: 0 })
-
-  useEffect(() => {
-    if (isInView) animate(count, target, { duration: 1.2, ease: 'easeOut' })
-  }, [isInView, count, target])
-
-  return (
-    <span ref={ref}>
-      <motion.span>{rounded.get() === 0 ? '0' : ''}</motion.span>
-      <motion.span
-        style={{ display: 'inline' }}
-        onUpdate={() => {
-          if (ref.current) ref.current.textContent = Math.floor(rounded.get()) + suffix
-        }}
-      />
-    </span>
-  )
 }
 
 /* ── Stagger container ── */
@@ -172,33 +143,7 @@ export function GenericLocationPage({ config }: { config: LocationConfig }) {
         </motion.div>
       </section>
 
-      {/* ── 2. Stats on Navy ── */}
-      <section className="bg-navy overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8 md:px-16">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
-            className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-b border-white/10"
-          >
-            {config.stats.map((s, i) => (
-              <motion.div key={i} variants={fadeSlideUp} className="py-10 px-6 md:px-10">
-                <p className="text-gold text-3xl md:text-4xl font-bold font-heading mb-1">
-                  {s.numeric != null ? (
-                    <AnimatedNumber target={s.numeric} suffix={s.value.replace(/[\d.]+/, '')} />
-                  ) : (
-                    s.value
-                  )}
-                </p>
-                <p className="text-white/40 text-[10px] uppercase tracking-[0.25em]">{s.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── 3. Split: Photo left | Dark text right ── */}
+      {/* ── 2. Split: Photo left | Dark text right ── */}
       <section className="flex flex-col lg:flex-row min-h-[70vh]">
         {/* photo half — clips in from left */}
         <motion.div

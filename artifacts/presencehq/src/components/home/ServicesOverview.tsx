@@ -1,16 +1,16 @@
 import { Link } from 'wouter'
 
 const SERVICES = [
-  { name: 'Virtual Office', desc: 'A complete professional identity. Premium address, mail handling, and more.' },
-  { name: 'Business Address', desc: 'Use our prime locations for your company registration and website.' },
-  { name: 'Mail Handling', desc: 'We receive, sort, and securely store your physical mail and packages.' },
-  { name: 'Mail Forwarding', desc: 'Digital scanning or physical forwarding of your mail globally.' },
-  { name: 'Meeting Rooms', desc: 'Book premium, fully-equipped meeting rooms by the hour.' },
-  { name: 'Hot Desk', desc: 'Flexible coworking access when you need to drop in and work.' },
-  { name: 'Dedicated Desk', desc: 'Your own permanent desk in a shared space, 24/7 access.' },
-  { name: 'Reception Services', desc: 'Professional receptionists to greet your clients.' },
-  { name: 'Business Expansion', desc: 'Instantly establish a footprint in new cities.' },
-  { name: 'Company Registration', desc: 'End-to-end assistance with legal company formation.' },
+  { name: 'Virtual Office', href: '/services/virtual-office', desc: 'A complete professional identity. Premium address, mail handling, and more.' },
+  { name: 'Business Address', href: '/services/business-address', desc: 'Use our prime locations for your company registration and website.' },
+  { name: 'Mail Handling', href: '/services/mail-handling', desc: 'We receive, sort, and securely store your physical mail and packages.' },
+  { name: 'Mail Forwarding', href: '/services/mail-forwarding', desc: 'Digital scanning or physical forwarding of your mail globally.' },
+  { name: 'Meeting Rooms', href: '/services/meeting-rooms', desc: 'Book premium, fully-equipped meeting rooms by the hour.' },
+  { name: 'Hot Desk', href: '/services/hot-desk', desc: 'Flexible coworking access when you need to drop in and work.' },
+  { name: 'Dedicated Desk', href: '/services/dedicated-desk', desc: 'Your own permanent desk in a shared space, 24/7 access.' },
+  { name: 'Reception Services', href: '/services/reception-services', desc: 'Professional receptionists to greet your clients.' },
+  { name: 'Business Expansion', href: '/services/business-expansion', desc: 'Instantly establish a footprint in new cities.' },
+  { name: 'Company Registration', href: '/services/company-registration', desc: 'End-to-end assistance with legal company formation.' },
 ]
 
 export function ServicesOverview() {
@@ -34,7 +34,7 @@ export function ServicesOverview() {
           <div className="w-full lg:w-2/3 flex flex-col">
             {SERVICES.map((service, i) => (
               <Link
-                href="/services"
+                href={service.href}
                 key={i}
                 className="group block border-b border-gray-100 pb-5 mb-5 hover:border-gray-300 transition-colors"
               >

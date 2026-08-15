@@ -326,32 +326,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── 6. Stats — navy ── */}
-      <section className="bg-navy">
-        <div className="max-w-7xl mx-auto px-8 md:px-16">
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
-            className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-b border-white/10"
-          >
-            {[
-              { value: '500+', label: 'Businesses Served' },
-              { value: '5',    label: 'Cities Covered' },
-              { value: '98%',  label: 'Client Satisfaction' },
-              { value: '24 hr',label: 'Activation Time' },
-            ].map((s, i) => (
-              <motion.div key={i} variants={up} className="py-10 px-6 md:px-10">
-                <p className="text-gold text-3xl md:text-4xl font-bold font-heading mb-1">{s.value}</p>
-                <p className="text-white/40 text-[10px] uppercase tracking-[0.25em]">{s.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── 7. Values — white, editorial ── */}
+      {/* ── 6. Values — white, editorial ── */}
       <section className="py-28 bg-white">
         <div className="max-w-7xl mx-auto px-8 md:px-16">
           <motion.div

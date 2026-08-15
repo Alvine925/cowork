@@ -44,7 +44,7 @@ const slides = [
     ),
     body: 'Fully equipped boardrooms and day offices available on demand. Impress clients without committing to a long-term lease.',
     primary: { label: 'Book a Room', href: '/contact' },
-    secondary: { label: 'Explore Memberships', href: '/memberships' },
+    secondary: { label: 'Explore Memberships', href: '/pricing' },
   },
   {
     image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1600&auto=format&q=80',
@@ -57,7 +57,7 @@ const slides = [
       </>
     ),
     body: 'Dedicated mail collection, scanning, forwarding, and a live receptionist to answer calls under your company name.',
-    primary: { label: 'Learn More', href: '/memberships' },
+    primary: { label: 'Learn More', href: '/pricing' },
     secondary: { label: 'Get Started', href: '/contact' },
   },
   {

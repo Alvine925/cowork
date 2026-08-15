@@ -12,7 +12,6 @@ import ContactPage from '@/pages/contact'
 import PricingPage from '@/pages/pricing'
 import ServicesPage from '@/pages/services'
 import LocationsPage from '@/pages/locations'
-import TestimonialsPage from '@/pages/testimonials'
 import IndustriesPage from '@/pages/industries'
 import PartnersPage from '@/pages/partners'
 import ResourcesPage from '@/pages/resources'
@@ -62,7 +61,6 @@ function Router() {
         <Route path="/about" component={AboutPage} />
         <Route path="/contact" component={ContactPage} />
         <Route path="/pricing" component={PricingPage} />
-        <Route path="/testimonials" component={TestimonialsPage} />
         <Route path="/industries" component={IndustriesPage} />
         <Route path="/partners" component={PartnersPage} />
         <Route path="/resources" component={ResourcesPage} />
