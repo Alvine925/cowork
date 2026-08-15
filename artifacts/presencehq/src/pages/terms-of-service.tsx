@@ -1,6 +1,6 @@
 import { PageHero } from '@/components/ui/PageHero'
 
-const lastUpdated = 'July 1, 2025'
+const lastUpdated = 'August 15, 2026'
 
 export default function TermsOfServicePage() {
   return (
@@ -84,6 +84,22 @@ export default function TermsOfServicePage() {
             <li><strong>Annual subscriptions</strong> are billed in full at the start of the annual term. The current annual prices are KES 42,000 for Basic, KES 60,000 for Professional, and KES 120,000 for Premium. No security deposit is required for annual customers under these plan terms.</li>
             <li><strong>Add-ons and one-time services</strong> (such as additional meeting room hours, mail forwarding fees, or parcel handling) are invoiced at the end of the calendar month in which they are used.</li>
           </ul>
+          <h3>Package terms, deposits, and address authorization</h3>
+          <p>
+            The package and billing terms that apply to you are the terms shown for your selected plan at signup, together with any written service agreement or order confirmation issued by Paper Street. A plan gives you only the services and address-use rights expressly included in those terms; it does not create a lease, tenancy, ownership interest, or other property right in any Paper Street premises or address.
+          </p>
+          <ul>
+            <li><strong>Monthly packages:</strong> In addition to the first month's subscription fee, monthly customers must pay a security deposit equal to two months of the selected package fee before service activation. The deposit is separate from the subscription fee and does not replace or prepay the monthly billing obligation.</li>
+            <li><strong>Annual packages:</strong> Annual customers pay the full annual package fee in advance. No security deposit is required for an annual package unless a separate written agreement expressly states otherwise.</li>
+            <li><strong>Changes to a package:</strong> Any upgrade, downgrade, change of billing frequency, or addition of services takes effect only when confirmed by Paper Street in writing. A change may result in a revised deposit or other amount becoming due before the change takes effect.</li>
+            <li><strong>Deposit handling:</strong> Paper Street may apply the security deposit to unpaid subscription fees, approved charges, damage, storage, or other amounts properly due under these terms. Any remaining balance will be handled as part of the account closure and refund process, subject to any outstanding obligations.</li>
+          </ul>
+          <p>
+            You may use a Paper Street address only during the term of a valid, active contract and only for the business, services, and purposes approved during onboarding. You must stop representing the address as your business, registered office, mailing address, or place of operation immediately when your contract expires, is suspended, or is terminated. You must also promptly update your records with the relevant authorities, banks, customers, suppliers, and other third parties.
+          </p>
+          <p>
+            Any use of a Paper Street address without a valid contract, beyond the scope of an active package, or for an unlawful, fraudulent, misleading, or unauthorized purpose is strictly prohibited. If unauthorized address use occurs, Paper Street may suspend or terminate services, notify affected authorities or third parties, require immediate correction of the representation, recover reasonable losses and enforcement costs, and take legal action—including seeking injunctive relief, damages, or other available remedies—to the fullest extent permitted by Kenyan law.
+          </p>
           <p>
             Accepted payment methods include M-Pesa, bank transfer, Visa, and Mastercard. Paper Street does not accept cash payments. Invoices are sent electronically to the email address on file.
           </p>
