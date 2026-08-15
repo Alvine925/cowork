@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { FloatingWhatsApp } from '@/components/layout/FloatingWhatsApp'
 import { BackToTop } from '@/components/layout/BackToTop'
+import { SeoHead } from '@/components/seo/SeoHead'
 
 import HomePage from '@/pages/home'
 import AboutPage from '@/pages/about'
@@ -56,6 +57,7 @@ function Router() {
   return (
     <>
       <ScrollToTop />
+      <SeoHead />
       <Switch>
         <Route path="/" component={HomePage} />
         <Route path="/about" component={AboutPage} />

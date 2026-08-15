@@ -46,6 +46,13 @@ The site presents Paper Street virtual office memberships, business address and 
 
 - The Vite config requires `PORT` and `BASE_PATH`; use the managed artifact workflow or provide both variables for manual commands.
 
+## SEO
+
+- Production URL: `https://paperstreet.africa`
+- Route metadata is centralized in `artifacts/presencehq/src/lib/seo.ts` and applied on navigation by `src/components/seo/SeoHead.tsx`.
+- Crawl files are served from `artifacts/presencehq/public/robots.txt` and `artifacts/presencehq/public/sitemap.xml`.
+- The static HTML shell includes default metadata and Organization, WebSite, and LocalBusiness JSON-LD for crawlers.
+
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
