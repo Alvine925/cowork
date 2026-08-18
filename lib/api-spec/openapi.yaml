@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: portal
+    description: Authenticated Paper Street client portal operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /portal/summary:
+    get:
+      operationId: getPortalSummary
+      tags: [portal]
+      summary: Get the authenticated client's portal summary
+      responses:
+        "200":
+          description: Portal summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalSummary"
+        "401":
+          description: Authentication required
+  /portal/subscription:
+    get:
+      operationId: getPortalSubscription
+      tags: [portal]
+      summary: Get the authenticated client's subscription
+      responses:
+        "200":
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalSubscription"
+        "401":
+          description: Authentication required
+  /portal/documents:
+    get:
+      operationId: getPortalDocuments
+      tags: [portal]
+      summary: List the authenticated client's documents
+      responses:
+        "200":
+          description: Client documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortalDocument"
+        "401":
+          description: Authentication required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +79,122 @@ components:
           type: string
       required:
         - status
+    PortalSubscription:
+      type: object
+      properties:
+        id:
+          type: number
+        plan:
+          type: string
+        billingCycle:
+          type: string
+          enum: [monthly, annual]
+        status:
+          type: string
+          enum: [active, pending_payment, suspended]
+        monthlyPrice:
+          type: number
+        annualPrice:
+          type: number
+        depositAmount:
+          type: number
+        nextBillingDate:
+          type: string
+          format: date
+        renewalDate:
+          type: string
+          format: date
+        location:
+          type: string
+        includedServices:
+          type: array
+          items:
+            type: string
+        lastPaymentDate:
+          type: string
+          format: date
+      required:
+        - id
+        - plan
+        - billingCycle
+        - status
+        - monthlyPrice
+        - annualPrice
+        - depositAmount
+        - nextBillingDate
+        - renewalDate
+        - location
+        - includedServices
+        - lastPaymentDate
+    PortalDocument:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [ready, pending]
+        description:
+          type: string
+        issuedDate:
+          type: string
+          format: date
+        updatedDate:
+          type: string
+          format: date
+        downloadUrl:
+          type: ["string", "null"]
+          description: Optional URL for downloading the document
+      required:
+        - id
+        - name
+        - category
+        - status
+        - description
+        - issuedDate
+        - updatedDate
+        - downloadUrl
+    PortalActivity:
+      type: object
+      properties:
+        id:
+          type: number
+        label:
+          type: string
+        detail:
+          type: string
+        date:
+          type: string
+          format: date
+        kind:
+          type: string
+          enum: [billing, document, service]
+      required:
+        - id
+        - label
+        - detail
+        - date
+        - kind
+    PortalSummary:
+      type: object
+      properties:
+        subscription:
+          $ref: "#/components/schemas/PortalSubscription"
+        documentsCount:
+          type: number
+        readyDocumentsCount:
+          type: number
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortalActivity"
+      required:
+        - subscription
+        - documentsCount
+        - readyDocumentsCount
+        - recentActivity
 

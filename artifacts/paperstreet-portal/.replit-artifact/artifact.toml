@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/portal/"
+title = "Paper Street Client Portal"
+description = "A secure Paper Street client portal where customers sign in to view their membership, billing plan, account documents, service status, and recent activity."
+version = "1.0.0"
+id = "artifacts/paperstreet-portal"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/portal/" ]
+localPort = 21886
+
+[services.development]
+run = "pnpm --filter @workspace/paperstreet-portal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/paperstreet-portal", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/paperstreet-portal/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21886"
+BASE_PATH = "/portal/"
