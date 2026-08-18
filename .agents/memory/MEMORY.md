@@ -1,0 +1,1 @@
+- [Workspace dependency sync](workspace-dependency-sync.md) — rerun the workspace install after a new artifact is added so its local tool links are created.
