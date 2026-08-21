@@ -157,7 +157,7 @@ export function Navbar() {
 
           <div className="hidden lg:flex items-center">
             <Link
-              href="/contact"
+              href="/login"
               className={cn(
                 'text-[11px] font-medium uppercase tracking-widest px-5 py-2 border transition-colors',
                 solidNav
@@ -165,7 +165,7 @@ export function Navbar() {
                   : 'border-white text-white hover:bg-white hover:text-navy'
               )}
             >
-              Get Started
+              Log in
             </Link>
           </div>
 
@@ -231,6 +231,12 @@ export function Navbar() {
 
               {/* CTA */}
               <div className="px-7 pb-10">
+                <Link
+                  href="/login"
+                  className="mb-3 block border border-navy text-center text-xs font-semibold uppercase tracking-widest text-navy py-3.5 hover:bg-navy hover:text-white transition-colors"
+                >
+                  Log in
+                </Link>
                 <Link
                   href="/contact"
                   className="block text-center bg-navy text-white text-xs font-semibold uppercase tracking-widest py-3.5 hover:bg-navy-700 transition-colors"

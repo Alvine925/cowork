@@ -24,6 +24,7 @@ import RefundPolicyPage from '@/pages/refund-policy'
 import NotFound from '@/pages/not-found'
 import BlogPage from '@/pages/blog'
 import BlogPostPage from '@/pages/blog-post'
+import LoginPage from '@/pages/login'
 
 // Service pages
 import VirtualOfficePage from '@/pages/services/virtual-office'
@@ -62,6 +63,7 @@ function Router() {
         <Route path="/" component={HomePage} />
         <Route path="/about" component={AboutPage} />
         <Route path="/contact" component={ContactPage} />
+        <Route path="/login" component={LoginPage} />
         <Route path="/pricing" component={PricingPage} />
         <Route path="/industries" component={IndustriesPage} />
         <Route path="/partners" component={PartnersPage} />

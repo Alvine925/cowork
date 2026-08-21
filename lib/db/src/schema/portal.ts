@@ -7,7 +7,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const portalSubscriptions = pgTable("portal_subscriptions", {
   id: serial("id").primaryKey(),

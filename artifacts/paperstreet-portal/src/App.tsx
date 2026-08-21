@@ -186,6 +186,22 @@ function LoadingScreen({ label = 'Preparing your desk' }: { label?: string }) {
   );
 }
 
+function AuthConfigurationMessage() {
+  return (
+    <FullScreenMessage
+      eyebrow="Paper Street / Member portal"
+      title="Member access is being connected."
+      detail="This portal is ready for member content, but authentication has not been configured in this environment yet. Connect the approved Supabase authentication setup to continue."
+      icon={ShieldCheck}
+      action={
+        <ButtonLink href="/" variant="quiet">
+          Return to Paper Street <Home size={15} />
+        </ButtonLink>
+      }
+    />
+  );
+}
+
 function ButtonLink({
   href,
   children,
@@ -596,6 +612,9 @@ function NotFound() {
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || !clerkPubKey) {
+    return <AuthConfigurationMessage />;
+  }
   return <ClerkProvider publishableKey={clerkPubKey} proxyUrl={clerkProxyUrl} appearance={clerkAppearance} signInUrl={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your Paper Street member desk' } }, signUp: { start: { title: 'Join Paper Street', subtitle: 'Create your member account to get started' } } }} routerPush={(to) => setLocation(stripBase(to))} routerReplace={(to) => setLocation(stripBase(to), { replace: true })}><QueryClientProvider client={queryClient}><PortalRouter /></QueryClientProvider></ClerkProvider>;
 }
 
