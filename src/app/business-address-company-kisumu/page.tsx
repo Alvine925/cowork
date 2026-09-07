@@ -1,0 +1,4 @@
+import { createLandingPageMetadata, createLandingPageComponent } from '@/views/landing/page-factory'
+
+export const metadata = createLandingPageMetadata('business-address-company-kisumu')
+export default createLandingPageComponent('business-address-company-kisumu')

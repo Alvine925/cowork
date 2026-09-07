@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@theme {
+  /* Brand Palette */
+  /* Primary: #2b4c3b (Forest Green) - hsl(149, 28%, 23%) */
+  --color-primary: #2b4c3b;
+  --color-navy: #2b4c3b;
+  --color-navy-50: #f2f7f4;
+  --color-navy-100: #deede4;
+  --color-navy-200: #bddbc9;
+  --color-navy-300: #93c2a8;
+  --color-navy-400: #66a383;
+  --color-navy-500: #468463;
+  --color-navy-600: #34684e;
+  --color-navy-700: #2b4c3b;
+  --color-navy-800: #233e31;
+  --color-navy-900: #1c3227;
+  --color-navy-950: #0f1c16;
+
+  /* Secondary: #ebff48 (Electric Lime Gold) - hsl(67, 100%, 64%) */
+  --color-secondary: #ebff48;
+  --color-gold: #ebff48;
+  --color-gold-50: #fdffe6;
+  --color-gold-100: #faffbf;
+  --color-gold-200: #f5ff80;
+  --color-gold-300: #ebff48;
+  --color-gold-400: #ddf91f;
+  --color-gold-500: #c1df07;
+  --color-gold-600: #97b003;
+  --color-gold-700: #718506;
+  --color-gold-800: #59680b;
+  --color-gold-900: #4a570e;
+  --color-gold-950: #273102;
+
+  --color-success: #0E9F6E;
+  --color-light-gray: #F6F8FA;
+  --color-dark-gray: #2D2D2D;
+
+  /* Fonts */
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Instrument Serif', Georgia, serif;
+
+  /* Accordion animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from { height: 0; overflow: hidden; }
+  to { height: var(--radix-accordion-content-height); overflow: hidden; }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); overflow: hidden; }
+  to { height: 0; overflow: hidden; }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased bg-[#fbfaf7] text-dark-gray;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-navy {
+    background: linear-gradient(135deg, #2b4c3b 0%, #1c3227 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #ebff48 0%, #c1df07 100%);
+  }
+
+  .text-gradient-navy {
+    background: linear-gradient(135deg, #2b4c3b, #34684e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #2b4c3b, #ebff48);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+}

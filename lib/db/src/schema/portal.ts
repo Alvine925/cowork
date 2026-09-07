@@ -11,7 +11,7 @@ import { z } from "zod/v4";
 
 export const portalSubscriptions = pgTable("portal_subscriptions", {
   id: serial("id").primaryKey(),
-  clerkUserId: text("clerk_user_id").notNull(),
+  userId: text("user_id").notNull(),
   plan: text("plan").notNull(),
   billingCycle: text("billing_cycle").notNull(),
   status: text("status").notNull(),
@@ -29,7 +29,7 @@ export const portalSubscriptions = pgTable("portal_subscriptions", {
 
 export const portalDocuments = pgTable("portal_documents", {
   id: serial("id").primaryKey(),
-  clerkUserId: text("clerk_user_id").notNull(),
+  userId: text("user_id").notNull(),
   name: text("name").notNull(),
   category: text("category").notNull(),
   status: text("status").notNull(),
