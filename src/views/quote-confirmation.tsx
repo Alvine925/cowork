@@ -108,7 +108,7 @@ function QuoteConfirmationContent() {
     <div class="header">
       <div class="brand">PAPER STREET WORKSPACES</div>
       <div class="brand-sub">CBD Commercial Center · Oginga Odinga St · Kisumu CBD, Kenya</div>
-      <div class="brand-sub">Tel: +254 709 123 456 · Email: hello@paperstreet.africa · Web: www.paperstreet.africa</div>
+      <div class="brand-sub">Tel: 0110486677 / +254 110 486 677 · Email: hello@paperstreet.co.ke · Web: www.paperstreet.co.ke</div>
     </div>
 
     <div class="title-row">
@@ -222,7 +222,7 @@ function QuoteConfirmationContent() {
       
       <p style="margin: 0 0 10px 0;"><strong>12. Governing Law and Dispute Resolution:</strong> Governed by the Laws of the Republic of Kenya. Disputes shall first undergo 30-day good-faith negotiations, followed by binding mediation under the Nairobi Centre for International Arbitration (NCIA) before any court litigation.</p>
       
-      <p style="margin: 0;"><strong>13. Legal Contact &amp; Corporate Notices:</strong> Legal Desk: legal@paperstreet.africa &middot; Client Support: hello@paperstreet.africa &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</p>
+      <p style="margin: 0;"><strong>13. Legal Contact &amp; Corporate Notices:</strong> Legal Desk: legal@paperstreet.co.ke &middot; Client Support: hello@paperstreet.co.ke &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</p>
     </div>
 
     <div class="section-title">ONBOARDING &amp; ACTIVATION NEXT STEPS</div>
@@ -234,7 +234,7 @@ function QuoteConfirmationContent() {
 
     <div class="footer">
       <strong>Paper Street Workspaces</strong> &middot; CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya<br>
-      Tel: +254 709 123 456 &middot; Email: hello@paperstreet.africa &middot; Web: www.paperstreet.africa
+      Tel: 0110486677 / +254 110 486 677 &middot; Email: hello@paperstreet.co.ke &middot; Web: www.paperstreet.co.ke
     </div>
   </div>
 </body>
@@ -265,7 +265,7 @@ function QuoteConfirmationContent() {
   return (
     <main className="min-h-screen bg-[#FBFAF7] pt-24 pb-28 text-navy">
       <div className="container mx-auto px-6 md:px-12 max-w-3xl">
-        
+
         {/* Navigation & Action Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-navy/15 pb-4 mb-8">
           <Link
@@ -288,7 +288,7 @@ function QuoteConfirmationContent() {
 
         {/* Flat Institutional Quotation Document */}
         <div className="space-y-8">
-          
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b-2 border-navy pb-6">
             <div>
@@ -475,7 +475,7 @@ function QuoteConfirmationContent() {
 
               <div>
                 <strong className="text-navy block font-semibold mb-0.5">13. Legal Contact &amp; Corporate Notices</strong>
-                <span>Legal Desk: legal@paperstreet.africa &middot; Client Support: hello@paperstreet.africa &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</span>
+                <span>Legal Desk: legal@paperstreet.co.ke &middot; Client Support: hello@paperstreet.co.ke &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</span>
               </div>
             </div>
           </div>
@@ -500,7 +500,7 @@ function QuoteConfirmationContent() {
           <div className="pt-8 border-t border-navy/15 text-center text-[11px] text-navy/50 space-y-1">
             <p className="font-semibold text-navy/70">Paper Street Workspaces</p>
             <p>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
-            <p>Phone: +254 709 123 456 &nbsp;|&nbsp; Email: hello@paperstreet.africa &nbsp;|&nbsp; www.paperstreet.africa</p>
+            <p>Phone: 0110486677 (+254 110 486 677) &nbsp;|&nbsp; Email: hello@paperstreet.co.ke &nbsp;|&nbsp; www.paperstreet.co.ke</p>
           </div>
 
         </div>

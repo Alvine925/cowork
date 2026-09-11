@@ -162,19 +162,7 @@ export function Navbar() {
             <Link href="/blog" className={linkCls}>Insights</Link>
           </nav>
 
-          <div className="hidden lg:flex items-center">
-            <Link
-              href="/login"
-              className={cn(
-                'text-[11px] font-medium uppercase tracking-widest px-5 py-2 border transition-colors',
-                solidNav
-                  ? 'border-navy text-navy hover:bg-navy hover:text-white'
-                  : 'border-white text-white hover:bg-white hover:text-navy'
-              )}
-            >
-              Log in
-            </Link>
-          </div>
+
 
           {/* Mobile hamburger */}
           <button
@@ -238,12 +226,6 @@ export function Navbar() {
 
               {/* CTA */}
               <div className="px-7 pb-10">
-                <Link
-                  href="/login"
-                  className="mb-3 block border border-navy text-center text-xs font-semibold uppercase tracking-widest text-navy py-3.5 hover:bg-navy hover:text-white transition-colors"
-                >
-                  Log in
-                </Link>
                 <Link
                   href="/contact"
                   className="block text-center bg-navy text-white text-xs font-semibold uppercase tracking-widest py-3.5 hover:bg-navy-700 transition-colors"

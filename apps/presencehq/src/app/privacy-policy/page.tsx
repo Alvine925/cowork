@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Read the Paper Street Privacy Policy to learn how we protect and process business and personal data under Kenya Data Protection regulations.',
   keywords: ['Paper Street privacy policy', 'Kenya data protection policy'],
   alternates: {
-    canonical: 'https://paperstreet.africa/privacy-policy',
+    canonical: 'https://paperstreet.co.ke/privacy-policy',
   },
 };
 

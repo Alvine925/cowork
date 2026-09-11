@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     'virtual mailbox Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/addons/mail-handling',
+    canonical: 'https://paperstreet.co.ke/services/addons/mail-handling',
   },
   openGraph: {
     title: 'Mail Handling & Digital Scanning | Paper Street Kisumu CBD',
     description:
       'Secure front-desk mail receiving, official letter logging, and instant high-resolution PDF document scans delivered directly to your online portal in Kisumu CBD.',
-    url: 'https://paperstreet.africa/services/addons/mail-handling',
+    url: 'https://paperstreet.co.ke/services/addons/mail-handling',
     siteName: 'Paper Street',
     locale: 'en_KE',
     type: 'website',

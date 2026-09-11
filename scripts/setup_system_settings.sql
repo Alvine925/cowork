@@ -30,7 +30,7 @@ VALUES
   ('paystack_public_key', 'pk_test_placeholder_replace_with_your_paystack_public_key', 'Paystack Public API Key for client transactions'),
   ('brevo_api_key', 'xkeysib-placeholder_replace_with_your_brevo_api_key', 'Brevo (Sendinblue) Transactional API Key'),
   ('brevo_sender_name', 'Paper Street Workspaces', 'Sender name displayed in transactional confirmation emails'),
-  ('brevo_sender_email', 'hello@paperstreet.africa', 'Verified Brevo sender email address'),
+  ('brevo_sender_email', 'hello@paperstreet.co.ke', 'Verified Brevo sender email address'),
   ('admin_email', 'otienoalvine925@gmail.com', 'Admin email address for real-time booking alerts and reports')
 ON CONFLICT (key) DO UPDATE SET
   value = EXCLUDED.value,

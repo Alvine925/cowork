@@ -129,7 +129,7 @@ export async function POST(req: Request) {
             <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 30px 0;" />
             <p style="font-size: 11px; color: #94A3B8; text-align: center; margin: 0;">
               Paper Street Workspaces · Delta Corner, Westlands, Nairobi, Kenya<br />
-              Telephone: +254 709 123 456 · Email: hello@paperstreet.africa
+              Telephone: 0110486677 / +254 110 486 677 · Email: hello@paperstreet.co.ke
             </p>
           </div>
         </div>

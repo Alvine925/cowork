@@ -61,7 +61,7 @@ serve(async (req) => {
     // 1. Fetch Brevo Credentials from Deno env or Supabase system_settings
     let apiKey = Deno.env.get('BREVO_API_KEY') || Deno.env.get('SENDINBLUE_API_KEY') || ''
     let senderName = Deno.env.get('BREVO_SENDER_NAME') || 'Paper Street Workspaces'
-    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.africa'
+    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.co.ke'
     let adminEmail = Deno.env.get('ADMIN_EMAIL') || 'otienoalvine925@gmail.com'
 
     if (!apiKey || apiKey.includes('placeholder')) {
@@ -176,7 +176,7 @@ serve(async (req) => {
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>Expansion Hubs: Nairobi &middot; Mombasa &middot; Nakuru &middot; Eldoret &middot; Kisumu CBD &middot; hello@paperstreet.africa</div>
+      <div>Expansion Hubs: Nairobi &middot; Mombasa &middot; Nakuru &middot; Eldoret &middot; Kisumu CBD &middot; hello@paperstreet.co.ke</div>
     </div>
 
   </div>

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Use a prestigious business address in Nairobi for company registration on eCitizen BRS, banking KYC, and professional correspondence.',
   keywords: ['business address Kenya', 'registered office address Kenya', 'business address Nairobi'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/business-address',
+    canonical: 'https://paperstreet.co.ke/services/business-address',
   },
 };
 

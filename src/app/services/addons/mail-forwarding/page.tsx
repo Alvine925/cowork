@@ -11,13 +11,13 @@ export const metadata: Metadata = {
     'virtual office mail Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/addons/mail-forwarding',
+    canonical: 'https://paperstreet.co.ke/services/addons/mail-forwarding',
   },
   openGraph: {
     title: 'Mail Forwarding in Kisumu | Paper Street',
     description:
       'Have original physical letters and documents received in Kisumu forwarded directly to your current address or town in Kenya.',
-    url: 'https://paperstreet.africa/services/addons/mail-forwarding',
+    url: 'https://paperstreet.co.ke/services/addons/mail-forwarding',
     siteName: 'Paper Street',
     locale: 'en_KE',
     type: 'website',

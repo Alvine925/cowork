@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Explore practical business resources from Paper Street covering company registration, professional addresses, workspace, compliance, and growth in Kenya.',
   keywords: ['Kenya business resources', 'starting a business Kenya', 'business guides Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/resources',
+    canonical: 'https://paperstreet.co.ke/resources',
   },
 };
 

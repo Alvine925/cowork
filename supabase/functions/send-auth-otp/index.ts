@@ -60,7 +60,7 @@ serve(async (req) => {
       Deno.env.get('SENDER_EMAIL') ||
       Deno.env.get('BREVO_FROM_EMAIL') ||
       Deno.env.get('FROM_EMAIL') ||
-      'hello@paperstreet.africa'
+      'hello@paperstreet.co.ke'
 
     if (!apiKey || apiKey.includes('placeholder')) {
       const { data: settings } = await supabase.from('system_settings').select('key, value')
@@ -110,11 +110,11 @@ serve(async (req) => {
       <div style="font-size: 12.5px; color: #334155; line-height: 1.5;">Share this code with colleagues. They receive <strong>10% off their first booking</strong>, and you earn <strong>KES 500 in workspace credits</strong> for each referral.</div>
     </div>
     <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 24px; margin-bottom: 24px;">
-      <a href="https://paperstreet.africa/portal/client/dashboard" style="display: inline-block; background: #0F2D52; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 24px;">Access Client Portal &rarr;</a>
+      <a href="https://paperstreet.co.ke/portal/client/dashboard" style="display: inline-block; background: #0F2D52; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 24px;">Access Client Portal &rarr;</a>
     </div>
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke</div>
     </div>
   </div>
 </body>
@@ -150,7 +150,7 @@ serve(async (req) => {
     </div>
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke</div>
     </div>
   </div>
 </body>

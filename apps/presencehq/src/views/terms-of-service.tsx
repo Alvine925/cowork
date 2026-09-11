@@ -114,7 +114,7 @@ export default function TermsOfServicePage() {
 
           <h2>6. Cancellation and Refund Policy</h2>
           <p>
-            You may cancel your Paper Street subscription at any time by providing written notice to hello@paperstreet.africa or through your account dashboard.
+            You may cancel your Paper Street subscription at any time by providing written notice to hello@paperstreet.co.ke or through your account dashboard.
           </p>
           <ul>
             <li><strong>Monthly subscriptions:</strong> Cancellations take effect at the end of the current billing cycle. No refunds are issued for partial months.</li>
@@ -188,8 +188,8 @@ export default function TermsOfServicePage() {
             For questions about these Terms of Service, please contact us:
           </p>
           <ul>
-            <li><strong>Email:</strong> legal@paperstreet.africa</li>
-            <li><strong>Phone:</strong> +254 700 000 000</li>
+            <li><strong>Email:</strong> legal@paperstreet.co.ke</li>
+            <li><strong>Phone:</strong> 0110486677 / +254 110 486 677</li>
             <li><strong>Address:</strong> Paper Street, Westlands Business Park, Waiyaki Way, Nairobi, Kenya</li>
           </ul>
         </div>

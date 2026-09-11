@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Workspace in Kisumu CBD | Paper Street',
     description: 'Every type of professional workspace in Kisumu CBD — hot desks, private offices, virtual office plans. Enterprise internet, generator backup, commercial address.',
-    url: 'https://paperstreet.africa/workspace-kisumu-cbd',
+    url: 'https://paperstreet.co.ke/workspace-kisumu-cbd',
   },
-  alternates: { canonical: 'https://paperstreet.africa/workspace-kisumu-cbd' },
+  alternates: { canonical: 'https://paperstreet.co.ke/workspace-kisumu-cbd' },
 }
 
 export default function WorkspaceKisumuCBDPage() {

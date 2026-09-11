@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Best Office Spaces for Startups in Kisumu',
     description: 'Every startup workspace option in Kisumu evaluated — day passes, monthly desks, private team offices, and why the financial math almost always favours coworking for early-stage companies.',
-    url: 'https://paperstreet.africa/startup-office-kisumu',
+    url: 'https://paperstreet.co.ke/startup-office-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/startup-office-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/startup-office-kisumu' },
 }
 
 export default function StartupOfficeKisumuPage() {

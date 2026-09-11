@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Establish your presence at Zion Mall Business Hub, Eldoret. North Rift logistics and commercial business address, mail forwarding, and desks.',
   keywords: ['Eldoret virtual office', 'coworking Zion Mall Eldoret', 'business address Eldoret'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/eldoret',
+    canonical: 'https://paperstreet.co.ke/locations/eldoret',
   },
 };
 

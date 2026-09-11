@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLoginRateLimit } from '@/hooks/useLoginRateLimit';
+import { detectPromptInjection } from '@/lib/sanitize';
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,12 +13,12 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
-  QrCode,
   Receipt,
   Ticket,
   UserRound,
   X,
 } from 'lucide-react';
+import { DynamicQrCode } from '@/components/portal/DynamicQrCode';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -49,9 +51,9 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   portalType: 'member',
-  setPortalType: () => {},
-  signOut: async () => {},
-  signInWithDemo: () => {},
+  setPortalType: () => { },
+  signOut: async () => { },
+  signInWithDemo: () => { },
 });
 
 export const usePortalAuth = () => useContext(AuthContext);
@@ -146,10 +148,10 @@ function formatDate(value?: string | null) {
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('en-KE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(date);
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
 }
 
 function formatMoney(value?: number | null) {
@@ -176,18 +178,16 @@ function StatusIndicator({ status }: { status: string }) {
   const isPending = status === 'pending' || status === 'pending_payment';
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-semibold border ${
-        isGood
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-semibold border ${isGood
           ? 'border-emerald-700/20 bg-emerald-50 text-emerald-800'
           : isPending
             ? 'border-amber-700/20 bg-amber-50 text-amber-800'
             : 'border-rose-700/20 bg-rose-50 text-rose-800'
-      }`}
+        }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          isGood ? 'bg-emerald-600' : isPending ? 'bg-amber-600' : 'bg-rose-600'
-        }`}
+        className={`h-1.5 w-1.5 rounded-full ${isGood ? 'bg-emerald-600' : isPending ? 'bg-amber-600' : 'bg-rose-600'
+          }`}
       />
       {status.replaceAll('_', ' ')}
     </span>
@@ -204,6 +204,151 @@ function PageHeader({ eyebrow, title, detail }: { eyebrow: string; title: string
   );
 }
 
+// SKELETON LOADERS
+export function SkeletonBox({ className = '' }: { className?: string }) {
+  return <div className={`bg-navy/10 animate-pulse rounded-none ${className}`} />;
+}
+
+export function DashboardMetricsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="space-y-2.5">
+          <SkeletonBox className="h-2.5 w-20" />
+          <SkeletonBox className="h-8 w-16" />
+          <SkeletonBox className="h-3 w-28" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ActivePassSkeleton() {
+  return (
+    <div className="p-8 border border-navy/15 bg-navy/5 flex flex-wrap items-center justify-between gap-6">
+      <div className="space-y-3 max-w-md w-full">
+        <SkeletonBox className="h-2.5 w-36" />
+        <SkeletonBox className="h-8 w-3/4" />
+        <SkeletonBox className="h-3.5 w-1/2" />
+      </div>
+      <div className="flex items-center gap-6">
+        <div className="space-y-2 text-right">
+          <SkeletonBox className="h-2.5 w-24 ml-auto" />
+          <SkeletonBox className="h-7 w-32 ml-auto" />
+        </div>
+        <SkeletonBox className="w-14 h-14" />
+      </div>
+    </div>
+  );
+}
+
+export function BookingsListSkeleton() {
+  return (
+    <div className="divide-y divide-navy/10">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="py-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-2">
+            <SkeletonBox className="h-4 w-60" />
+            <SkeletonBox className="h-3 w-44" />
+          </div>
+          <div className="space-y-2 text-right">
+            <SkeletonBox className="h-5 w-24 ml-auto" />
+            <SkeletonBox className="h-4 w-16 ml-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PassesListSkeleton() {
+  return (
+    <div className="divide-y divide-navy/15">
+      {[1, 2].map((i) => (
+        <div key={i} className="py-8 flex flex-wrap items-center justify-between gap-8 first:pt-0">
+          <div className="max-w-md w-full space-y-3">
+            <SkeletonBox className="h-2.5 w-28" />
+            <SkeletonBox className="h-8 w-4/5" />
+            <SkeletonBox className="h-3.5 w-1/2" />
+          </div>
+          <div className="flex items-center gap-8">
+            <div className="space-y-2 text-right">
+              <SkeletonBox className="h-2.5 w-24 ml-auto" />
+              <SkeletonBox className="h-7 w-32 ml-auto" />
+            </div>
+            <SkeletonBox className="w-16 h-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function InvoicesSkeleton() {
+  return (
+    <div className="divide-y divide-navy/10">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="py-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-2">
+            <SkeletonBox className="h-4 w-48" />
+            <SkeletonBox className="h-3 w-64" />
+          </div>
+          <div className="space-y-2 text-right">
+            <SkeletonBox className="h-5 w-28 ml-auto" />
+            <SkeletonBox className="h-7 w-20 ml-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MemberDashboardSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="space-y-2.5">
+            <SkeletonBox className="h-2.5 w-20" />
+            <SkeletonBox className="h-8 w-24" />
+            <SkeletonBox className="h-3 w-32" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function MemberMembershipSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="grid md:grid-cols-2 gap-12 py-6 border-b border-navy/10">
+        <div className="space-y-3">
+          <SkeletonBox className="h-2.5 w-24" />
+          <SkeletonBox className="h-8 w-60" />
+          <SkeletonBox className="h-3.5 w-40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MemberDocumentsSkeleton() {
+  return (
+    <div className="divide-y divide-navy/10">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="py-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-2 max-w-xl w-full">
+            <SkeletonBox className="h-4 w-48" />
+            <SkeletonBox className="h-3 w-3/4" />
+          </div>
+          <SkeletonBox className="h-8 w-20" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ==========================================
 // 1. MEMBER LOGIN (MEMBERS ONLY - NO SIGNUP)
 // ==========================================
@@ -214,6 +359,10 @@ export function MemberLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const { isLocked, attemptsLeft, lockoutSecondsLeft, recordFailure, resetLimit } =
+    useLoginRateLimit('member', email);
 
   useEffect(() => {
     setPortalType('member');
@@ -225,6 +374,16 @@ export function MemberLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (isLocked) {
+      setError(`Too many failed attempts. Try again in ${Math.ceil(lockoutSecondsLeft / 60)} minute(s).`);
+      return;
+    }
+
+    if (detectPromptInjection(email) || detectPromptInjection(password)) {
+      setError('Invalid input detected. Please use your registered credentials.');
+      return;
+    }
 
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
@@ -247,15 +406,22 @@ export function MemberLoginPage() {
       });
       if (authErr) throw authErr;
       if (data.user) {
+        resetLimit();
         setPortalType('member');
         router.push('/portal/member/dashboard');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid member credentials.');
+      recordFailure();
+      const remaining = Math.max(0, attemptsLeft - 1);
+      const msg = err instanceof Error ? err.message : 'Invalid member credentials.';
+      setError(remaining > 0 ? `${msg} ${remaining} attempt(s) remaining.` : msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const lockoutMins = Math.ceil(lockoutSecondsLeft / 60);
+  const lockoutSecs = lockoutSecondsLeft % 60;
 
   return (
     <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
@@ -282,7 +448,22 @@ export function MemberLoginPage() {
             <strong>Member Credentials Notice:</strong> Member accounts are provisioned exclusively upon office lease confirmation. Self-registration is restricted.
           </div>
 
-          {error && (
+          {isLocked && (
+            <div className="mb-6 p-4 border border-amber-300 bg-amber-50 text-xs text-amber-900 flex items-start gap-3">
+              <span className="text-lg leading-none">🔒</span>
+              <div>
+                <p className="font-semibold">Account temporarily locked</p>
+                <p className="mt-1 text-amber-800">
+                  Too many failed attempts. Try again in{' '}
+                  <span className="font-mono font-bold">
+                    {lockoutMins}:{String(lockoutSecs).padStart(2, '0')}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {error && !isLocked && (
             <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
               {error}
             </div>
@@ -295,32 +476,54 @@ export function MemberLoginPage() {
               </label>
               <input
                 type="email"
+                id="member-email"
                 required
+                disabled={isLocked}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="member@company.africa"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="email"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="font-mono text-[10px] uppercase tracking-wider text-navy/50 hover:text-navy transition-colors underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <input
                 type="password"
+                id="member-password"
                 required
+                disabled={isLocked}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="current-password"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
+
+            {attemptsLeft < 5 && attemptsLeft > 0 && (
+              <p className="text-[10px] font-mono text-amber-700">
+                Warning: {attemptsLeft} attempt(s) remaining before temporary lockout.
+              </p>
+            )}
 
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                id="member-login-submit"
+                disabled={loading || isLocked}
                 className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Authenticating...' : 'Sign In to Member Portal'}
@@ -346,6 +549,13 @@ export function MemberLoginPage() {
           </div>
         </div>
       </div>
+
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          defaultEmail={email}
+          onClose={() => setShowForgotPassword(false)}
+        />
+      )}
     </main>
   );
 }
@@ -360,6 +570,10 @@ export function ClientLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const { isLocked, attemptsLeft, lockoutSecondsLeft, recordFailure, resetLimit } =
+    useLoginRateLimit('client', email);
 
   useEffect(() => {
     setPortalType('client');
@@ -371,6 +585,16 @@ export function ClientLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (isLocked) {
+      setError(`Too many failed attempts. Try again in ${Math.ceil(lockoutSecondsLeft / 60)} minute(s).`);
+      return;
+    }
+
+    if (detectPromptInjection(email) || detectPromptInjection(password)) {
+      setError('Invalid input detected. Please use your registered credentials.');
+      return;
+    }
 
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
@@ -393,15 +617,22 @@ export function ClientLoginPage() {
       });
       if (authErr) throw authErr;
       if (data.user) {
+        resetLimit();
         setPortalType('client');
         router.push('/portal/client/dashboard');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid client credentials.');
+      recordFailure();
+      const remaining = Math.max(0, attemptsLeft - 1);
+      const msg = err instanceof Error ? err.message : 'Invalid client credentials.';
+      setError(remaining > 0 ? `${msg} ${remaining} attempt(s) remaining.` : msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const lockoutMins = Math.ceil(lockoutSecondsLeft / 60);
+  const lockoutSecs = lockoutSecondsLeft % 60;
 
   return (
     <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
@@ -424,7 +655,22 @@ export function ClientLoginPage() {
         </div>
 
         <div className="border-t border-navy/15 pt-8">
-          {error && (
+          {isLocked && (
+            <div className="mb-6 p-4 border border-amber-300 bg-amber-50 text-xs text-amber-900 flex items-start gap-3">
+              <span className="text-lg leading-none">🔒</span>
+              <div>
+                <p className="font-semibold">Account temporarily locked</p>
+                <p className="mt-1 text-amber-800">
+                  Too many failed attempts. Try again in{' '}
+                  <span className="font-mono font-bold">
+                    {lockoutMins}:{String(lockoutSecs).padStart(2, '0')}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {error && !isLocked && (
             <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
               {error}
             </div>
@@ -437,32 +683,54 @@ export function ClientLoginPage() {
               </label>
               <input
                 type="email"
+                id="client-email"
                 required
+                disabled={isLocked}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="client@company.ke"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="email"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="font-mono text-[10px] uppercase tracking-wider text-navy/50 hover:text-navy transition-colors underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <input
                 type="password"
+                id="client-password"
                 required
+                disabled={isLocked}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="current-password"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
+
+            {attemptsLeft < 5 && attemptsLeft > 0 && (
+              <p className="text-[10px] font-mono text-amber-700">
+                Warning: {attemptsLeft} attempt(s) remaining before temporary lockout.
+              </p>
+            )}
 
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                id="client-login-submit"
+                disabled={loading || isLocked}
                 className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Authenticating...' : 'Sign In to Client Desk'}
@@ -488,6 +756,13 @@ export function ClientLoginPage() {
           </div>
         </div>
       </div>
+
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          defaultEmail={email}
+          onClose={() => setShowForgotPassword(false)}
+        />
+      )}
     </main>
   );
 }
@@ -727,7 +1002,7 @@ export function PortalShellLayout({ children, type }: { children: ReactNode; typ
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF8F0] flex">
+    <div className="min-h-screen bg-[#fbfaf7] flex">
       {/* Mobile drawer overlay */}
       {mobileOpen && (
         <div
@@ -738,9 +1013,8 @@ export function PortalShellLayout({ children, type }: { children: ReactNode; typ
 
       {/* Clean Editorial Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#0F2D52] px-7 py-8 text-white transition-transform duration-300 lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#1c3227] px-7 py-8 text-white transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
@@ -775,11 +1049,10 @@ export function PortalShellLayout({ children, type }: { children: ReactNode; typ
                   key={href}
                   href={href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-colors ${
-                    active
+                  className={`flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-colors ${active
                       ? 'bg-white/10 text-white font-semibold border-l-2 border-gold'
                       : 'text-white/70 hover:bg-white/5 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Icon size={16} strokeWidth={active ? 2 : 1.5} className={active ? 'text-gold' : ''} />
                   {label}
@@ -814,7 +1087,7 @@ export function PortalShellLayout({ children, type }: { children: ReactNode; typ
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-[280px] flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 h-16 border-b border-navy/10 bg-[#FBF8F0]/95 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
+        <header className="sticky top-0 z-30 h-16 border-b border-navy/10 bg-[#fbfaf7]/95 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -1081,7 +1354,7 @@ export function MemberSupportView() {
             Request courier dispatch of received original parcels to your physical location.
           </p>
           <a
-            href="mailto:hello@paperstreet.africa?subject=Mail%20Forwarding%20Request"
+            href="mailto:hello@paperstreet.co.ke?subject=Mail%20Forwarding%20Request"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
             Dispatch Request &rarr;
@@ -1095,7 +1368,7 @@ export function MemberSupportView() {
             Reserve the 6-person or 12-person boardroom with your monthly member credits.
           </p>
           <a
-            href="mailto:hello@paperstreet.africa?subject=Boardroom%20Reservation"
+            href="mailto:hello@paperstreet.co.ke?subject=Boardroom%20Reservation"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
             Book Room &rarr;
@@ -1109,10 +1382,10 @@ export function MemberSupportView() {
             Call the front desk during office hours (Mon-Fri 8:30 AM - 5:30 PM EAT).
           </p>
           <a
-            href="tel:+254709123456"
+            href="tel:0110486677"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
-            +254 709 123 456 &rarr;
+            0110486677 (+254 110 486 677) &rarr;
           </a>
         </div>
       </div>
@@ -1126,27 +1399,53 @@ export function MemberSupportView() {
 export function ClientDashboardView() {
   const { user } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Client';
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [passes, setPasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcomingBookings = [
-    {
-      id: 'BK-2041',
-      room: 'The Glasshouse Meeting Room (6 Pax)',
-      location: 'Delta Corner, Westlands',
-      date: '2026-08-26',
-      time: '10:00 AM - 12:00 PM',
-      status: 'confirmed',
-      amount: 5000,
-    },
-    {
-      id: 'BK-2042',
-      room: 'Full-Day Hot Desk Pass',
-      location: 'Riverside Drive Hub',
-      date: '2026-08-28',
-      time: '08:30 AM - 06:00 PM',
-      status: 'confirmed',
-      amount: 2500,
-    },
-  ];
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return;
+      try {
+        const guestUserId = user?.email ? `guest_${user.email.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
+        let bQuery = supabase
+          .from('client_bookings')
+          .select('*')
+          .order('booking_date', { ascending: true })
+          .limit(3);
+
+        if (guestUserId && user.email) {
+          bQuery = bQuery.or(`user_id.eq.${user.id},user_id.eq.${guestUserId},client_email.eq.${user.email}`);
+        } else {
+          bQuery = bQuery.eq('user_id', user.id);
+        }
+        const { data: bData } = await bQuery;
+        setBookings(bData || []);
+
+        let pQuery = supabase
+          .from('client_passes')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (guestUserId) {
+          pQuery = pQuery.or(`user_id.eq.${user.id},user_id.eq.${guestUserId}`);
+        } else {
+          pQuery = pQuery.eq('user_id', user.id);
+        }
+        const { data: pData } = await pQuery;
+        setPasses(pData || []);
+      } catch (err) {
+        console.warn('ClientDashboard load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [user]);
+
+  const activePass = passes[0];
 
   return (
     <div className="space-y-12 animate-paper-rise">
@@ -1156,32 +1455,40 @@ export function ClientDashboardView() {
         detail="Manage your day passes, meeting room reservations, and instant payment receipts."
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Active Passes</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">1 Day Pass</p>
-          <div className="mt-2"><StatusIndicator status="ready" /></div>
+      {loading ? (
+        <DashboardMetricsSkeleton />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Active Passes</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1">{passes.length}</p>
+            <div className="mt-2"><StatusIndicator status={passes.length > 0 ? 'active' : 'none'} /></div>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Next Reservation</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1">
+              {bookings.length > 0 ? formatDate(bookings[0].booking_date) : 'None'}
+            </p>
+            {bookings.length > 0 && <p className="text-xs text-navy/60 mt-1">{bookings[0].start_time} · {bookings[0].location}</p>}
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Check-in PIN</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1 font-mono">
+              {activePass ? activePass.pass_code : '—'}
+            </p>
+            <p className="text-xs text-navy/60 mt-1">{activePass ? 'Scan QR at reception' : 'No active pass'}</p>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">New Booking</p>
+            <Link
+              href="/portal/client/bookings"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-gold mt-2 hover:underline"
+            >
+              + Reserve Space
+            </Link>
+          </div>
         </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Next Reservation</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">Wed, Aug 26</p>
-          <p className="text-xs text-navy/60 mt-1">10:00 AM · Westlands</p>
-        </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Check-in PIN</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1 font-mono">PS-8291</p>
-          <p className="text-xs text-navy/60 mt-1">Scan QR at reception</p>
-        </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">New Booking</p>
-          <Link
-            href="/portal/client/bookings"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-gold mt-2 hover:underline"
-          >
-            + Reserve Space
-          </Link>
-        </div>
-      </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -1191,21 +1498,39 @@ export function ClientDashboardView() {
           </Link>
         </div>
 
-        <div className="divide-y divide-navy/10">
-          {upcomingBookings.map((b) => (
-            <div key={b.id} className="py-5 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-semibold text-navy">{b.room}</h3>
-                <p className="text-xs text-navy/60 mt-0.5">{b.location} · {b.time}</p>
-                <p className="font-mono text-[10px] text-navy/40 mt-1">{formatDate(b.date)}</p>
+        {loading ? (
+          <BookingsListSkeleton />
+        ) : bookings.length === 0 ? (
+          <div className="py-10 border-y border-navy/10 text-center">
+            <Ticket className="w-8 h-8 text-navy/20 mx-auto mb-3" />
+            <p className="font-heading text-xl text-navy/50">No Upcoming Reservations</p>
+            <p className="text-xs text-navy/40 mt-2 max-w-xs mx-auto leading-relaxed">
+              You don&apos;t have any workspace reservations yet. Browse available packages to get started.
+            </p>
+            <Link
+              href="/portal/client/bookings"
+              className="inline-block mt-5 px-5 py-2 bg-navy text-white text-xs font-semibold uppercase tracking-widest hover:bg-navy/90 transition-colors"
+            >
+              Book a Space &rarr;
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-navy/10">
+            {bookings.map((b) => (
+              <div key={b.id} className="py-5 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-navy">{b.service_title}</h3>
+                  <p className="text-xs text-navy/60 mt-0.5">{b.location} · {b.start_time} &ndash; {b.end_time}</p>
+                  <p className="font-mono text-[10px] text-navy/40 mt-1">{formatDate(b.booking_date)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-navy">{formatMoney(b.total_amount_kes)}</p>
+                  <div className="mt-1"><StatusIndicator status={b.status} /></div>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-navy">{formatMoney(b.amount)}</p>
-                <div className="mt-1"><StatusIndicator status={b.status} /></div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1248,9 +1573,8 @@ export function ClientBookingsView() {
               <div
                 key={s.title}
                 onClick={() => { setSelectedService(s.title); setBooked(false); }}
-                className={`py-4 cursor-pointer transition-colors ${
-                  selectedService === s.title ? 'bg-navy/5 pl-3 border-l-2 border-navy' : 'hover:bg-navy/[0.02]'
-                }`}
+                className={`py-4 cursor-pointer transition-colors ${selectedService === s.title ? 'bg-navy/5 pl-3 border-l-2 border-navy' : 'hover:bg-navy/[0.02]'
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <h3 className="text-sm font-semibold text-navy">{s.title}</h3>
@@ -1353,6 +1677,37 @@ export function ClientBookingsView() {
 }
 
 export function ClientPassesView() {
+  const { user } = usePortalAuth();
+  const [passes, setPasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return;
+      try {
+        const guestUserId = user?.email ? `guest_${user.email.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
+        let pQuery = supabase
+          .from('client_passes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (guestUserId) {
+          pQuery = pQuery.or(`user_id.eq.${user.id},user_id.eq.${guestUserId}`);
+        } else {
+          pQuery = pQuery.eq('user_id', user.id);
+        }
+
+        const { data } = await pQuery;
+        setPasses(data || []);
+      } catch (err) {
+        console.warn('ClientPassesView load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [user]);
+
   return (
     <div className="space-y-12 animate-paper-rise">
       <PageHeader
@@ -1361,59 +1716,117 @@ export function ClientPassesView() {
         detail="Present this pass upon arrival at reception for building access and WiFi authorization."
       />
 
-      <div className="py-8 border-y border-navy/10 flex flex-wrap items-center justify-between gap-8">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-gold font-bold">Entry Pass</p>
-          <h2 className="font-heading text-3xl text-navy mt-1">Delta Corner, Westlands</h2>
-          <p className="text-xs text-navy/60 mt-2">Full-Day Access · 200Mbps High-Speed WiFi & Barista Coffee</p>
+      {loading ? (
+        <PassesListSkeleton />
+      ) : passes.length === 0 ? (
+        <div className="py-12 border-y border-navy/10 text-center">
+          <Ticket className="w-8 h-8 text-navy/20 mx-auto mb-3" />
+          <p className="font-heading text-xl text-navy/50">No Entry Passes</p>
+          <p className="text-xs text-navy/40 mt-2 max-w-sm mx-auto leading-relaxed">
+            Entry passes are issued when you complete a booking. Book a hot desk or meeting room to receive your digital check-in pass.
+          </p>
+          <Link
+            href="/portal/client/bookings"
+            className="inline-block mt-5 px-5 py-2 bg-navy text-white text-xs font-semibold uppercase tracking-widest hover:bg-navy/90 transition-colors"
+          >
+            Book a Space &rarr;
+          </Link>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <p className="font-mono text-[10px] uppercase text-navy/40">Pass Code</p>
-            <p className="font-mono text-xl font-bold text-navy">PS-7742-KE</p>
-          </div>
-          <QrCode size={56} className="text-navy" />
+      ) : (
+        <div className="divide-y divide-navy/15">
+          {passes.map((pass) => (
+            <div key={pass.id} className="py-8 border-y border-navy/10 flex flex-wrap items-center justify-between gap-8 first:pt-0">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-gold font-bold">Entry Pass</p>
+                <h2 className="font-heading text-3xl text-navy mt-1">{pass.service_title}</h2>
+                <p className="text-xs text-navy/60 mt-2">{pass.location} · {formatDate(pass.valid_date)}</p>
+                {pass.wifi_network && (
+                  <p className="text-xs text-navy/50 mt-1">Wi-Fi: <strong className="text-navy">{pass.wifi_network}</strong></p>
+                )}
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <p className="font-mono text-[10px] uppercase text-navy/40">Pass Code</p>
+                  <p className="font-mono text-xl font-bold text-navy">{pass.pass_code}</p>
+                </div>
+                <DynamicQrCode
+                  value={`https://paperstreet.co.ke/checkin?code=${pass.pass_code}`}
+                  size={80}
+                />
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 export function ClientInvoicesView() {
-  const invoices = [
-    { id: 'INV-2026-081', desc: 'Boardroom Reservation (2 hrs)', date: '2026-08-24', amount: 5000 },
-    { id: 'INV-2026-074', desc: '5-Day Flexible Desk Bundle', date: '2026-08-12', amount: 10000 },
-  ];
+  const { user } = usePortalAuth();
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('client_invoices')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        setInvoices(data || []);
+      } catch (err) {
+        console.warn('ClientInvoicesView load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [user]);
 
   return (
     <div className="space-y-12 animate-paper-rise">
       <PageHeader
         eyebrow="Billing History"
-        title="Orders & Receipts"
+        title="Orders &amp; Receipts"
         detail="Download tax invoices and official transaction receipts for business expense tracking."
       />
 
-      <div className="divide-y divide-navy/10">
-        {invoices.map((inv) => (
-          <div key={inv.id} className="py-4 flex items-center justify-between gap-4 text-xs">
-            <div>
-              <span className="font-mono text-navy/50">{inv.id}</span>
-              <h3 className="font-semibold text-navy mt-0.5">{inv.desc}</h3>
+      {loading ? (
+        <InvoicesSkeleton />
+      ) : invoices.length === 0 ? (
+        <div className="py-12 border-y border-navy/10 text-center">
+          <Receipt className="w-8 h-8 text-navy/20 mx-auto mb-3" />
+          <p className="font-heading text-xl text-navy/50">No Invoices Yet</p>
+          <p className="text-xs text-navy/40 mt-2 max-w-sm mx-auto leading-relaxed">
+            Your booking receipts and payment invoices will appear here after your first completed transaction.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-navy/10">
+          {invoices.map((inv) => (
+            <div key={inv.id} className="py-4 flex items-center justify-between gap-4 text-xs">
+              <div>
+                <span className="font-mono text-navy/50">{inv.invoice_number}</span>
+                <h3 className="font-semibold text-navy mt-0.5">{inv.description}</h3>
+              </div>
+              <div className="flex items-center gap-6">
+                <span className="font-mono text-navy/40">{formatDate(inv.created_at)}</span>
+                <span className="font-semibold text-navy">{formatMoney(inv.amount_kes)}</span>
+                <button
+                  type="button"
+                  onClick={() => alert(`Downloading Invoice ${inv.invoice_number}`)}
+                  className="inline-flex items-center gap-1.5 border border-navy/15 px-3 py-1.5 text-navy hover:bg-navy hover:text-white transition-colors"
+                >
+                  <Download size={12} /> PDF
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-6">
-              <span className="font-mono text-navy/40">{formatDate(inv.date)}</span>
-              <span className="font-semibold text-navy">{formatMoney(inv.amount)}</span>
-              <button
-                type="button"
-                onClick={() => alert(`Downloading Invoice ${inv.id}`)}
-                className="border border-navy/20 px-3 py-1 text-[11px] uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors"
-              >
-                PDF
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1421,7 +1834,7 @@ export function ClientInvoicesView() {
 export function PortalProfileView({ type }: { type: PortalType }) {
   const { user, signOut } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Paper Street User';
-  const email = user?.email || 'user@paperstreet.africa';
+  const email = user?.email || 'user@paperstreet.co.ke';
   const phone = user?.user_metadata?.phone || '+254 700 000 000';
 
   return (
@@ -1494,3 +1907,334 @@ export function ProtectedPortalWrapper({ children, type }: { children: ReactNode
 
   return <PortalShellLayout type={type}>{children}</PortalShellLayout>;
 }
+
+// ==========================================
+// FORGOT PASSWORD MODAL
+// ==========================================
+function ForgotPasswordModal({
+  defaultEmail,
+  onClose,
+}: {
+  defaultEmail?: string;
+  onClose: () => void;
+}) {
+  const [email, setEmail] = useState(defaultEmail || '');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (detectPromptInjection(email)) {
+      setErrorMsg('Invalid input detected.');
+      return;
+    }
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setErrorMsg(emailCheck.error || 'Please enter a valid email address');
+      return;
+    }
+
+    setStatus('loading');
+    try {
+      // Dynamic redirect — works on localhost AND production
+      const redirectTo = `${window.location.origin}/portal/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        sanitizeInput(email, 120).toLowerCase(),
+        { redirectTo },
+      );
+      if (error) throw error;
+      setStatus('sent');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to send reset email. Please try again.');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleBackdrop}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm px-4"
+    >
+      <div className="relative w-full max-w-sm bg-white border border-navy/15 p-8">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 text-navy/40 hover:text-navy transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {status === 'sent' ? (
+          <div className="text-center py-4">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+              <Check className="h-5 w-5 text-emerald-600" />
+            </div>
+            <h2 className="font-heading text-2xl font-light text-navy">Check your inbox</h2>
+            <p className="mt-3 text-xs text-navy/60 leading-relaxed">
+              We've sent a password reset link to <strong>{email}</strong>.
+              It expires in 1 hour. Check your spam folder if it doesn't arrive.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 w-full border border-navy/20 py-2.5 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <>
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold">
+              Password Reset
+            </span>
+            <h2 className="mt-2 font-heading text-2xl font-light text-navy">Forgot your password?</h2>
+            <p className="mt-2 text-xs text-navy/60 leading-relaxed">
+              Enter your registered email and we'll send you a secure reset link.
+            </p>
+
+            {status === 'error' && (
+              <div className="mt-4 p-3 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  id="forgot-password-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                />
+              </div>
+              <button
+                id="forgot-password-submit"
+                type="submit"
+                disabled={status === 'loading'}
+                className="w-full bg-navy text-white py-3 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+              >
+                {status === 'loading' ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// RESET PASSWORD PAGE
+// ==========================================
+export function ResetPasswordPage() {
+  const router = useRouter();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
+  const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setStatus('idle');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (detectPromptInjection(newPassword) || detectPromptInjection(confirmPassword)) {
+      setErrorMsg('Invalid characters detected in password.');
+      return;
+    }
+
+    const passCheck = validatePassword(newPassword);
+    if (!passCheck.valid) {
+      setErrorMsg(passCheck.error || 'Invalid password');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      return;
+    }
+
+    setStatus('loading');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setStatus('done');
+      setTimeout(() => router.push('/login'), 2500);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update password. Please request a new reset link.');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
+      <div className="max-w-md mx-auto">
+        <div className="mb-10">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold font-bold">
+            Account Security
+          </span>
+          <h1 className="mt-2 font-heading text-4xl font-light text-navy">Set New Password</h1>
+          <p className="mt-2 text-xs text-navy/60 leading-relaxed">
+            Choose a strong password for your Paper Street account.
+          </p>
+        </div>
+
+        <div className="border-t border-navy/15 pt-8">
+          {status === 'done' ? (
+            <div className="text-center py-8">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                <Check className="h-5 w-5 text-emerald-600" />
+              </div>
+              <h2 className="font-heading text-2xl font-light text-navy">Password updated</h2>
+              <p className="mt-2 text-xs text-navy/60">Redirecting you to login…</p>
+            </div>
+          ) : (
+            <>
+              {status === 'error' && (
+                <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
+                  {errorMsg}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* New Password */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="new-password"
+                      type={showNew ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      autoComplete="new-password"
+                      className="w-full border-b border-navy/20 bg-transparent py-2.5 pr-8 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew((v) => !v)}
+                      aria-label={showNew ? 'Hide password' : 'Show password'}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy transition-colors p-1"
+                    >
+                      {showNew ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                      )}
+                    </button>
+                  </div>
+                  {newPassword.length > 0 && newPassword.length < 6 && (
+                    <p className="mt-1.5 text-[10px] font-mono text-amber-600">
+                      Password must be at least 6 characters
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
+                      Confirm Password
+                    </label>
+                    {passwordsMatch && (
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                        Passwords match
+                      </span>
+                    )}
+                    {passwordsMismatch && (
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-rose-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        Doesn't match
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="confirm-password"
+                      type={showConfirm ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      autoComplete="new-password"
+                      className={`w-full border-b bg-transparent py-2.5 pr-8 text-sm text-navy placeholder:text-navy/30 focus:outline-none transition-colors ${passwordsMatch
+                          ? 'border-emerald-500 focus:border-emerald-600'
+                          : passwordsMismatch
+                            ? 'border-rose-400 focus:border-rose-500'
+                            : 'border-navy/20 focus:border-navy'
+                        }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy transition-colors p-1"
+                    >
+                      {showConfirm ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    id="reset-password-submit"
+                    type="submit"
+                    disabled={status === 'loading' || passwordsMismatch || newPassword.length < 6}
+                    className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                  >
+                    {status === 'loading' ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+

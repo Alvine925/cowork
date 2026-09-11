@@ -227,24 +227,6 @@ export function Navbar() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-2 shrink-0">
-            {authUser ? (
-              <Link
-                href="/portal/client/dashboard"
-                className={cn(
-                  'text-[11px] font-semibold uppercase tracking-widest px-4 py-2 border transition-colors flex items-center gap-2',
-                  solidNav
-                    ? 'border-navy bg-navy text-white hover:bg-navy-700'
-                    : 'border-white bg-white/10 text-white hover:bg-white/20'
-                )}
-              >
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Portal Desk
-              </Link>
-            ) : (
-              <Link href="/portal/client/login" className={quoteBtn}>
-                Log in
-              </Link>
-            )}
             <Link href="/quote/virtual-office" className={quoteBtn}>
               Get Quote
             </Link>

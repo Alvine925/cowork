@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'Westlands office contact',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/contact',
+    canonical: 'https://paperstreet.co.ke/contact',
   },
 };
 

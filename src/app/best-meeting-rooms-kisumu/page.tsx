@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Meeting Rooms for Hire in Kisumu: Prices and Options',
     description: 'Compare private meeting rooms and executive boardrooms in Kisumu CBD with hourly pricing, AV screens, and generator backup.',
-    url: 'https://paperstreet.africa/best-meeting-rooms-kisumu',
+    url: 'https://paperstreet.co.ke/best-meeting-rooms-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/best-meeting-rooms-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/best-meeting-rooms-kisumu' },
 }
 
 export default function BestMeetingRoomsKisumuPage() {

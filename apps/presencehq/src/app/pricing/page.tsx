@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'meeting room rates Nairobi',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/pricing',
+    canonical: 'https://paperstreet.co.ke/pricing',
   },
 };
 

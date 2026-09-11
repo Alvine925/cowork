@@ -24,7 +24,7 @@ export default function CareersPage() {
             </p>
             <div className="pt-4">
               <a
-                href="mailto:careers@paperstreet.africa?subject=Application:%20Member%20Concierge"
+                href="mailto:careers@paperstreet.co.ke?subject=Application:%20Member%20Concierge"
                 className="inline-block bg-navy text-white px-6 py-2.5 text-xs uppercase tracking-wider font-semibold"
               >
                 Apply via Email &rarr;

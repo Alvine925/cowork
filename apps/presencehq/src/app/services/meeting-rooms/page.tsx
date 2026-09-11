@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Book modern boardrooms and meeting spaces in Westlands, Nairobi by the hour or day. Equipped with 4K video conferencing, fast WiFi, and coffee service.',
   keywords: ['meeting rooms Nairobi', 'boardroom rental Kenya', 'conference space Westlands'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/meeting-rooms',
+    canonical: 'https://paperstreet.co.ke/services/meeting-rooms',
   },
 };
 

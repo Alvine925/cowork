@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Request Quote: ${config.title} in Kisumu CBD | Paper Street`,
     description: `Generate an official institutional membership proposal and pricing quotation for ${config.title} at Paper Street Workspaces Kisumu CBD.`,
-    alternates: { canonical: `https://paperstreet.africa/quote/${slug}` },
+    alternates: { canonical: `https://paperstreet.co.ke/quote/${slug}` },
   }
 }
 

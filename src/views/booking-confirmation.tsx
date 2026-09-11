@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { generateCalendarDetails, formatDisplayDateOrDates } from '@/lib/booking-rules-engine'
+import { generatePdfReceiptBinary } from '@/lib/brevo-service'
 import {
   CheckCircle2,
   Download,
@@ -35,10 +36,13 @@ interface ConfirmedBooking {
   rentAmountKES: number
   depositAmountKES: number
   totalAmountKES: number
+  overtimeHours?: number
+  overtimeFeeKES?: number
   paystackReference: string
   paymentChannel?: string
   paymentDate?: string
   passCode?: string
+  specialRequests?: string
   status: string
 }
 
@@ -70,7 +74,7 @@ function BookingConfirmationContent() {
           try {
             const raw = sessionStorage.getItem(`ps_pending_${reference}`) || sessionStorage.getItem('ps_pending_latest')
             if (raw) localMeta = JSON.parse(raw)
-          } catch (_) {}
+          } catch (_) { }
         }
 
         let data: any = null
@@ -132,7 +136,7 @@ function BookingConfirmationContent() {
           try {
             sessionStorage.removeItem(`ps_pending_${reference}`)
             sessionStorage.removeItem('ps_pending_latest')
-          } catch (_) {}
+          } catch (_) { }
         }
       } catch (err: any) {
         if (isMounted) {
@@ -155,168 +159,47 @@ function BookingConfirmationContent() {
   const handleDownloadReceipt = () => {
     if (!booking) return
 
-    const dateList = (booking.bookingDate || '').includes(',')
-      ? booking.bookingDate.split(',').map((d: string) => d.trim()).filter(Boolean)
-      : (booking.bookingDate || '').includes(';')
-      ? booking.bookingDate.split(';').map((d: string) => d.trim()).filter(Boolean)
-      : [booking.bookingDate || '']
+    try {
+      const pdfBinary = generatePdfReceiptBinary({
+        clientName: booking.clientName,
+        clientEmail: booking.clientEmail,
+        clientPhone: booking.clientPhone,
+        companyName: booking.companyName,
+        serviceTitle: booking.serviceTitle,
+        tierName: booking.tierName || '',
+        location: booking.location,
+        bookingDate: booking.bookingDate,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        durationHours: booking.durationHours,
+        rentAmountKES: booking.rentAmountKES || booking.totalAmountKES,
+        depositAmountKES: booking.depositAmountKES || 0,
+        totalAmountKES: booking.totalAmountKES,
+        overtimeHours: booking.overtimeHours || 0,
+        overtimeFeeKES: booking.overtimeFeeKES || 0,
+        paystackReference: booking.paystackReference,
+        passCode: booking.passCode,
+        specialRequests: booking.specialRequests,
+      })
 
-    const receiptHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Paper Street Official Receipt - ${booking.paystackReference}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2D52; background: #ffffff; margin: 0; padding: 40px 20px; font-size: 13px; line-height: 1.6; }
-    .receipt-container { max-width: 680px; margin: 0 auto; background: #ffffff; }
-    .header { border-bottom: 2px solid #0F2D52; padding-bottom: 16px; margin-bottom: 24px; }
-    .brand { font-size: 20px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0F2D52; }
-    .brand-sub { font-size: 11px; color: #64748B; margin-top: 4px; }
-    .title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #cbd5e1; padding-bottom: 16px; }
-    .doc-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0F2D52; }
-    .meta-item { font-size: 12px; margin-top: 4px; color: #475569; }
-    .meta-item strong { color: #0F2D52; }
-    .badge { font-weight: 700; color: #065f46; }
-    .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #0F2D52; margin-top: 20px; margin-bottom: 8px; }
-    .detail-grid { display: table; width: 100%; border-bottom: 1px solid #cbd5e1; padding-bottom: 16px; margin-bottom: 20px; }
-    .detail-row { display: table-row; }
-    .detail-label { display: table-cell; width: 35%; padding: 4px 0; color: #64748B; font-size: 12px; }
-    .detail-val { display: table-cell; padding: 4px 0; color: #0F2D52; font-size: 12px; font-weight: 600; }
-    table.ledger { width: 100%; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 12px; }
-    table.ledger th { text-align: left; padding: 8px 0; border-bottom: 1px solid #0F2D52; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #0F2D52; }
-    table.ledger td { padding: 10px 0; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
-    table.ledger td.num { text-align: right; font-family: monospace; font-size: 13px; }
-    table.ledger th.num { text-align: right; }
-    .total-row td { border-top: 2px solid #0F2D52; border-bottom: 2px solid #0F2D52; font-weight: 700; color: #0F2D52; font-size: 14px; padding: 12px 0; }
-    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #cbd5e1; font-size: 11px; color: #64748B; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="receipt-container">
-    <div class="header">
-      <div class="brand">PAPER STREET WORKSPACES</div>
-      <div class="brand-sub">CBD Commercial Center · Oginga Odinga St · Kisumu CBD, Kenya</div>
-      <div class="brand-sub">Tel: +254 709 123 456 · Email: hello@paperstreet.africa · Web: www.paperstreet.africa</div>
-    </div>
+      const len = pdfBinary.length
+      const bytes = new Uint8Array(len)
+      for (let i = 0; i < len; i++) {
+        bytes[i] = pdfBinary.charCodeAt(i) & 0xff
+      }
 
-    <div class="title-row">
-      <div>
-        <div class="doc-title">OFFICIAL BOOKING RECEIPT</div>
-        <div class="meta-item">Reference: <strong>${booking.paystackReference}</strong></div>
-        <div class="meta-item">Issue Date: <strong>${new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></div>
-      </div>
-      <div style="text-align: right;">
-        <div class="meta-item">Status: <span class="badge">PAYMENT CONFIRMED AND VERIFIED</span></div>
-        <div class="meta-item">Access Pass Code: <strong>${booking.passCode || 'ACTIVE'}</strong></div>
-      </div>
-    </div>
-
-    <div class="section-title">CLIENT DETAILS</div>
-    <div class="detail-grid">
-      <div class="detail-row">
-        <div class="detail-label">Client Name:</div>
-        <div class="detail-val">${booking.clientName}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Email:</div>
-        <div class="detail-val">${booking.clientEmail}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Phone:</div>
-        <div class="detail-val">${booking.clientPhone}</div>
-      </div>
-      ${booking.companyName ? `
-      <div class="detail-row">
-        <div class="detail-label">Company:</div>
-        <div class="detail-val">${booking.companyName}</div>
-      </div>` : ''}
-    </div>
-
-    <div class="section-title">RESERVATION DETAILS</div>
-    <div class="detail-grid">
-      <div class="detail-row">
-        <div class="detail-label">Package &amp; Tier:</div>
-        <div class="detail-val">${booking.serviceTitle}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Facility Location:</div>
-        <div class="detail-val">${booking.location}</div>
-      </div>
-    </div>
-
-    <!-- Individual Rows for Each Scheduled Date & Time -->
-    <div class="section-title">SCHEDULED PASS DATES &amp; ACCESS HOURS (${dateList.length} DAY PASS${dateList.length > 1 ? 'ES' : ''})</div>
-    <table class="ledger" style="margin-top: 6px; margin-bottom: 20px;">
-      <thead>
-        <tr>
-          <th style="width: 25%;">Pass Day</th>
-          <th style="width: 45%;">Date</th>
-          <th class="num" style="width: 30%;">Access Window</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${dateList.map((dStr, idx) => `
-          <tr>
-            <td style="font-weight: 600; color: #0F2D52;">Day ${idx + 1}</td>
-            <td>${formatDisplayDateOrDates(dStr)}</td>
-            <td class="num">${booking.startTime} &mdash; ${booking.endTime}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-
-    <div class="section-title">PAYMENT BREAKDOWN</div>
-    <table class="ledger">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th class="num">Amount (KES)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <strong>${booking.serviceTitle}</strong><br>
-            <span style="font-size: 11px; color: #64748B;">Schedule: ${formattedDate} (${booking.startTime} - ${booking.endTime})</span>
-          </td>
-          <td class="num">KES ${(booking.rentAmountKES || booking.totalAmountKES).toLocaleString()}</td>
-        </tr>
-        ${booking.depositAmountKES > 0 ? `
-        <tr>
-          <td>
-            <strong>Refundable Security Deposit</strong><br>
-            <span style="font-size: 11px; color: #64748B;">Refundable within 30 days of term completion</span>
-          </td>
-          <td class="num">KES ${booking.depositAmountKES.toLocaleString()}</td>
-        </tr>` : ''}
-        <tr class="total-row">
-          <td>TOTAL AMOUNT PAID</td>
-          <td class="num">KES ${booking.totalAmountKES.toLocaleString()}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div style="font-size: 12px; color: #475569; margin: 24px 0; border-top: 1px solid #cbd5e1; padding-top: 14px;">
-      <strong style="color: #0F2D52;">Front Desk Check-in:</strong> Present booking reference <strong>${booking.paystackReference}</strong> at Paper Street reception upon arrival. Our team will verify your reservation and allocate your space.
-    </div>
-
-    <div class="footer">
-      <p style="margin: 0 0 4px 0;">This is an official payment receipt issued by Paper Street Workspaces.</p>
-      <p style="margin: 0;">For enquiries contact hello@paperstreet.africa or call +254 709 123 456</p>
-    </div>
-  </div>
-</body>
-</html>`
-
-    const blob = new Blob([receiptHtml], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `PaperStreet_Receipt_${booking.paystackReference}.html`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+      const blob = new Blob([bytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `PaperStreet_Receipt_${booking.paystackReference}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch (err) {
+      console.error('Failed to download PDF receipt:', err)
+    }
   }
 
   // 1. Loading state
@@ -401,13 +284,13 @@ function BookingConfirmationContent() {
   const dateList = (booking.bookingDate || '').includes(',')
     ? booking.bookingDate.split(',').map((d: string) => d.trim()).filter(Boolean)
     : (booking.bookingDate || '').includes(';')
-    ? booking.bookingDate.split(';').map((d: string) => d.trim()).filter(Boolean)
-    : [booking.bookingDate || '']
+      ? booking.bookingDate.split(';').map((d: string) => d.trim()).filter(Boolean)
+      : [booking.bookingDate || '']
 
   return (
     <main className="min-h-screen bg-[#fbfaf7] pt-24 pb-28 text-navy print:pt-0 print:pb-0 print:bg-white">
       <div className="container mx-auto px-6 md:px-12 max-w-3xl">
-        
+
         {/* Navigation & Action Bar (Hidden on print) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-navy/15 pb-4 mb-8 print:hidden">
           <Link
@@ -447,7 +330,7 @@ function BookingConfirmationContent() {
 
         {/* Clean Official Receipt Document (Flat No-Card Layout) */}
         <div className="space-y-8">
-          
+
           {/* Receipt Top Header with Paper Street Logo */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b-2 border-navy pb-6">
             <div>
@@ -607,7 +490,7 @@ function BookingConfirmationContent() {
           <div className="pt-8 border-t border-navy/15 text-center text-[11px] text-navy/50 space-y-1">
             <p className="font-semibold text-navy/70">Paper Street Workspaces</p>
             <p>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
-            <p>Phone: +254 709 123 456 &nbsp;|&nbsp; Email: hello@paperstreet.africa &nbsp;|&nbsp; www.paperstreet.africa</p>
+            <p>Phone: 0110486677 (+254 110 486 677) &nbsp;|&nbsp; Email: hello@paperstreet.co.ke &nbsp;|&nbsp; www.paperstreet.co.ke</p>
           </div>
 
         </div>

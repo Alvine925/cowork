@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     const amountInSubunits = Math.round(serverTotalKES * 100)
 
     // Determine return callback URL
-    const requestOrigin = req.headers.get('origin') || req.headers.get('referer') || 'https://paperstreet.africa'
+    const requestOrigin = req.headers.get('origin') || req.headers.get('referer') || 'https://paperstreet.co.ke'
     const urlObj = new URL(requestOrigin)
     const baseOrigin = `${urlObj.protocol}//${urlObj.host}`
     const callbackUrl = body.callbackUrl || `${baseOrigin}/book/confirmation`
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
     // Check if real Paystack secret key is configured
     if (!config.paystackSecretKey || config.paystackSecretKey.includes('placeholder')) {
       console.warn('[Paystack Initialize] Secret key is not configured in Supabase or .env. Providing mock authorization for test environment.')
-      
+
       return NextResponse.json({
         success: true,
         authorization_url: `${baseOrigin}/book/confirmation?reference=${reference}&simulated=true`,

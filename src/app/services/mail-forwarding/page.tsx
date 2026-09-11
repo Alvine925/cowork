@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Reliable mail forwarding across Kenya and internationally. High-resolution daily PDF scans and scheduled physical courier parcel delivery.',
   keywords: ['mail forwarding Kenya', 'international mail forwarding Nairobi', 'mail scan service'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/mail-forwarding',
+    canonical: 'https://paperstreet.co.ke/services/mail-forwarding',
   },
 };
 

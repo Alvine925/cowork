@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [post.image],
     },
     alternates: {
-      canonical: `https://paperstreet.africa/blog/${slug}`,
+      canonical: `https://paperstreet.co.ke/blog/${slug}`,
     },
   };
 }
@@ -70,79 +70,79 @@ export default async function BlogPostPage({ params }: Props) {
 
   const jsonLd = post
     ? {
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'Article',
-            headline: post.title,
-            description: post.excerpt,
-            image: post.image,
-            datePublished: post.date,
-            author: {
-              '@type': 'Person',
-              name: post.author,
-              jobTitle: post.authorRole,
-            },
-            publisher: {
-              '@type': 'Organization',
-              name: 'Paper Street Workspace',
-              logo: {
-                '@type': 'ImageObject',
-                url: 'https://paperstreet.africa/favicon.svg',
-              },
-            },
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': `https://paperstreet.africa/blog/${resolvedParams.slug}`,
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Article',
+          headline: post.title,
+          description: post.excerpt,
+          image: post.image,
+          datePublished: post.date,
+          author: {
+            '@type': 'Person',
+            name: post.author,
+            jobTitle: post.authorRole,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'Paper Street Workspace',
+            logo: {
+              '@type': 'ImageObject',
+              url: 'https://paperstreet.co.ke/favicon.svg',
             },
           },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: 'https://paperstreet.africa',
-              },
-              {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Blog',
-                item: 'https://paperstreet.africa/blog',
-              },
-              {
-                '@type': 'ListItem',
-                position: 3,
-                name: post.title,
-                item: `https://paperstreet.africa/blog/${resolvedParams.slug}`,
-              },
-            ],
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://paperstreet.co.ke/blog/${resolvedParams.slug}`,
           },
-          {
-            '@type': 'LocalBusiness',
-            name: 'Paper Street Kisumu CBD',
-            image: post.image,
-            '@id': 'https://paperstreet.africa/locations/kisumu',
-            url: 'https://paperstreet.africa/locations/kisumu',
-            telephone: '+254700000000',
-            priceRange: 'KES 1,000 - KES 25,000',
-            address: {
-              '@type': 'PostalAddress',
-              streetAddress: 'Kisumu CBD Commercial Center, Oginga Odinga Street',
-              addressLocality: 'Kisumu',
-              addressRegion: 'Kisumu County',
-              postalCode: '40100',
-              addressCountry: 'KE',
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: 'https://paperstreet.co.ke',
             },
-            geo: {
-              '@type': 'GeoCoordinates',
-              latitude: -0.1022,
-              longitude: 34.7617,
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Blog',
+              item: 'https://paperstreet.co.ke/blog',
             },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: post.title,
+              item: `https://paperstreet.co.ke/blog/${resolvedParams.slug}`,
+            },
+          ],
+        },
+        {
+          '@type': 'LocalBusiness',
+          name: 'Paper Street Kisumu CBD',
+          image: post.image,
+          '@id': 'https://paperstreet.co.ke/locations/kisumu',
+          url: 'https://paperstreet.co.ke/locations/kisumu',
+          telephone: '+254110486677',
+          priceRange: 'KES 1,000 - KES 25,000',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Kisumu CBD Commercial Center, Oginga Odinga Street',
+            addressLocality: 'Kisumu',
+            addressRegion: 'Kisumu County',
+            postalCode: '40100',
+            addressCountry: 'KE',
           },
-        ],
-      }
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: -0.1022,
+            longitude: 34.7617,
+          },
+        },
+      ],
+    }
     : null;
 
   return (

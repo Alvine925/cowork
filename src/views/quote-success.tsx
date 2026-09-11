@@ -15,7 +15,7 @@ function QuoteSuccessContent() {
   return (
     <main className="min-h-screen bg-[#FBFAF7] pt-28 pb-32 text-navy">
       <div className="container mx-auto px-6 md:px-12 max-w-2xl">
-        
+
         {/* Brand Header */}
         <div className="border-b-2 border-navy pb-6 mb-8 flex items-center justify-between">
           <div>
@@ -33,7 +33,7 @@ function QuoteSuccessContent() {
 
         {/* Success Card */}
         <div className="space-y-8">
-          
+
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
               <CheckCircle2 size={14} className="text-emerald-700" /> Quotation Dispatched Successfully
@@ -89,7 +89,7 @@ function QuoteSuccessContent() {
               What Happens Next (Human Onboarding Specialist)
             </strong>
             <p>
-              1. <strong>Check your email:</strong> Please review your inbox (and junk/spam folder) for the email from <code>hello@paperstreet.africa</code>.
+              1. <strong>Check your email:</strong> Please review your inbox (and junk/spam folder) for the email from <code>hello@paperstreet.co.ke</code>.
             </p>
             <p>
               2. <strong>Direct Specialist Contact:</strong> A Paper Street membership specialist will reach out within <strong>2 business hours</strong> to guide you through KYC verification, answer questions, and finalize agreement signing.

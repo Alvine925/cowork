@@ -9,8 +9,8 @@ export default function VirtualOfficePage() {
         eyebrow: 'Complete Workspace Solution',
         title: 'Virtual Office.',
         subtitle: 'A full professional business presence with prime commercial address, mail handling, and meeting room access.',
-        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&auto=format&q=80',
-        imageAlt: 'Warm, light-filled workspace prepared for a professional team',
+        image: '/virtual-office.webp',
+        imageAlt: 'Paper Street Virtual Office Space in Kisumu',
         description:
           'A virtual office brings together all the essential components of an established office: a prestigious commercial business address, reliable mail handling and scanning, front-desk client greeting, and on-demand access to our meeting room and coworking desks.',
         audience: 'For startups, remote companies, regional enterprises, and consultants who need a complete professional base in Kisumu.',

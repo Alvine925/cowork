@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Your own reserved desk with lockable storage, ergonomic seating, 24/7 access option, and full member benefits across Kenya.',
   keywords: ['dedicated desk Nairobi', 'fixed workstation Kenya', 'private desk coworking'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/dedicated-desk',
+    canonical: 'https://paperstreet.co.ke/services/dedicated-desk',
   },
 };
 

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'desk space Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/dedicated-desk',
+    canonical: 'https://paperstreet.co.ke/services/dedicated-desk',
   },
 };
 

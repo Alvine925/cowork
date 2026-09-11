@@ -26,54 +26,54 @@ const CATEGORIES: {
   description: string;
   cookies: { name: string; purpose: string; duration: string }[];
 }[] = [
-  {
-    id: "essential",
-    icon: <Shield className="h-5 w-5" />,
-    label: "Essential",
-    required: true,
-    description:
-      "These cookies are strictly necessary for the website to operate. Without them, services like account login, security, and session continuity would not function. They cannot be disabled.",
-    cookies: [
-      { name: "ps_session", purpose: "Maintains your authenticated session", duration: "Session" },
-      { name: "ps_csrf", purpose: "Prevents cross-site request forgery attacks", duration: "Session" },
-      { name: "ps_portal_type", purpose: "Remembers which portal (member/client) you accessed", duration: "30 days" },
-    ],
-  },
-  {
-    id: "analytics",
-    icon: <BarChart2 className="h-5 w-5" />,
-    label: "Analytics & Performance",
-    description:
-      "These cookies help us understand how people use the site — which pages are most visited, where people drop off, and how fast pages load. All data is anonymised and never sold.",
-    cookies: [
-      { name: "_ga", purpose: "Google Analytics — distinguishes unique users", duration: "2 years" },
-      { name: "_ga_*", purpose: "Google Analytics — session tracking", duration: "2 years" },
-      { name: "ps_perf", purpose: "Internal performance timing", duration: "7 days" },
-    ],
-  },
-  {
-    id: "marketing",
-    icon: <Target className="h-5 w-5" />,
-    label: "Marketing & Retargeting",
-    description:
-      "These cookies allow us to show relevant advertisements to people who have visited our site, and measure how effective our campaigns are. Opting out will not remove ads — it will make them less relevant.",
-    cookies: [
-      { name: "_fbp", purpose: "Facebook — ad attribution and retargeting", duration: "3 months" },
-      { name: "_gcl_au", purpose: "Google Ads — conversion tracking", duration: "3 months" },
-    ],
-  },
-  {
-    id: "preferences",
-    icon: <SlidersHorizontal className="h-5 w-5" />,
-    label: "Preferences",
-    description:
-      "These cookies remember your personal settings so we can personalise your experience. For example, remembering your language preference or your portal access type.",
-    cookies: [
-      { name: "ps_client_user", purpose: "Stores your portal profile locally", duration: "Persistent" },
-      { name: "ps_cookie_consent", purpose: "Records your cookie consent choices", duration: "12 months" },
-    ],
-  },
-];
+    {
+      id: "essential",
+      icon: <Shield className="h-5 w-5" />,
+      label: "Essential",
+      required: true,
+      description:
+        "These cookies are strictly necessary for the website to operate. Without them, services like account login, security, and session continuity would not function. They cannot be disabled.",
+      cookies: [
+        { name: "ps_session", purpose: "Maintains your authenticated session", duration: "Session" },
+        { name: "ps_csrf", purpose: "Prevents cross-site request forgery attacks", duration: "Session" },
+        { name: "ps_portal_type", purpose: "Remembers which portal (member/client) you accessed", duration: "30 days" },
+      ],
+    },
+    {
+      id: "analytics",
+      icon: <BarChart2 className="h-5 w-5" />,
+      label: "Analytics & Performance",
+      description:
+        "These cookies help us understand how people use the site — which pages are most visited, where people drop off, and how fast pages load. All data is anonymised and never sold.",
+      cookies: [
+        { name: "_ga", purpose: "Google Analytics — distinguishes unique users", duration: "2 years" },
+        { name: "_ga_*", purpose: "Google Analytics — session tracking", duration: "2 years" },
+        { name: "ps_perf", purpose: "Internal performance timing", duration: "7 days" },
+      ],
+    },
+    {
+      id: "marketing",
+      icon: <Target className="h-5 w-5" />,
+      label: "Marketing & Retargeting",
+      description:
+        "These cookies allow us to show relevant advertisements to people who have visited our site, and measure how effective our campaigns are. Opting out will not remove ads — it will make them less relevant.",
+      cookies: [
+        { name: "_fbp", purpose: "Facebook — ad attribution and retargeting", duration: "3 months" },
+        { name: "_gcl_au", purpose: "Google Ads — conversion tracking", duration: "3 months" },
+      ],
+    },
+    {
+      id: "preferences",
+      icon: <SlidersHorizontal className="h-5 w-5" />,
+      label: "Preferences",
+      description:
+        "These cookies remember your personal settings so we can personalise your experience. For example, remembering your language preference or your portal access type.",
+      cookies: [
+        { name: "ps_client_user", purpose: "Stores your portal profile locally", duration: "Persistent" },
+        { name: "ps_cookie_consent", purpose: "Records your cookie consent choices", duration: "12 months" },
+      ],
+    },
+  ];
 
 function Toggle({
   checked,
@@ -99,8 +99,8 @@ function Toggle({
         disabled
           ? "cursor-not-allowed border-navy/20 bg-navy/15"
           : checked
-          ? "cursor-pointer border-navy bg-navy"
-          : "cursor-pointer border-navy/30 bg-white",
+            ? "cursor-pointer border-navy bg-navy"
+            : "cursor-pointer border-navy/30 bg-white",
       ].join(" ")}
     >
       <span
@@ -190,7 +190,7 @@ export default function CookiePolicyPage() {
             </p>
             <p>
               Paper Street uses cookies and similar technologies (such as local storage and session tokens)
-              on <strong>paperstreet.africa</strong> to keep you securely signed in, understand how our
+              on <strong>paperstreet.co.ke</strong> to keep you securely signed in, understand how our
               site is used, and show relevant content.
             </p>
 
@@ -217,7 +217,7 @@ export default function CookiePolicyPage() {
             <h2>5. Contact</h2>
             <p>
               Questions about our cookie practices? Email us at{" "}
-              <a href="mailto:privacy@paperstreet.africa">privacy@paperstreet.africa</a> or visit our{" "}
+              <a href="mailto:privacy@paperstreet.co.ke">privacy@paperstreet.co.ke</a> or visit our{" "}
               <Link href="/privacy-policy">Privacy Policy</Link>.
             </p>
           </div>

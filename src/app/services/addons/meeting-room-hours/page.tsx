@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     'meeting space on demand',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/addons/meeting-room-hours',
+    canonical: 'https://paperstreet.co.ke/services/addons/meeting-room-hours',
   },
   openGraph: {
     title: 'Meeting Room Hours & Booking Credits | Paper Street Kisumu CBD',
     description:
       'Flexible hourly reservation credits for our private 4K presentation meeting room in Kisumu CBD. Fully equipped with video conferencing and acoustic privacy.',
-    url: 'https://paperstreet.africa/services/addons/meeting-room-hours',
+    url: 'https://paperstreet.co.ke/services/addons/meeting-room-hours',
     siteName: 'Paper Street',
     locale: 'en_KE',
     type: 'website',

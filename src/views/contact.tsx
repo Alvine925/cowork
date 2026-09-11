@@ -134,7 +134,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-[#FBF8F0] text-navy">
-      
+
       {/* ── 1. Clean Editorial Header (No Floating Glow/Cards) ── */}
       <section className="pt-32 pb-16 border-b border-navy/15 bg-white">
         <div className="container mx-auto px-6 md:px-12 max-w-6xl">
@@ -166,10 +166,10 @@ export default function ContactPage() {
       <section className="py-20 md:py-24">
         <div className="container mx-auto px-6 md:px-12 max-w-6xl">
           <div className="grid lg:grid-cols-12 gap-16 lg:gap-20 items-start">
-            
+
             {/* ── Left Column: Institutional Directory & Details ── */}
             <div className="lg:col-span-5 space-y-12">
-              
+
               {/* Directory Section 01: Flagship */}
               <div>
                 <div className="flex items-center gap-2 pb-2 border-b border-navy/15 mb-4">
@@ -201,25 +201,25 @@ export default function ContactPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex flex-col">
                     <span className="text-xs font-mono text-navy/50 uppercase">Telephone &amp; WhatsApp:</span>
-                    <a href="tel:+254700000000" className="font-medium text-navy hover:underline">
-                      +254 700 000 000 (Main Desk)
+                    <a href="tel:0110486677" className="font-medium text-navy hover:underline">
+                      0110486677 / +254 110 486 677
                     </a>
-                    <a href="tel:+254709123456" className="text-xs text-navy/70 hover:underline">
-                      +254 709 123 456 (Corporate Inquiries)
-                    </a>
+                    <span className="text-xs text-navy/70">
+                      Calls &amp; WhatsApp: Mon&ndash;Sat, 8:00 AM &ndash; 6:00 PM
+                    </span>
                   </div>
 
                   <div className="flex flex-col pt-2">
                     <span className="text-xs font-mono text-navy/50 uppercase">Email Inquiries:</span>
-                    <a href="mailto:hello@paperstreet.africa" className="font-medium text-navy hover:underline">
-                      hello@paperstreet.africa
+                    <a href="mailto:hello@paperstreet.co.ke" className="font-medium text-navy hover:underline">
+                      hello@paperstreet.co.ke
                     </a>
                   </div>
 
                   <div className="flex flex-col pt-2">
                     <span className="text-xs font-mono text-navy/50 uppercase">WhatsApp Instant Support:</span>
                     <a
-                      href="https://wa.me/254700000000?text=Hello%20Paper%20Street%20Workspaces%2C%20I%20am%20inquiring%20about%20your%20services."
+                      href="https://wa.me/254110486677?text=Hello%20Paper%20Street%20Workspaces%2C%20I%20am%20inquiring%20about%20your%20services."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-emerald-800 hover:underline inline-flex items-center gap-1"
@@ -273,7 +273,7 @@ export default function ContactPage() {
 
             {/* ── Right Column: Plain Editorial Form (No Card Wrapper) ── */}
             <div className="lg:col-span-7">
-              
+
               {submissionSuccess ? (
                 <div className="py-6 space-y-6">
                   <div className="border-b-2 border-navy pb-4">
@@ -319,7 +319,7 @@ export default function ContactPage() {
                       Send Another Inquiry
                     </Button>
                     <a
-                      href="https://wa.me/254700000000"
+                      href="https://wa.me/254110486677"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 border border-navy text-navy text-xs uppercase tracking-wider font-semibold px-6 py-3 hover:bg-navy/5"
@@ -346,7 +346,7 @@ export default function ContactPage() {
                   )}
 
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    
+
                     {/* 1. Service Selection Pills */}
                     <div>
                       <label className="text-xs font-mono uppercase tracking-wider text-navy/70 block mb-2 font-semibold">
@@ -360,11 +360,10 @@ export default function ContactPage() {
                               key={svc.id}
                               type="button"
                               onClick={() => handleServiceSelect(svc.id)}
-                              className={`text-left p-2.5 text-xs transition-all border ${
-                                isSelected
+                              className={`text-left p-2.5 text-xs transition-all border ${isSelected
                                   ? 'border-navy bg-navy text-white font-medium'
                                   : 'border-navy/20 bg-white text-navy/80 hover:border-navy/60'
-                              }`}
+                                }`}
                             >
                               {svc.label}
                             </button>
@@ -389,11 +388,10 @@ export default function ContactPage() {
                               key={loc.id}
                               type="button"
                               onClick={() => handleLocationSelect(loc.id)}
-                              className={`text-left p-2.5 text-xs transition-all border ${
-                                isSelected
+                              className={`text-left p-2.5 text-xs transition-all border ${isSelected
                                   ? 'border-navy bg-navy text-white font-medium'
                                   : 'border-navy/20 bg-white text-navy/80 hover:border-navy/60'
-                              }`}
+                                }`}
                             >
                               <div>{loc.label}</div>
                               <span className={`text-[9px] font-mono block mt-0.5 ${isSelected ? 'text-white/70' : 'text-navy/50'}`}>

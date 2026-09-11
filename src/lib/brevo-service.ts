@@ -32,244 +32,284 @@ export interface BookingEmailData {
  * Clean and plain layout: no cards or background boxes, pure institutional typography and dividing rules.
  */
 export function generatePdfReceiptBinary(data: BookingEmailData): string {
-  // Sanitize text for PDF string literals (strip backslash, parens, non-ASCII)
-  const s = (v: string | number | undefined) =>
+  const sanitize = (v: string | number | undefined) =>
     String(v || '')
-      .replace(/[\\()]/g, '')
-      .replace(/[^\x20-\x7E]/g, '')
-      .substring(0, 90)
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/[^\x20-\x7E]/g, ' ')
+      .trim()
 
-  const ref = s(data.paystackReference || 'PS-REF')
-  const issueDate = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-  const formattedDates = s(formatDisplayDateOrDates(data.bookingDate))
-  const rentStr = `KES ${(data.rentAmountKES || data.totalAmountKES).toLocaleString()}`
-  const totalStr = `KES ${data.totalAmountKES.toLocaleString()}`
-  const overtimeHours = data.overtimeHours || 0
-  const overtimeFee = data.overtimeFeeKES || 0
-  const hasOvertime = overtimeFee > 0
-  const hasDeposit = (data.depositAmountKES || 0) > 0
-  const passCode = s(data.passCode || ref)
+  const ref = sanitize(data.paystackReference || 'PS-REF')
+  const clientName = sanitize(data.clientName || 'Client')
+  const clientEmail = sanitize(data.clientEmail || '')
+  const clientPhone = sanitize(data.clientPhone || '—')
+  const companyName = sanitize(data.companyName || '')
+  const serviceTitle = sanitize(data.serviceTitle || 'Workspace Reservation')
+  const tierName = sanitize(data.tierName || '')
+  const location = sanitize(data.location || 'Paper Street CBD Commercial Centre, Kisumu')
+  const startTime = sanitize(data.startTime || '08:00 AM')
+  const endTime = sanitize(data.endTime || '06:00 PM')
+  const passCode = sanitize(data.passCode || ref)
+  const issueDate = sanitize(new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }))
+
+  const rentKES = Number(data.rentAmountKES || data.totalAmountKES || 0)
+  const depositKES = Number(data.depositAmountKES || 0)
+  const overtimeHours = Number(data.overtimeHours || 0)
+  const overtimeFeeKES = Number(data.overtimeFeeKES || 0)
+  const totalKES = Number(data.totalAmountKES || 0)
+
+  const rawBookingDate = String(data.bookingDate || '')
+  const dateParts = rawBookingDate.includes(',') ? rawBookingDate.split(',') : rawBookingDate.includes(';') ? rawBookingDate.split(';') : [rawBookingDate]
+  const cleanDates = dateParts.map((d: string) => d.trim()).filter(Boolean)
 
   let stream = `
-% HEADER
+% BRAND HEADER
 0.06 0.18 0.32 rg
-BT /F1 18 Tf 50 800 Td (PAPER STREET WORKSPACES) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8 Tf 50 786 Td (CBD Commercial Center - Oginga Odinga St - Kisumu, Kenya) Tj ET
-BT /F2 8 Tf 50 775 Td (Tel: +254 709 123 456   |   hello@paperstreet.africa   |   www.paperstreet.africa) Tj ET
+45 765 40 40 re f
+
+0.92 1.00 0.28 RG
+1 w
+45 765 40 40 re S
+
+0.92 1.00 0.28 rg
+BT /F1 20 Tf 52 777 Td (PS) Tj ET
+
+0.06 0.18 0.32 rg
+BT /F1 17 Tf 95 794 Td (PAPER STREET) Tj ET
+
+0.28 0.35 0.45 rg
+BT /F1 7.5 Tf 95 782 Td (WORKSPACES & COMMERCIAL CENTRE - KISUMU CBD) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 7.5 Tf 95 771 Td (CBD Commercial Centre, Oginga Odinga St - Kisumu CBD, Kenya) Tj ET
+
+0.88 0.98 0.92 rg
+385 776 165 25 re f
+
+0.02 0.47 0.34 RG
+0.75 w
+385 776 165 25 re S
+
+0.02 0.47 0.34 rg
+BT /F1 8 Tf 395 785 Td (PAYMENT VERIFIED & CONFIRMED) Tj ET
 
 0.06 0.18 0.32 RG
-2.0 w
-50 768 m 545 768 l S
+2 w
+45 752 m 550 752 l S
 
-% DOCUMENT TITLE & REFERENCE
 0.06 0.18 0.32 rg
-BT /F1 13 Tf 50 748 Td (OFFICIAL BOOKING RECEIPT) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 733 Td (Reference:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 108 733 Td (${ref}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 721 Td (Issue Date:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 721 Td (${s(issueDate)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 709 Td (Status:) Tj ET
-0.09 0.47 0.21 rg
-BT /F1 8.5 Tf 108 709 Td (PAYMENT CONFIRMED AND VERIFIED) Tj ET
+BT /F1 12 Tf 45 733 Td (OFFICIAL BOOKING RECEIPT & TAX INVOICE) Tj ET
 
-0.78 0.82 0.87 RG
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 390 735 Td (Receipt Date:) Tj ET
+0.06 0.18 0.32 rg
+BT /F1 8 Tf 455 735 Td (${issueDate}) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 390 722 Td (Booking Ref:) Tj ET
+0.06 0.18 0.32 rg
+BT /F1 8.5 Tf 455 722 Td (${ref}) Tj ET
+
+0.82 0.86 0.92 RG
 0.5 w
-50 700 m 545 700 l S
+45 712 m 550 712 l S
 
-% CLIENT DETAILS
 0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 686 Td (CLIENT DETAILS) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 673 Td (Name:) Tj ET
+BT /F1 8 Tf 45 698 Td (BILLED TO) Tj ET
+BT /F1 8 Tf 300 698 Td (RESERVATION SUMMARY) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 45 683 Td (Client Name:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 673 Td (${s(data.clientName)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 661 Td (Email:) Tj ET
+BT /F1 8.5 Tf 105 683 Td (${clientName}) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 45 669 Td (Email:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 661 Td (${s(data.clientEmail)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 649 Td (Phone:) Tj ET
+BT /F2 8 Tf 105 669 Td (${clientEmail}) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 45 655 Td (Phone:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 649 Td (${s(data.clientPhone)}) Tj ET
+BT /F2 8 Tf 105 655 Td (${clientPhone}) Tj ET
 `
 
-  let nextY = 637
-
-  if (data.companyName) {
+  let curY = 641
+  if (companyName) {
     stream += `
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${nextY} Td (Company:) Tj ET
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 45 ${curY} Td (Company:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 ${nextY} Td (${s(data.companyName)}) Tj ET
+BT /F1 8 Tf 105 ${curY} Td (${companyName}) Tj ET
 `
-    nextY -= 12
+    curY -= 14
   }
 
-  const ruleY1 = nextY - 4
-  const reservationLabelY = ruleY1 - 14
-  const packageY = reservationLabelY - 14
-  const tierY = packageY - 13
-  const locationY = tierY - 13
-  const dateY = locationY - 13
-  const windowY = dateY - 13
-  const accessCodeY = windowY - 13
-
+  const fullPkg = tierName ? `${serviceTitle} - ${tierName}` : serviceTitle
   stream += `
-0.78 0.82 0.87 RG
-0.5 w
-50 ${ruleY1} m 545 ${ruleY1} l S
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 300 683 Td (Package:) Tj ET
+0.06 0.18 0.32 rg
+BT /F1 8.5 Tf 365 683 Td (${fullPkg}) Tj ET
 
-% RESERVATION DETAILS
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 300 669 Td (Facility:) Tj ET
 0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 ${reservationLabelY} Td (RESERVATION DETAILS) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${packageY} Td (Package:) Tj ET
+BT /F2 8 Tf 365 669 Td (${location}) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 300 655 Td (Access Hours:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 ${packageY} Td (${s(data.serviceTitle)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${tierY} Td (Tier:) Tj ET
+BT /F1 8 Tf 365 655 Td (${startTime} to ${endTime}) Tj ET
+
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 300 641 Td (Access Code:) Tj ET
 0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 ${tierY} Td (${s(data.tierName)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${locationY} Td (Location:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 ${locationY} Td (${s(data.location)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${dateY} Td (Date:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 108 ${dateY} Td (${s(data.bookingDate)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${windowY} Td (Access Window:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 138 ${windowY} Td (${s(data.startTime)} to ${s(data.endTime)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${accessCodeY} Td (Access Code:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 138 ${accessCodeY} Td (${passCode}) Tj ET
+BT /F1 9 Tf 365 641 Td (${passCode}) Tj ET
 `
 
-  const ruleY2 = accessCodeY - 14
-  const payLabelY = ruleY2 - 14
-  const colHeaderY = payLabelY - 14
-  const ruleY3 = colHeaderY - 8
-  const baseRowY = ruleY3 - 17
-
+  const schedY = Math.min(curY, 627) - 10
   stream += `
-0.78 0.82 0.87 RG
+0.82 0.86 0.92 RG
 0.5 w
-50 ${ruleY2} m 545 ${ruleY2} l S
+45 ${schedY} m 550 ${schedY} l S
 
-% PAYMENT BREAKDOWN
 0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 ${payLabelY} Td (PAYMENT BREAKDOWN) Tj ET
-0.40 0.47 0.56 rg
-BT /F1 7.5 Tf 50 ${colHeaderY} Td (DESCRIPTION) Tj ET
-BT /F1 7.5 Tf 435 ${colHeaderY} Td (AMOUNT) Tj ET
+BT /F1 8 Tf 45 ${schedY - 14} Td (SCHEDULED ACCESS DATES & PASSES (${cleanDates.length} PASS${cleanDates.length > 1 ? 'ES' : ''})) Tj ET
+`
+
+  let dateRowY = schedY - 28
+  for (let i = 0; i < Math.min(cleanDates.length, 6); i++) {
+    const d = cleanDates[i]
+    stream += `
+0.45 0.52 0.62 rg
+BT /F1 7.5 Tf 55 ${dateRowY} Td (Day ${i + 1}:) Tj ET
+0.06 0.18 0.32 rg
+BT /F2 8 Tf 105 ${dateRowY} Td (${sanitize(d)}) Tj ET
+0.45 0.52 0.62 rg
+BT /F2 7.5 Tf 300 ${dateRowY} Td (Window: ${startTime} - ${endTime}) Tj ET
+`
+    dateRowY -= 13
+  }
+
+  const ledgerY = dateRowY - 10
+  stream += `
+0.82 0.86 0.92 RG
+0.5 w
+45 ${ledgerY} m 550 ${ledgerY} l S
+
+0.06 0.18 0.32 rg
+BT /F1 8 Tf 45 ${ledgerY - 14} Td (PAYMENT BREAKDOWN) Tj ET
+
+0.06 0.18 0.32 rg
+BT /F1 7.5 Tf 45 ${ledgerY - 28} Td (ITEM DESCRIPTION) Tj ET
+BT /F1 7.5 Tf 450 ${ledgerY - 28} Td (AMOUNT (KES)) Tj ET
 
 0.06 0.18 0.32 RG
 0.75 w
-50 ${ruleY3} m 545 ${ruleY3} l S
+45 ${ledgerY - 33} m 550 ${ledgerY - 33} l S
 
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 50 ${baseRowY} Td (${s(data.serviceTitle)} - ${s(data.tierName)}) Tj ET
-BT /F2 8.5 Tf 435 ${baseRowY} Td (${s(rentStr)}) Tj ET
+0.15 0.20 0.28 rg
+BT /F2 8 Tf 45 ${ledgerY - 47} Td (${fullPkg}) Tj ET
+BT /F1 8 Tf 450 ${ledgerY - 47} Td (KES ${rentKES.toLocaleString()}) Tj ET
 `
 
-  let rowY = baseRowY - 17
-
-  if (hasDeposit) {
+  let itemY = ledgerY - 47
+  if (depositKES > 0) {
+    itemY -= 15
     stream += `
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 ${rowY} Td (Refundable Security Deposit) Tj ET
-BT /F2 8.5 Tf 435 ${rowY} Td (KES ${s((data.depositAmountKES || 0).toLocaleString())}) Tj ET
+0.45 0.52 0.62 rg
+BT /F2 8 Tf 45 ${itemY} Td (Refundable Security Deposit) Tj ET
+0.15 0.20 0.28 rg
+BT /F1 8 Tf 450 ${itemY} Td (KES ${depositKES.toLocaleString()}) Tj ET
 `
-    rowY -= 17
   }
 
-  if (hasOvertime) {
+  if (overtimeFeeKES > 0) {
+    itemY -= 15
     stream += `
 0.55 0.27 0.07 rg
-BT /F2 8.5 Tf 50 ${rowY} Td (Extended-Hours Access - ${s(overtimeHours)} hr${overtimeHours > 1 ? 's' : ''} after close of business) Tj ET
-BT /F2 8.5 Tf 435 ${rowY} Td (KES ${s(overtimeFee.toLocaleString())}) Tj ET
+BT /F2 8 Tf 45 ${itemY} Td (Extended Hours Access (${overtimeHours} hr${overtimeHours > 1 ? 's' : ''})) Tj ET
+BT /F1 8 Tf 450 ${itemY} Td (+ KES ${overtimeFeeKES.toLocaleString()}) Tj ET
 `
-    rowY -= 17
   }
 
-  const totalRuleY = rowY - 5
-  const totalRowY = totalRuleY - 18
-
+  const totalRuleY = itemY - 10
+  const totalRowY = totalRuleY - 16
   stream += `
 0.06 0.18 0.32 RG
 1.5 w
-50 ${totalRuleY + 3} m 545 ${totalRuleY + 3} l S
-0.5 w
-50 ${totalRuleY} m 545 ${totalRuleY} l S
+45 ${totalRuleY} m 550 ${totalRuleY} l S
 
 0.06 0.18 0.32 rg
-BT /F1 10 Tf 50 ${totalRowY} Td (TOTAL AMOUNT PAID) Tj ET
-BT /F1 11 Tf 390 ${totalRowY} Td (${s(totalStr)}) Tj ET
+BT /F1 10 Tf 45 ${totalRowY} Td (TOTAL AMOUNT PAID) Tj ET
+BT /F1 11 Tf 435 ${totalRowY} Td (KES ${totalKES.toLocaleString()}) Tj ET
 
 0.06 0.18 0.32 RG
 1.5 w
-50 ${totalRowY - 10} m 545 ${totalRowY - 10} l S
+45 ${totalRowY - 8} m 550 ${totalRowY - 8} l S
 
-0.78 0.82 0.87 RG
+0.96 0.97 0.98 rg
+45 ${totalRowY - 56} 505 38 re f
+
+0.82 0.86 0.92 RG
 0.5 w
-50 ${totalRowY - 38} m 545 ${totalRowY - 38} l S
+45 ${totalRowY - 56} 505 38 re S
 
-% CHECK-IN
 0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 ${totalRowY - 52} Td (CHECK-IN INSTRUCTION) Tj ET
-0.20 0.25 0.33 rg
-BT /F2 8 Tf 50 ${totalRowY - 66} Td (Present booking reference ${ref} at the front desk upon arrival.) Tj ET
-BT /F2 8 Tf 50 ${totalRowY - 78} Td (Reception will verify your reservation and allocate your workspace.) Tj ET
+BT /F1 7.5 Tf 55 ${totalRowY - 32} Td (CHECK-IN INSTRUCTIONS) Tj ET
 
-% FOOTER
-0.78 0.82 0.87 RG
+0.28 0.35 0.45 rg
+BT /F2 7.5 Tf 55 ${totalRowY - 44} Td (Present your booking reference ${ref} at reception desk upon arrival.) Tj ET
+BT /F2 7.5 Tf 55 ${totalRowY - 52} Td (Our concierge will verify your reservation, issue facility access badge, and guide you to your desk.) Tj ET
+
+0.82 0.86 0.92 RG
 0.5 w
-50 95 m 545 95 l S
-0.40 0.47 0.56 rg
-BT /F2 7.5 Tf 150 81 Td (This is an official payment receipt issued by Paper Street Workspaces.) Tj ET
-BT /F2 7.5 Tf 105 69 Td (For enquiries: hello@paperstreet.africa  |  +254 709 123 456  |  www.paperstreet.africa) Tj ET
+45 60 m 550 60 l S
+
+0.45 0.52 0.62 rg
+BT /F1 7 Tf 145 47 Td (This is an official computer-generated receipt issued by Paper Street Workspaces Limited.) Tj ET
+BT /F2 7 Tf 120 37 Td (CBD Commercial Centre, Oginga Odinga St, Kisumu CBD, Kenya  |  hello@paperstreet.co.ke  |  0110486677) Tj ET
 `
 
   const streamContent = stream.trim()
-  const pdfLines = [
-    '%PDF-1.4',
-    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
-    '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
-    '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >> endobj',
-    `4 0 obj << /Length ${Buffer.byteLength(streamContent, 'utf-8')} >> stream\n${streamContent}\nendstream\nendobj`,
-    '5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj',
-    '6 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
-  ]
+  const streamLength = streamContent.length
 
-  let pdfContent = pdfLines.join('\n') + '\n'
-  const xrefOffset = pdfContent.length
+  const obj1 = '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n'
+  const obj2 = '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n'
+  const obj3 = '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj\n'
+  const obj4 = `4 0 obj\n<< /Length ${streamLength} >>\nstream\n${streamContent}\nendstream\nendobj\n`
+  const obj5 = '5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n'
+  const obj6 = '6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n'
+
+  const header = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'
+  const offset1 = header.length
+  const offset2 = offset1 + obj1.length
+  const offset3 = offset2 + obj2.length
+  const offset4 = offset3 + obj3.length
+  const offset5 = offset4 + obj4.length
+  const offset6 = offset5 + obj5.length
+  const xrefOffset = offset6 + obj6.length
 
   const xref = [
     'xref',
     '0 7',
     '0000000000 65535 f ',
-    '0000000009 00000 n ',
-    '0000000058 00000 n ',
-    '0000000115 00000 n ',
-    '0000000260 00000 n ',
-    '0000000350 00000 n ',
-    '0000000420 00000 n ',
-    'trailer << /Size 7 /Root 1 0 R >>',
+    `${String(offset1).padStart(10, '0')} 00000 n `,
+    `${String(offset2).padStart(10, '0')} 00000 n `,
+    `${String(offset3).padStart(10, '0')} 00000 n `,
+    `${String(offset4).padStart(10, '0')} 00000 n `,
+    `${String(offset5).padStart(10, '0')} 00000 n `,
+    `${String(offset6).padStart(10, '0')} 00000 n `,
+    'trailer',
+    '<< /Size 7 /Root 1 0 R >>',
     'startxref',
     `${xrefOffset}`,
-    '%%EOF'
+    '%%EOF\n',
   ].join('\n')
 
-  return pdfContent + xref
+  return header + obj1 + obj2 + obj3 + obj4 + obj5 + obj6 + xref
 }
 
 /**
@@ -279,8 +319,8 @@ function buildClientCleanEmailHtml(data: BookingEmailData): string {
   const dateItems = data.bookingDate.includes(',')
     ? data.bookingDate.split(',').map((d: string) => d.trim()).filter(Boolean)
     : data.bookingDate.includes(';')
-    ? data.bookingDate.split(';').map((d: string) => d.trim()).filter(Boolean)
-    : [data.bookingDate]
+      ? data.bookingDate.split(';').map((d: string) => d.trim()).filter(Boolean)
+      : [data.bookingDate]
 
   const dateRowsHtml = dateItems.map((d: string, idx: number) => {
     const dFmt = formatDisplayDateOrDates(d)
@@ -406,7 +446,7 @@ function buildClientCleanEmailHtml(data: BookingEmailData): string {
         Booking Terms &amp; Cancellation Policy
       </div>
       <div>
-        Please review our <a href="https://paperstreet.africa/daily-booking-terms" style="color: #0F2D52; font-weight: 600; text-decoration: underline;">Daily Booking Terms &amp; Cancellation Policy</a>. Rescheduling is 100% free with 24 hours notice. Cancellations require at least 2 days (48 hours) advance notice for a 90% refund (10% processing fee applies). Unutilized or missed bookings are non-refundable.
+        Please review our <a href="https://paperstreet.co.ke/daily-booking-terms" style="color: #0F2D52; font-weight: 600; text-decoration: underline;">Daily Booking Terms &amp; Cancellation Policy</a>. Rescheduling is 100% free with 24 hours notice. Cancellations require at least 2 days (48 hours) advance notice for a 90% refund (10% processing fee applies). Unutilized or missed bookings are non-refundable.
       </div>
     </div>
 
@@ -414,7 +454,7 @@ function buildClientCleanEmailHtml(data: BookingEmailData): string {
     <div style="border-top: 1px solid #E2E8F0; padding-top: 20px; font-size: 11px; color: #94A3B8; text-align: center; line-height: 1.6;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #64748B;">Paper Street Workspaces</p>
       <p style="margin: 0 0 4px 0;">CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
-      <p style="margin: 0;">Tel: +254 709 123 456 &nbsp;|&nbsp; Email: hello@paperstreet.africa &nbsp;|&nbsp; www.paperstreet.africa</p>
+      <p style="margin: 0;">Tel: 0110486677 / +254 110 486 677 &nbsp;|&nbsp; Email: hello@paperstreet.co.ke &nbsp;|&nbsp; www.paperstreet.co.ke</p>
     </div>
 
   </div>
@@ -530,45 +570,84 @@ export async function sendBrevoEmail(params: {
 }): Promise<{ success: boolean; data?: any; error?: string }> {
   const config = await getSystemConfig()
 
-  if (!config.brevoApiKey || config.brevoApiKey.includes('placeholder')) {
-    console.warn('[Brevo Email] BREVO_API_KEY is not configured. Simulating email dispatch to:', params.to)
-    return { success: true, data: { simulated: true } }
+  // 1. If Brevo API key is configured, send via Brevo
+  if (config.brevoApiKey && !config.brevoApiKey.includes('placeholder')) {
+    try {
+      const payload = {
+        sender: {
+          name: config.brevoSenderName || 'Paper Street Workspaces',
+          email: config.brevoSenderEmail || 'hello@paperstreet.co.ke',
+        },
+        to: params.to,
+        subject: params.subject,
+        htmlContent: params.htmlContent,
+        attachment: params.attachment,
+      }
+
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'api-key': config.brevoApiKey,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('[Brevo API Error]', result)
+        return { success: false, error: result.message || JSON.stringify(result) }
+      }
+
+      return { success: true, data: result }
+    } catch (err: any) {
+      console.error('[Brevo Fetch Exception]', err)
+      return { success: false, error: err?.message || String(err) }
+    }
   }
 
-  try {
-    const payload = {
-      sender: {
-        name: config.brevoSenderName || 'Paper Street Workspaces',
-        email: config.brevoSenderEmail || 'hello@paperstreet.africa',
-      },
-      to: params.to,
-      subject: params.subject,
-      htmlContent: params.htmlContent,
-      attachment: params.attachment,
+  // 2. Fallback to Resend if configured
+  const resendApiKey = process.env.RESEND_API_KEY || process.env.NEXT_PUBLIC_RESEND_API_KEY
+  if (resendApiKey) {
+    try {
+      const resendSender = process.env.RESEND_FROM_EMAIL || 'Paper Street <onboarding@resend.dev>'
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: resendSender,
+          to: params.to.map((t) => t.email),
+          subject: params.subject,
+          html: params.htmlContent,
+          attachments: params.attachment?.map((a) => ({
+            filename: a.name,
+            content: a.content,
+          })),
+        }),
+      })
+
+      const json = await res.json()
+      if (!res.ok) {
+        console.error('[Resend API Error]', json)
+        return { success: false, error: json }
+      }
+      return { success: true, data: json }
+    } catch (err: any) {
+      console.error('[Resend Exception]', err)
+      return { success: false, error: err?.message || String(err) }
     }
-
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'api-key': config.brevoApiKey,
-      },
-      body: JSON.stringify(payload),
-    })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      console.error('[Brevo API Error]', result)
-      return { success: false, error: result.message || JSON.stringify(result) }
-    }
-
-    return { success: true, data: result }
-  } catch (err: any) {
-    console.error('[Brevo Fetch Exception]', err)
-    return { success: false, error: err?.message || String(err) }
   }
+
+  console.warn(
+    '[Email Service Warning] No active email API key (BREVO_API_KEY or RESEND_API_KEY) found. Simulating email dispatch to:',
+    params.to.map((t) => t.email).join(', ')
+  )
+  return { success: true, data: { simulated: true } }
 }
 
 /**
@@ -611,10 +690,66 @@ export async function dispatchBookingEmails(data: BookingEmailData): Promise<{
   let clientSuccess = false
   let adminSuccess = false
 
+  // 1.b Invoke Supabase Edge Functions (send-booking-email & send-admin-alert)
+  // If serviceTitle already contains tier in parentheses e.g. "Hot Desk (Full-Day Pass)",
+  // extract the tier from it when tierName is empty.
+  const resolvedTierName = data.tierName ||
+    (data.serviceTitle.includes('(') ? data.serviceTitle.match(/\(([^)]+)\)/)?.[1] || '' : '')
+  const resolvedServiceTitle = data.serviceTitle.includes('(')
+    ? data.serviceTitle.replace(/\s*\([^)]*\)\s*$/, '').trim()
+    : data.serviceTitle
+
+  const sharedPayload = {
+    clientName: data.clientName,
+    clientEmail: data.clientEmail,
+    clientPhone: data.clientPhone,
+    companyName: data.companyName || '',
+    serviceTitle: resolvedServiceTitle,
+    tierName: resolvedTierName,
+    location: data.location,
+    bookingDate: data.bookingDate,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    totalAmountKES: data.totalAmountKES,
+    rentAmountKES: data.rentAmountKES || data.totalAmountKES,
+    depositAmountKES: data.depositAmountKES || 0,
+    overtimeHours: data.overtimeHours || 0,
+    overtimeFeeKES: data.overtimeFeeKES || 0,
+    paystackReference: data.paystackReference,
+    passCode: data.passCode || '',
+    specialRequests: data.specialRequests || '',
+  }
+
+  try {
+    if (shouldSendClient) {
+      const { data: edgeRes, error: edgeErr } = await supabase.functions.invoke('send-booking-email', {
+        body: sharedPayload,
+      })
+      if (!edgeErr && edgeRes?.success) {
+        shouldSendClient = false
+        clientSuccess = true
+      }
+    }
+
+    if (shouldSendAdmin) {
+      const { data: adminEdgeRes, error: adminEdgeErr } = await supabase.functions.invoke('send-admin-alert', {
+        body: sharedPayload,
+      })
+      if (!adminEdgeErr && adminEdgeRes?.success) {
+        shouldSendAdmin = false
+        adminSuccess = true
+      }
+    }
+  } catch (edgeEx) {
+    console.warn('[Supabase Edge Function Email Warning]', edgeEx)
+  }
+
   // 2. Send email to client (with clean binary PDF receipt)
   if (shouldSendClient) {
     const pdfContent = generatePdfReceiptBinary(data)
-    const pdfBase64 = Buffer.from(pdfContent, 'binary').toString('base64')
+    const pdfBase64 = typeof Buffer !== 'undefined'
+      ? Buffer.from(pdfContent, 'binary').toString('base64')
+      : btoa(pdfContent)
     const attachmentFilename = `PaperStreet_Receipt_${data.paystackReference}.pdf`
 
     const clientHtml = buildClientCleanEmailHtml(data)
@@ -639,7 +774,7 @@ export async function dispatchBookingEmails(data: BookingEmailData): Promise<{
           .from('client_bookings')
           .update({ email_sent: true, email_sent_at: new Date().toISOString() })
           .eq('paystack_reference', data.paystackReference)
-      } catch (_) {}
+      } catch (_) { }
     }
   } else {
     clientSuccess = true // Already sent previously
@@ -664,7 +799,7 @@ export async function dispatchBookingEmails(data: BookingEmailData): Promise<{
           .from('client_bookings')
           .update({ admin_alert_sent: true })
           .eq('paystack_reference', data.paystackReference)
-      } catch (_) {}
+      } catch (_) { }
     }
   } else {
     adminSuccess = true // Already sent previously
@@ -693,7 +828,7 @@ export interface ContactInquiryData {
  */
 export function buildContactAcknowledgementHtml(data: ContactInquiryData): string {
   const refCode = data.submissionId ? `INQ-${data.submissionId.slice(0, 8).toUpperCase()}` : 'PS-INQ'
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -760,13 +895,13 @@ export function buildContactAcknowledgementHtml(data: ContactInquiryData): strin
 
     <!-- Direct Contact Line -->
     <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; font-size: 12.5px; color: #334155; line-height: 1.6;">
-      <strong style="color: #0F2D52;">Need immediate assistance?</strong> Contact our front desk directly on phone or WhatsApp at <strong style="color: #0F2D52;">+254 709 123 456</strong> (Mon&ndash;Sat, 8:00 AM &ndash; 6:00 PM).
+      <strong style="color: #0F2D52;">Need immediate assistance?</strong> Contact our front desk directly on phone or WhatsApp at <strong style="color: #0F2D52;">0110486677 (+254 110 486 677)</strong> (Mon&ndash;Sat, 8:00 AM &ndash; 6:00 PM).
     </div>
 
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa &middot; www.paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke &middot; www.paperstreet.co.ke</div>
     </div>
 
   </div>
@@ -781,7 +916,7 @@ export function buildContactAcknowledgementHtml(data: ContactInquiryData): strin
  */
 export function buildContactAdminAlertHtml(data: ContactInquiryData): string {
   const refCode = data.submissionId ? `INQ-${data.submissionId.slice(0, 8).toUpperCase()}` : 'PS-INQ'
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -918,7 +1053,7 @@ export interface LocationWaitlistData {
  */
 export function buildWaitlistAcknowledgementHtml(data: LocationWaitlistData): string {
   const refCode = data.waitlistId ? `VIP-${data.waitlistId.slice(0, 8).toUpperCase()}` : 'PS-VIP'
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -1016,7 +1151,7 @@ export function buildWaitlistAcknowledgementHtml(data: LocationWaitlistData): st
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>Expansion Hubs: Nairobi &middot; Mombasa &middot; Nakuru &middot; Eldoret &middot; Kisumu CBD &middot; hello@paperstreet.africa</div>
+      <div>Expansion Hubs: Nairobi &middot; Mombasa &middot; Nakuru &middot; Eldoret &middot; Kisumu CBD &middot; hello@paperstreet.co.ke</div>
     </div>
 
   </div>
@@ -1031,7 +1166,7 @@ export function buildWaitlistAcknowledgementHtml(data: LocationWaitlistData): st
  */
 export function buildWaitlistAdminAlertHtml(data: LocationWaitlistData): string {
   const refCode = data.waitlistId ? `VIP-${data.waitlistId.slice(0, 8).toUpperCase()}` : 'PS-VIP'
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -1224,14 +1359,14 @@ export function buildOtpEmailHtml(data: OtpEmailData): string {
         If you did not request this verification code, you can safely disregard this email. Your account security remains intact.
       </p>
       <p style="margin: 0;">
-        For account assistance, contact our front desk at <strong style="color: #0F2D52;">hello@paperstreet.africa</strong>.
+        For account assistance, contact our front desk at <strong style="color: #0F2D52;">hello@paperstreet.co.ke</strong>.
       </p>
     </div>
 
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa &middot; www.paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke &middot; www.paperstreet.co.ke</div>
     </div>
 
   </div>
@@ -1341,7 +1476,7 @@ export function buildWelcomeEmailHtml(data: WelcomeEmailData): string {
 
     <!-- Direct Action Button -->
     <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 24px; margin-bottom: 24px;">
-      <a href="https://paperstreet.africa/portal/client/dashboard" style="display: inline-block; background: #0F2D52; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 24px;">
+      <a href="https://paperstreet.co.ke/portal/client/dashboard" style="display: inline-block; background: #0F2D52; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 24px;">
         Access Client Portal &rarr;
       </a>
     </div>
@@ -1349,7 +1484,7 @@ export function buildWelcomeEmailHtml(data: WelcomeEmailData): string {
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa &middot; www.paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke &middot; www.paperstreet.co.ke</div>
     </div>
 
   </div>
@@ -1489,4 +1624,193 @@ export async function dispatchFeedbackAlertEmail(data: FeedbackAlertData): Promi
   })
   return res.success
 }
+
+/**
+ * Builds clean typography-based client reminder email (1 day before booking).
+ */
+export function buildBookingReminderEmailHtml(data: BookingEmailData): string {
+  const formattedDates = formatDisplayDateOrDates(data.bookingDate)
+  const ref = data.paystackReference || 'PS-BOOKING'
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Paper Street Workspace is Ready Tomorrow</title>
+</head>
+<body style="margin: 0; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2D52; background-color: #fbfaf7; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; padding: 40px 32px;">
+
+    <!-- Header -->
+    <div style="border-bottom: 2px solid #0F2D52; padding-bottom: 20px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <div style="font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #0F2D52; margin: 0;">
+          PAPER STREET
+        </div>
+        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; margin-top: 4px;">
+          Workspaces &amp; Commercial Center · Kisumu CBD
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span style="display: inline-block; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px;">
+          SESSION TOMORROW
+        </span>
+      </div>
+    </div>
+
+    <!-- Greeting -->
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 22px; color: #0F2D52; margin: 0 0 10px 0; font-weight: 600;">
+        See you tomorrow, ${data.clientName}.
+      </h1>
+      <p style="font-size: 13.5px; color: #475569; line-height: 1.6; margin: 0;">
+        This is a friendly reminder that your upcoming workspace reservation at Paper Street is scheduled for tomorrow. Your desk and building amenities will be ready when you arrive.
+      </p>
+    </div>
+
+    <!-- Booking Reference Card -->
+    <div style="background: #0F2D52; color: #ffffff; padding: 18px 20px; margin-bottom: 24px;">
+      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #93c5fd; font-weight: 600;">
+        Booking Check-In Reference
+      </div>
+      <div style="font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: 2px; margin-top: 3px;">
+        ${ref}
+      </div>
+      <div style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
+        Provide this reference to the concierge on Floor 2 upon arrival.
+      </div>
+    </div>
+
+    <!-- Itinerary Table -->
+    <div style="margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B; width: 35%;">Workspace Service:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600;">${data.serviceTitle}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Date:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600;">${formattedDates}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Access Hours:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600; font-family: monospace;">${data.startTime} &mdash; ${data.endTime}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Location:</td>
+          <td style="padding: 10px 0; color: #0F2D52;">${data.location || 'CBD Commercial Center, Oginga Odinga St, Kisumu CBD'}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Wi-Fi & Arrival Details -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px 20px; margin-bottom: 24px;">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #0F2D52; font-weight: 700; margin-bottom: 8px;">
+        Fast Wi-Fi &amp; Amenities Ready For You
+      </div>
+      <div style="font-size: 12px; color: #334155; line-height: 1.6;">
+        &bull; <strong>Wi-Fi Network:</strong> ${data.wifiNetwork || 'PaperStreet-CBD-5G'}<br />
+        &bull; <strong>Wi-Fi Password:</strong> <code style="background: #e2e8f0; padding: 1px 4px; font-family: monospace;">${data.wifiPass || 'PaperStreet2026!'}</code><br />
+        &bull; <strong>Power Backup:</strong> 100% automatic generator backup in case of grid outages.<br />
+        &bull; <strong>Refreshments:</strong> Complimentary artisan tea, filtered water, and fresh barista coffee.
+      </div>
+    </div>
+
+    <!-- Concierge Note -->
+    <div style="border-left: 3px solid #0F2D52; padding: 10px 14px; margin-bottom: 28px; font-size: 12px; color: #475569;">
+      Need to reschedule or running late? Contact our reception concierge at <strong>0110486677 (+254 110 486 677)</strong> or email <a href="mailto:hello@paperstreet.co.ke" style="color: #0F2D52; font-weight: 600;">hello@paperstreet.co.ke</a>. Rescheduling is 100% free with at least 24 hours advance notice.
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 11px; color: #94A3B8; text-align: center; line-height: 1.6;">
+      <p style="margin: 0 0 4px 0; font-weight: 600; color: #64748B;">Paper Street Workspaces</p>
+      <p style="margin: 0 0 4px 0;">CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
+      <p style="margin: 0;">www.paperstreet.co.ke · hello@paperstreet.co.ke</p>
+    </div>
+
+  </div>
+</body>
+</html>
+`
+}
+
+/**
+ * Dispatches 24-Hour Advance Booking Reminder Email to the client.
+ * Marks `reminder_sent` = true in `client_bookings` to avoid duplicates.
+ */
+export async function sendBookingReminderEmail(booking: {
+  id: string | number
+  client_name: string
+  client_email: string
+  client_phone?: string
+  company_name?: string
+  service_title: string
+  location?: string
+  booking_date: string
+  start_time?: string
+  end_time?: string
+  total_amount_kes?: number
+  paystack_reference?: string
+  pass_code?: string
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const emailData: BookingEmailData = {
+      clientName: booking.client_name,
+      clientEmail: booking.client_email,
+      clientPhone: booking.client_phone || '—',
+      companyName: booking.company_name,
+      serviceTitle: booking.service_title,
+      tierName: 'Reserved Session',
+      location: booking.location || 'CBD Commercial Center, Oginga Odinga St, Kisumu CBD',
+      bookingDate: booking.booking_date,
+      startTime: booking.start_time || '08:00 AM',
+      endTime: booking.end_time || '06:00 PM',
+      totalAmountKES: booking.total_amount_kes || 0,
+      rentAmountKES: booking.total_amount_kes || 0,
+      depositAmountKES: 0,
+      paystackReference: booking.paystack_reference || `PS-BK-${booking.id}`,
+      passCode: booking.pass_code,
+      wifiNetwork: 'PaperStreet-CBD-5G',
+      wifiPass: 'PaperStreet2026!',
+    }
+
+    // 1. Try Supabase Edge Function invoke first
+    try {
+      const { data: edgeRes, error: edgeErr } = await supabase.functions.invoke('send-booking-reminder', {
+        body: emailData,
+      })
+      if (!edgeErr && edgeRes?.success) {
+        if (booking.id) {
+          await supabase
+            .from('client_bookings')
+            .update({ reminder_sent: true, reminder_sent_at: new Date().toISOString() })
+            .eq('id', booking.id)
+        }
+        return { success: true }
+      }
+    } catch (_) { }
+
+    // 2. Fallback to direct Brevo / Resend delivery
+    const html = buildBookingReminderEmailHtml(emailData)
+    const res = await sendBrevoEmail({
+      to: [{ email: emailData.clientEmail, name: emailData.clientName }],
+      subject: `Reminder: Your Paper Street Workspace is Ready Tomorrow (${emailData.serviceTitle})`,
+      htmlContent: html,
+    })
+
+    if (res.success && booking.id) {
+      await supabase
+        .from('client_bookings')
+        .update({ reminder_sent: true, reminder_sent_at: new Date().toISOString() })
+        .eq('id', booking.id)
+    }
+
+    return res
+  } catch (err: any) {
+    console.error('[sendBookingReminderEmail Exception]', err)
+    return { success: false, error: err?.message || String(err) }
+  }
+}
+
 

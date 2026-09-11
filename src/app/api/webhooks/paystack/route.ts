@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         customerEmail.split('@')[0] ||
         'Client'
 
-      const clientEmail = customerEmail || metadata.clientEmail || metadata.client_email || 'client@paperstreet.africa'
+      const clientEmail = customerEmail || metadata.clientEmail || metadata.client_email || 'client@paperstreet.co.ke'
       const clientPhone = metadata.clientPhone || metadata.client_phone || customFields.phone || data.customer?.phone || '—'
       const companyName = metadata.companyName || metadata.company_name || ''
 
@@ -62,18 +62,26 @@ export async function POST(req: Request) {
       const location = metadata.location || 'Kisumu CBD (CBD Commercial Center)'
 
       // Dates extraction: check array, custom_fields, and comma-separated strings
-      let bookingDate = ''
+      let selectedDatesList: string[] = []
       if (Array.isArray(metadata.selectedDates) && metadata.selectedDates.length > 0) {
-        bookingDate = metadata.selectedDates.join(', ')
+        selectedDatesList = metadata.selectedDates
       } else if (Array.isArray(metadata.selected_dates) && metadata.selected_dates.length > 0) {
-        bookingDate = metadata.selected_dates.join(', ')
+        selectedDatesList = metadata.selected_dates
       } else if (metadata.bookingDate || metadata.booking_date) {
-        bookingDate = metadata.bookingDate || metadata.booking_date
+        const rawDate = String(metadata.bookingDate || metadata.booking_date)
+        selectedDatesList = rawDate.includes(',')
+          ? rawDate.split(',').map((s) => s.trim()).filter(Boolean)
+          : [rawDate.trim()]
       } else if (customFields.schedule) {
-        bookingDate = customFields.schedule
+        selectedDatesList = customFields.schedule.includes(',')
+          ? customFields.schedule.split(',').map((s) => s.trim()).filter(Boolean)
+          : [customFields.schedule.trim()]
       } else {
-        bookingDate = new Date().toISOString().split('T')[0]
+        selectedDatesList = [new Date().toISOString().split('T')[0]]
       }
+
+      const primaryDate = selectedDatesList[0] || new Date().toISOString().split('T')[0]
+      const bookingDateDisplay = selectedDatesList.join(', ')
 
       const startTime = metadata.startTime || metadata.start_time || '08:00 AM'
       const endTime = metadata.endTime || metadata.end_time || metadata.calculatedEndTime || '06:00 PM'
@@ -85,7 +93,19 @@ export async function POST(req: Request) {
       const calculatedEndTime = metadata.endTime || metadata.calculatedEndTime || endTime
       const totalAmountKES = paidAmountKES || (rentAmountKES + depositAmountKES + overtimeFeeKES)
       const qrCodeToken = metadata.qrCodeToken || `QR-${reference}`
-      const specialRequests = metadata.specialRequests || metadata.special_requests || ''
+
+      const scheduleMetadata = selectedDatesList.length > 1 ? {
+        isMultiDay: true,
+        totalDays: selectedDatesList.length,
+        dates: selectedDatesList,
+      } : null
+
+      const specialRequests = [
+        metadata.specialRequests || metadata.special_requests || '',
+        companyName ? `Company: ${companyName}` : null,
+        selectedDatesList.length > 1 ? `Schedule: ${bookingDateDisplay}` : null,
+        scheduleMetadata ? `[SCHEDULE_DATA]:${JSON.stringify(scheduleMetadata)}` : null,
+      ].filter(Boolean).join(' | ')
 
       const passSuffix = serviceSlug.substring(0, 3).toUpperCase()
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -113,7 +133,7 @@ export async function POST(req: Request) {
               company_name: companyName || null,
               service_title: `${serviceTitle} (${tierName})`,
               location: location,
-              booking_date: bookingDate,
+              booking_date: primaryDate,
               start_time: startTime,
               end_time: calculatedEndTime,
               calculated_end_time: calculatedEndTime,
@@ -140,21 +160,31 @@ export async function POST(req: Request) {
           .single()
 
         if (newBooking?.id) {
-          // Insert client pass
-          await supabase.from('client_passes').insert([
-            {
+          // Insert client passes for each scheduled day
+          const passesToInsert = selectedDatesList.map((dStr, idx) => {
+            const daySuffix = selectedDatesList.length > 1 ? `-D${idx + 1}` : ''
+            const specificPassCode = `${passCode}${daySuffix}`
+            return {
               user_id: userId,
               booking_id: newBooking.id,
-              pass_code: passCode,
+              pass_code: specificPassCode,
               service_title: `${serviceTitle} (${tierName})`,
               location: location,
-              valid_date: bookingDate,
-              qr_data: JSON.stringify({ passCode, paystackReference: reference, email: clientEmail, date: bookingDate }),
+              valid_date: dStr,
+              qr_data: JSON.stringify({
+                passCode: specificPassCode,
+                paystackReference: reference,
+                email: clientEmail,
+                date: dStr,
+                dayNumber: idx + 1,
+                totalDays: selectedDatesList.length,
+              }),
               status: 'active',
               wifi_network: 'PaperStreet-CBD-5G',
               wifi_pass: 'PaperStreet2026!',
             }
-          ])
+          })
+          await supabase.from('client_passes').insert(passesToInsert)
         }
 
         // Dispatch Brevo Emails (with single-send database deduplication lock)
@@ -166,7 +196,7 @@ export async function POST(req: Request) {
           serviceTitle,
           tierName,
           location,
-          bookingDate,
+          bookingDate: bookingDateDisplay,
           startTime,
           endTime: calculatedEndTime,
           durationHours,

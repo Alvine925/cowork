@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Establish your presence at Central Business Plaza, Nakuru City. Rift Valley commercial address, meeting room credits, and mail logging.',
   keywords: ['Nakuru virtual office', 'coworking Nakuru City', 'business address Nakuru'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/nakuru',
+    canonical: 'https://paperstreet.co.ke/locations/nakuru',
   },
 };
 

@@ -9,7 +9,7 @@ export default function VirtualOfficePage() {
         eyebrow: 'Core service',
         title: 'Virtual Office.',
         subtitle: 'A credible Kenyan base for the moments when your business needs to look established, responsive and ready.',
-        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&auto=format&q=80',
+        image: '/virtual-office.webp',
         imageAlt: 'Warm, light-filled workspace prepared for a professional team',
         description:
           'A virtual office brings the practical parts of a physical office together: a recognised business address, dependable mail support, a local point of contact and workspace access when the work calls for it. It is a flexible foundation for founders, remote teams and international businesses operating in Kenya.',

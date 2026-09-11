@@ -48,7 +48,7 @@ BT /F1 18 Tf 50 800 Td (PAPER STREET WORKSPACES) Tj ET
 0.40 0.47 0.56 rg
 BT /F2 8 Tf 50 786 Td (CBD Commercial Center  ·  Oginga Odinga St  ·  Kisumu CBD, Kenya) Tj ET
 0.40 0.47 0.56 rg
-BT /F2 8 Tf 50 775 Td (Tel: +254 709 123 456   |   hello@paperstreet.africa   |   www.paperstreet.africa) Tj ET
+BT /F2 8 Tf 50 775 Td (Tel: 0110486677 / +254 110 486 677   |   hello@paperstreet.co.ke   |   www.paperstreet.co.ke) Tj ET
 
 % thick top rule
 0.06 0.18 0.32 RG
@@ -209,7 +209,7 @@ BT /F2 8 Tf 50 ${totalY - 91} Td (3. Official Service Agreement execution and in
 
 0.40 0.47 0.56 rg
 BT /F2 7.5 Tf 135 66 Td (Paper Street Workspaces  ·  CBD Commercial Center, Kisumu CBD, Kenya) Tj ET
-BT /F2 7.5 Tf 120 54 Td (For enquiries contact hello@paperstreet.africa or call +254 709 123 456) Tj ET
+BT /F2 7.5 Tf 120 54 Td (For enquiries contact hello@paperstreet.co.ke or call 0110486677) Tj ET
 `
 
   const streamContent = stream.trim()
@@ -452,7 +452,7 @@ serve(async (req) => {
         
         <p style="margin: 0 0 10px 0;"><strong>12. Governing Law and Dispute Resolution:</strong> Governed by the Laws of the Republic of Kenya. Disputes shall first undergo 30-day good-faith negotiations, followed by binding mediation under the Nairobi Centre for International Arbitration (NCIA) before any court litigation.</p>
         
-        <p style="margin: 0;"><strong>13. Legal Contact &amp; Corporate Notices:</strong> Legal Desk: legal@paperstreet.africa &middot; Client Support: hello@paperstreet.africa &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</p>
+        <p style="margin: 0;"><strong>13. Legal Contact &amp; Corporate Notices:</strong> Legal Desk: legal@paperstreet.co.ke &middot; Client Support: hello@paperstreet.co.ke &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</p>
       </div>
     </div>
 
@@ -460,7 +460,7 @@ serve(async (req) => {
     <div style="border-top: 1px solid #E2E8F0; padding-top: 20px; font-size: 11px; color: #94A3B8; text-align: center; line-height: 1.6;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #64748B;">Paper Street Workspaces</p>
       <p style="margin: 0 0 4px 0;">CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
-      <p style="margin: 0;">Tel: +254 709 123 456 &nbsp;|&nbsp; hello@paperstreet.africa &nbsp;|&nbsp; www.paperstreet.africa</p>
+      <p style="margin: 0;">Tel: 0110486677 / +254 110 486 677 &nbsp;|&nbsp; hello@paperstreet.co.ke &nbsp;|&nbsp; www.paperstreet.co.ke</p>
     </div>
 
   </div>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'office solutions Kenya',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services',
+    canonical: 'https://paperstreet.co.ke/services',
   },
 };
 

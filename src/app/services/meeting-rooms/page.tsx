@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'hire meeting room Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/meeting-rooms',
+    canonical: 'https://paperstreet.co.ke/services/meeting-rooms',
   },
 };
 

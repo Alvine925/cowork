@@ -94,7 +94,7 @@ export const ADDONS_DATA: Record<string, AddonData> = {
     tagline: 'We receive your letters at reception, hold them securely, and scan them to your portal.',
     parentService: 'Virtual Office & Business Address',
     parentHref: '/services/virtual-office',
-    heroImage: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=1600&auto=format&q=80',
+    heroImage: '/mail-handling.webp',
     icon: MailScanAddonIcon,
     summary:
       'When letters, business notices, or tenders arrive at Paper Street in Kisumu, our front desk receives and holds them safely for you. We notify you immediately and upload a clean scan to your portal so you can read it right away.',
@@ -150,7 +150,7 @@ export const ADDONS_DATA: Record<string, AddonData> = {
     tagline: 'Have original physical letters and documents sent directly to your current address.',
     parentService: 'Virtual Office Add-on',
     parentHref: '/services/virtual-office',
-    heroImage: 'https://images.unsplash.com/photo-1553484771-371a605b060b?w=1600&auto=format&q=80',
+    heroImage: '/mail-forwarding.webp',
     icon: MailForwardAddonIcon,
     summary:
       'If you receive original physical documents in Kisumu — such as signed contracts, original certificates, cheques, or cards — that you need in person, we forward them directly to your physical address.',
@@ -205,7 +205,7 @@ export const ADDONS_DATA: Record<string, AddonData> = {
     tagline: 'Book our private presentation meeting room in Kisumu by the hour.',
     parentService: 'Meeting Room & Workspace Add-on',
     parentHref: '/services/meeting-rooms',
-    heroImage: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?w=1600&auto=format&q=80',
+    heroImage: '/meeting-room.webp',
     icon: BoardroomSuiteAddonIcon,
     summary:
       'Need a quiet, professional place to meet a client, pitch a proposal, or hold a team review in Kisumu? Book hours in our private meeting room equipped with a display screen and whiteboard.',
@@ -260,7 +260,7 @@ export const ADDONS_DATA: Record<string, AddonData> = {
     tagline: 'A personal locked storage drawer to keep your work gear safe overnight.',
     parentService: 'Dedicated Desk & Workspace Add-on',
     parentHref: '/services/dedicated-desk',
-    heroImage: 'https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?w=1600&auto=format&q=80',
+    heroImage: '/dedicated-desk.webp',
     icon: LockableStorageAddonIcon,
     summary:
       'Avoid carrying your monitors, chargers, notebooks, and paperwork back and forth every day. Keep them locked in your own personal under-desk drawer at Paper Street in Kisumu.',
@@ -314,7 +314,7 @@ export const ADDONS_DATA: Record<string, AddonData> = {
     tagline: 'Flexible day passes for open desks and quiet booths in Kisumu.',
     parentService: 'Virtual Office & Day Pass Add-on',
     parentHref: '/services/hot-desk',
-    heroImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&q=80',
+    heroImage: '/daypass.webp',
     icon: DayPassWorkspaceAddonIcon,
     summary:
       'Need a productive space to work for the day? Use flexible day passes to drop into Paper Street whenever you need deep focus, a quiet space away from home, or between client meetings in Kisumu.',

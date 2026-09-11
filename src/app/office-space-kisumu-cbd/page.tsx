@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Office Space in Kisumu CBD | Paper Street',
     description: 'Private, furnished, serviced office space in Kisumu CBD. Month-to-month. No deposit. Enterprise internet included. From KES 35,000/month.',
-    url: 'https://paperstreet.africa/office-space-kisumu-cbd',
+    url: 'https://paperstreet.co.ke/office-space-kisumu-cbd',
   },
-  alternates: { canonical: 'https://paperstreet.africa/office-space-kisumu-cbd' },
+  alternates: { canonical: 'https://paperstreet.co.ke/office-space-kisumu-cbd' },
 }
 
 export default function OfficeSpaceKisumuCBDPage() {

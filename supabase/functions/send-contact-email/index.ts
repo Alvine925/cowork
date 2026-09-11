@@ -48,7 +48,7 @@ serve(async (req) => {
     // 1. Fetch credentials from Deno env or Supabase system_settings table
     let apiKey = Deno.env.get('BREVO_API_KEY') || Deno.env.get('SENDINBLUE_API_KEY') || ''
     let senderName = Deno.env.get('BREVO_SENDER_NAME') || 'Paper Street Workspaces'
-    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.africa'
+    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.co.ke'
     let adminEmail = Deno.env.get('ADMIN_EMAIL') || 'otienoalvine925@gmail.com'
 
     if (!apiKey || apiKey.includes('placeholder')) {
@@ -132,13 +132,13 @@ serve(async (req) => {
 
     <!-- Direct Contact Line -->
     <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; font-size: 12.5px; color: #334155; line-height: 1.6;">
-      <strong style="color: #0F2D52;">Need immediate assistance?</strong> Contact our front desk directly on phone or WhatsApp at <strong style="color: #0F2D52;">+254 709 123 456</strong> (Mon&ndash;Sat, 8:00 AM &ndash; 6:00 PM).
+      <strong style="color: #0F2D52;">Need immediate assistance?</strong> Contact our front desk directly on phone or WhatsApp at <strong style="color: #0F2D52;">0110486677 (+254 110 486 677)</strong> (Mon&ndash;Sat, 8:00 AM &ndash; 6:00 PM).
     </div>
 
     <!-- Footer -->
     <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
       <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
-      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.africa &middot; www.paperstreet.africa</div>
+      <div>CBD Commercial Center, Oginga Odinga Street, Kisumu CBD &middot; hello@paperstreet.co.ke &middot; www.paperstreet.co.ke</div>
     </div>
 
   </div>

@@ -9,7 +9,7 @@ export default function MailForwardingPage() {
         eyebrow: 'Service',
         title: 'Mail Forwarding.',
         subtitle: 'Your mail delivered wherever you are — digitally or physically.',
-        image: 'https://images.unsplash.com/photo-1553484771-371a605b060b?w=1600&auto=format&q=80',
+        image: '/mail-forwarding.webp',
         description:
           'Get your mail no matter where you are in the world. Choose digital scanning for instant access to documents, or physical forwarding for packages and original documents. We batch and forward on your preferred schedule.',
         features: [

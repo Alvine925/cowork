@@ -103,8 +103,8 @@ export default function RefundPolicyPage() {
             Upon the formal conclusion of your contract term, please submit your deposit refund request to our finance department:
           </p>
           <ul className="list-none pl-0 space-y-2 text-[#2b4c3b]/80 font-mono text-sm">
-            <li><strong>Finance & Billing Desk:</strong> billing@paperstreet.africa</li>
-            <li><strong>Legal & Compliance Desk:</strong> legal@paperstreet.africa</li>
+            <li><strong>Finance & Billing Desk:</strong> billing@paperstreet.co.ke</li>
+            <li><strong>Legal & Compliance Desk:</strong> legal@paperstreet.co.ke</li>
             <li><strong>Subject Line:</strong> Deposit Refund Request - [Your Company Name] - Contract End Date: [DD/MM/YYYY]</li>
             <li><strong>Required Attachments:</strong> (1) Certified BRS Form CR9 / updated CR12; (2) Keycard return confirmation receipt; (3) M-Pesa / Bank disbursement details.</li>
           </ul>

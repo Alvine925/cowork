@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Coworking Space vs Renting an Office in Kisumu',
     description: 'Should you join a coworking space or rent a private office in Kisumu? A real financial and operational breakdown.',
-    url: 'https://paperstreet.africa/coworking-vs-renting-office-kisumu',
+    url: 'https://paperstreet.co.ke/coworking-vs-renting-office-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/coworking-vs-renting-office-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/coworking-vs-renting-office-kisumu' },
 }
 
 export default function CoworkingVsOfficeKisumuPage() {

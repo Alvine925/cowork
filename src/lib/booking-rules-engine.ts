@@ -376,7 +376,7 @@ export function calculateBookingSlotAndPrice(params: CalculateSlotParams): Calcu
 
   const baseDurationHours = getPackageDurationHours(serviceSlug, tierId, multiplier)
   const defaultDurationMinutes = Math.round(baseDurationHours * 60)
-  
+
   let endMinutes = startMinutes + defaultDurationMinutes
   if (endTimeStr) {
     const customEndMinutes = parseTimeToMinutes(endTimeStr)
@@ -495,7 +495,7 @@ export function getAvailableStartTimesForDate(
 
   for (let m = schedule.openMinutes; m <= maxStartMinutes; m += 30) {
     const isPast = isToday && m < nairobiNow.timeMinutes
-    
+
     // For full-day pass (duration >= 8h), early check-in covers up to standard closing (06:00 PM)
     let endMinutes = m + durationMinutes
     if (durationHours >= 8 && m <= 10 * 60) {
@@ -565,7 +565,7 @@ export function generateCalendarDetails(booking: {
 
   const title = encodeURIComponent(`Paper Street - ${serviceTitle}`)
   const details = encodeURIComponent(
-    `Official Booking at Paper Street Workspaces.\nReference: ${reference}\nScheduled: ${startTime} - ${endTime}\nLocation: ${location}\nFront Desk: +254 709 123 456`
+    `Official Booking at Paper Street Workspaces.\nReference: ${reference}\nScheduled: ${startTime} - ${endTime}\nLocation: ${location}\nFront Desk: 0110486677 / +254 110 486 677`
   )
   const loc = encodeURIComponent(`${location}, Kisumu CBD, Kenya`)
 
@@ -578,7 +578,7 @@ export function generateCalendarDetails(booking: {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:ps-booking-${reference}@paperstreet.africa`,
+    `UID:ps-booking-${reference}@paperstreet.co.ke`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
     `DTSTART;TZID=Africa/Nairobi:${startIso}`,
     `DTEND;TZID=Africa/Nairobi:${endIso}`,

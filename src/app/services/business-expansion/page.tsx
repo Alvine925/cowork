@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Expand your business footprint to Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret simultaneously with unified virtual office infrastructure.',
   keywords: ['business expansion Kenya', 'multi city presence Kenya', 'expand to Mombasa Kisumu'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/business-expansion',
+    canonical: 'https://paperstreet.co.ke/services/business-expansion',
   },
 };
 

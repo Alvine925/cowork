@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Hot Desk in Kisumu CBD | Paper Street',
     description: 'Flexible hot desk access in Kisumu CBD — enterprise Wi-Fi, generator backup, professional reception. From KES 1,000/day or KES 12,000/month.',
-    url: 'https://paperstreet.africa/hot-desk-kisumu-cbd',
+    url: 'https://paperstreet.co.ke/hot-desk-kisumu-cbd',
   },
-  alternates: { canonical: 'https://paperstreet.africa/hot-desk-kisumu-cbd' },
+  alternates: { canonical: 'https://paperstreet.co.ke/hot-desk-kisumu-cbd' },
 }
 
 export default function HotDeskKisumuCBDPage() {

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'A prestigious Nairobi business presence at Westlands Business Park, Waiyaki Way. Professional registered address, boardroom hire, and flexible desks.',
   keywords: ['Nairobi virtual office', 'coworking Westlands Nairobi', 'business address Waiyaki Way'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/nairobi',
+    canonical: 'https://paperstreet.co.ke/locations/nairobi',
   },
 };
 

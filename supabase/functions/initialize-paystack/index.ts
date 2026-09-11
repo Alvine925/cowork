@@ -91,7 +91,7 @@ serve(async (req) => {
       utm_medium = '',
       utm_campaign = '',
       utm_referrer = '',
-      callbackUrl = 'https://paperstreet.africa/book/confirmation',
+      callbackUrl = 'https://paperstreet.co.ke/book/confirmation',
     } = body
 
     if (!clientEmail || !clientName) {

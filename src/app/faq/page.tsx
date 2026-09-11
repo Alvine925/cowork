@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     'coworking FAQ Kenya',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/faq',
+    canonical: 'https://paperstreet.co.ke/faq',
   },
 }
 

@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const slides = [
   {
-    image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1600&auto=format&q=80',
+    image: '/virtual-office.webp',
     eyebrow: 'Business Presence Platform',
     heading: (
       <>
@@ -21,7 +21,7 @@ const slides = [
     secondary: { label: 'Book Consultation', href: '/contact' },
   },
   {
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&auto=format&q=80',
+    image: '/business-address.webp',
     eyebrow: 'Prime Nairobi Addresses',
     heading: (
       <>
@@ -35,7 +35,7 @@ const slides = [
     secondary: { label: 'See Pricing', href: '/pricing' },
   },
   {
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&q=80',
+    image: '/daypass.webp',
     eyebrow: 'Meeting & Co-working',
     heading: (
       <>
@@ -49,7 +49,7 @@ const slides = [
     secondary: { label: 'Explore Memberships', href: '/pricing' },
   },
   {
-    image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1600&auto=format&q=80',
+    image: '/dedicated-desk.webp',
     eyebrow: 'Mail & Reception',
     heading: (
       <>

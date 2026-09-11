@@ -57,6 +57,11 @@ export interface BookingResult {
  * with resilient offline fallback storage.
  */
 export async function createSupabaseBooking(payload: CreateBookingPayload): Promise<BookingResult> {
+  const dateList = payload.bookingDate.includes(',')
+    ? payload.bookingDate.split(',').map((s) => s.trim()).filter(Boolean)
+    : [payload.bookingDate.trim()]
+  const primaryDate = dateList[0] || new Date().toISOString().split('T')[0]
+
   const passCode = `PS-${Math.floor(1000 + Math.random() * 9000)}-${payload.serviceSlug.substring(0, 3).toUpperCase()}`
   const mpesaRef = `QKE${Math.floor(100000 + Math.random() * 900000)}`
   const userId = payload.userId || `guest_${payload.clientEmail.replace(/[^a-zA-Z0-9]/g, '_')}`
@@ -68,7 +73,7 @@ export async function createSupabaseBooking(payload: CreateBookingPayload): Prom
     client_phone: payload.clientPhone,
     service_title: `${payload.serviceTitle} (${payload.tierName})`,
     location: payload.location,
-    booking_date: payload.bookingDate,
+    booking_date: primaryDate,
     start_time: payload.startTime,
     end_time: payload.endTime || '06:00 PM',
     duration_hours: payload.durationHours || 8,
@@ -78,7 +83,11 @@ export async function createSupabaseBooking(payload: CreateBookingPayload): Prom
     payment_status: 'paid',
     payment_method: 'M-Pesa',
     mpesa_reference: mpesaRef,
-    special_requests: payload.specialRequests || payload.companyName ? `Company: ${payload.companyName || 'N/A'}. ${payload.specialRequests || ''}` : '',
+    special_requests: [
+      payload.companyName ? `Company: ${payload.companyName}` : null,
+      dateList.length > 1 ? `Schedule: ${dateList.join(', ')}` : null,
+      payload.specialRequests || null,
+    ].filter(Boolean).join(' | '),
     created_at: new Date().toISOString(),
     pass_code: passCode
   }
@@ -116,23 +125,42 @@ export async function createSupabaseBooking(payload: CreateBookingPayload): Prom
     // 2. Insert into Supabase `client_passes` table if booking created
     if (bookingData?.id) {
       try {
-        await supabase.from('client_passes').insert([
-          {
+        const passesToInsert = dateList.map((dStr, idx) => {
+          const daySuffix = dateList.length > 1 ? `-D${idx + 1}` : ''
+          const specificPassCode = `${passCode}${daySuffix}`
+          return {
             user_id: bookingRecord.user_id,
             booking_id: bookingData.id,
-            pass_code: passCode,
+            pass_code: specificPassCode,
             service_title: bookingRecord.service_title,
             location: bookingRecord.location,
-            valid_date: bookingRecord.booking_date,
-            qr_data: JSON.stringify({ passCode, mpesaRef, email: payload.clientEmail, date: payload.bookingDate }),
+            valid_date: dStr,
+            qr_data: JSON.stringify({ passCode: specificPassCode, mpesaRef, email: payload.clientEmail, date: dStr }),
             status: 'active',
             wifi_network: 'PaperStreet-CBD-5G',
             wifi_pass: 'PaperStreet2026!'
           }
-        ])
+        })
+        await supabase.from('client_passes').insert(passesToInsert)
       } catch (passErr) {
         console.warn('Pass insertion notice:', passErr)
       }
+    }
+
+    // 2.b Check and credit referral if referee booked a service
+    if (typeof window !== 'undefined') {
+      try {
+        void fetch('/api/portal/referrals/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'reward_booking',
+            refereeEmail: payload.clientEmail,
+            bookingId: savedId,
+            totalAmountKES: payload.totalAmountKES,
+          }),
+        }).catch(() => {})
+      } catch (_) {}
     }
 
     // 3. Save to localStorage for instant client dashboard retrieval

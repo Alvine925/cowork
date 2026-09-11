@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'coworking Nairobi',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/about',
+    canonical: 'https://paperstreet.co.ke/about',
   },
 };
 

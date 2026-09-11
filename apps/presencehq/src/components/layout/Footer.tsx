@@ -74,8 +74,10 @@ export function Footer() {
               Westlands Business Park, Waiyaki Way<br />
               Nairobi, Kenya
             </p>
-            <p className="text-xs text-white/40 mt-2">+254 700 000 000</p>
-            <p className="text-xs text-white/40">hello@paperstreet.africa</p>
+            <p className="text-xs text-white/40 mt-2">
+              <a href="tel:0110486677" className="hover:text-white transition-colors">0110486677</a> &middot; <a href="https://wa.me/254110486677" target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors">WhatsApp</a>
+            </p>
+            <p className="text-xs text-white/40">hello@paperstreet.co.ke</p>
           </div>
         </div>
 

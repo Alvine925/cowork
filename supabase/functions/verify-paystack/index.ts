@@ -116,7 +116,7 @@ serve(async (req) => {
       customerEmail.split('@')[0] ||
       'Client'
 
-    const clientEmail = customerEmail || bookingMeta.clientEmail || bookingMeta.client_email || 'client@paperstreet.africa'
+    const clientEmail = customerEmail || bookingMeta.clientEmail || bookingMeta.client_email || 'client@paperstreet.co.ke'
     const clientPhone = bookingMeta.clientPhone || bookingMeta.client_phone || customFields.phone || tx.customer?.phone || '—'
     const companyName = bookingMeta.companyName || bookingMeta.company_name || ''
 
@@ -158,7 +158,7 @@ serve(async (req) => {
 
     // 2. Insert or update booking in Supabase client_bookings
     let savedId: any = `bk_${Date.now()}`
-    
+
     const { data: existingBookings } = await supabase
       .from('client_bookings')
       .select('id, client_name')
@@ -303,4 +303,21 @@ serve(async (req) => {
       status: 500,
     })
   }
+})
+paystackReference: reference,
+  passCode,
+  paymentChannel,
+  paymentDate,
+  status: 'confirmed',
+        },
+      }),
+{ headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    )
+  } catch (err: any) {
+  console.error('[Verify Paystack Exception]', err)
+  return new Response(JSON.stringify({ error: err.message }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status: 500,
+  })
+}
 })

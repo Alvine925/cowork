@@ -27,11 +27,11 @@ export const metadata: Metadata = {
     title: 'Virtual Office, Business Address & Day Pass in Kisumu | Paper Street',
     description:
       'Virtual office and business address services in Kisumu, plus day passes, meeting rooms, and dedicated desks at Paper Street.',
-    url: 'https://paperstreet.africa/',
+    url: 'https://paperstreet.co.ke/',
     type: 'website',
   },
   alternates: {
-    canonical: 'https://paperstreet.africa/',
+    canonical: 'https://paperstreet.co.ke/',
   },
 };
 

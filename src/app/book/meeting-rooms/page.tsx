@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Book Meeting & Boardrooms in Kisumu CBD | Paper Street',
   description:
     'Reserve private executive meeting rooms and boardrooms by the hour or full-day with 4K screen, wireless casting, conference audio, and reception greeting in Kisumu CBD.',
-  alternates: { canonical: 'https://paperstreet.africa/book/meeting-rooms' },
+  alternates: { canonical: 'https://paperstreet.co.ke/book/meeting-rooms' },
 }
 
 export default function Page() {

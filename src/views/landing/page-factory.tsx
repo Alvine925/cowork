@@ -26,7 +26,7 @@ export function createLandingPageMetadata(slug: string): Metadata {
       title: config.metaTitle,
       description: config.metaDescription,
       type: 'website',
-      url: `https://paperstreet.africa/${slug}`,
+      url: `https://paperstreet.co.ke/${slug}`,
       images: [
         {
           url: config.heroImage,
@@ -41,7 +41,7 @@ export function createLandingPageMetadata(slug: string): Metadata {
       images: [config.heroImage],
     },
     alternates: {
-      canonical: `https://paperstreet.africa/${slug}`,
+      canonical: `https://paperstreet.co.ke/${slug}`,
     },
   }
 }
@@ -60,9 +60,9 @@ export function createLandingPageComponent(slug: string) {
           '@type': 'LocalBusiness',
           name: 'Paper Street Kisumu CBD',
           image: config.heroImage,
-          '@id': `https://paperstreet.africa/${slug}`,
-          url: `https://paperstreet.africa/${slug}`,
-          telephone: '+254700000000',
+          '@id': `https://paperstreet.co.ke/${slug}`,
+          url: `https://paperstreet.co.ke/${slug}`,
+          telephone: '+254110486677',
           priceRange: 'KES 1,000 - KES 65,000',
           address: {
             '@type': 'PostalAddress',
@@ -85,36 +85,36 @@ export function createLandingPageComponent(slug: string) {
               '@type': 'ListItem',
               position: 1,
               name: 'Home',
-              item: 'https://paperstreet.africa',
+              item: 'https://paperstreet.co.ke',
             },
             {
               '@type': 'ListItem',
               position: 2,
               name: 'Kisumu Workspace',
-              item: 'https://paperstreet.africa/locations/kisumu',
+              item: 'https://paperstreet.co.ke/locations/kisumu',
             },
             {
               '@type': 'ListItem',
               position: 3,
               name: config.title,
-              item: `https://paperstreet.africa/${slug}`,
+              item: `https://paperstreet.co.ke/${slug}`,
             },
           ],
         },
         ...(config.faqs && config.faqs.length > 0
           ? [
-              {
-                '@type': 'FAQPage',
-                mainEntity: config.faqs.map((faq) => ({
-                  '@type': 'Question',
-                  name: faq.q,
-                  acceptedAnswer: {
-                    '@type': 'Answer',
-                    text: faq.a,
-                  },
-                })),
-              },
-            ]
+            {
+              '@type': 'FAQPage',
+              mainEntity: config.faqs.map((faq) => ({
+                '@type': 'Question',
+                name: faq.q,
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: faq.a,
+                },
+              })),
+            },
+          ]
           : []),
       ],
     }

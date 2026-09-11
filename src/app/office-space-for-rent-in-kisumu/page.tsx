@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Office Space for Rent in Kisumu: Serviced Commercial Offices',
     description: 'Find flexible, furnished office space for rent in Kisumu CBD. Move in immediately with all utilities included.',
-    url: 'https://paperstreet.africa/office-space-for-rent-in-kisumu',
+    url: 'https://paperstreet.co.ke/office-space-for-rent-in-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/office-space-for-rent-in-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/office-space-for-rent-in-kisumu' },
 }
 
 export default function OfficeSpaceForRentKisumuPage() {

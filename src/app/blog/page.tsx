@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Practical business articles on company registration in Kenya, virtual office tax considerations, office costs, and scaling across East Africa.',
   keywords: ['Kenya business blog', 'virtual office guides Kenya', 'business registration tips'],
   alternates: {
-    canonical: 'https://paperstreet.africa/blog',
+    canonical: 'https://paperstreet.co.ke/blog',
   },
 };
 

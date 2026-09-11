@@ -92,12 +92,12 @@ export async function generateMetadata({
     description: meta.description,
     keywords: meta.keywords,
     alternates: {
-      canonical: `https://paperstreet.africa/services/addons/${slug}`,
+      canonical: `https://paperstreet.co.ke/services/addons/${slug}`,
     },
     openGraph: {
       title: meta.title,
       description: meta.description,
-      url: `https://paperstreet.africa/services/addons/${slug}`,
+      url: `https://paperstreet.co.ke/services/addons/${slug}`,
       siteName: 'Paper Street',
       locale: 'en_KE',
       type: 'website',

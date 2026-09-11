@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'desk rental Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/hot-desk',
+    canonical: 'https://paperstreet.co.ke/services/hot-desk',
   },
 };
 

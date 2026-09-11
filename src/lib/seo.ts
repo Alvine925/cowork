@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://paperstreet.africa'
+export const SITE_URL = 'https://paperstreet.co.ke'
 export const SITE_NAME = 'Paper Street'
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/favicon.svg`
 

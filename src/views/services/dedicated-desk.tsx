@@ -9,8 +9,8 @@ export default function DedicatedDeskPage() {
         eyebrow: 'Resident Workspace',
         title: 'Dedicated Desk.',
         subtitle: 'Your personal permanent desk in Kisumu with lockable storage, generator power backup, and monthly meeting room credits.',
-        image: 'https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?w=1600&auto=format&q=80',
-        imageAlt: 'Personal permanent dedicated desk workstation with monitor setup',
+        image: '/dedicated-desk.webp',
+        imageAlt: 'Paper Street personal permanent dedicated desk workstation in Kisumu',
         description:
           'Stop packing and unpacking your gear every day. A Dedicated Desk gives you an assigned personal workstation in Kisumu CBD where you can leave your monitors set up, lock away your documents, and get straight to work every morning.',
         audience: 'For independent software engineers, consultants, financial analysts, and founders needing a consistent daily base in Kisumu.',

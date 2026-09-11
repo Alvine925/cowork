@@ -78,7 +78,7 @@ serve(async (req) => {
         customerEmail.split('@')[0] ||
         'Client'
 
-      const clientEmail = customerEmail || metadata.clientEmail || metadata.client_email || 'client@paperstreet.africa'
+      const clientEmail = customerEmail || metadata.clientEmail || metadata.client_email || 'client@paperstreet.co.ke'
       const clientPhone = metadata.clientPhone || metadata.client_phone || customFields.phone || data.customer?.phone || '—'
       const companyName = metadata.companyName || metadata.company_name || ''
 
@@ -177,6 +177,37 @@ serve(async (req) => {
               wifi_pass: 'PaperStreet2026!',
             }
           ])
+
+          // Reward referral if this referee booked a service
+          try {
+            const { data: refPending } = await supabase
+              .from('client_referrals')
+              .select('*')
+              .eq('referred_email', clientEmail.toLowerCase().trim())
+              .eq('status', 'pending')
+              .maybeSingle()
+
+            if (refPending) {
+              await supabase
+                .from('client_referrals')
+                .update({ status: 'rewarded', rewarded_at: new Date().toISOString() })
+                .eq('id', refPending.id)
+
+              const { data: refProfile } = await supabase
+                .from('client_profiles')
+                .select('discount_balance_kes')
+                .eq('email', refPending.referrer_email)
+                .maybeSingle()
+
+              const newBalance = (Number(refProfile?.discount_balance_kes) || 0) + (Number(refPending.reward_kes) || 500)
+              await supabase
+                .from('client_profiles')
+                .update({ discount_balance_kes: newBalance, updated_at: new Date().toISOString() })
+                .eq('email', refPending.referrer_email)
+            }
+          } catch (refErr) {
+            console.warn('[Webhook Referral Reward Notice]', refErr)
+          }
         }
 
         // Invoke canonical send-booking-email edge function for client confirmation & PDF

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Lakeside corporate presence at Milimani Corporate Center, Kisumu. Western Kenya business address, regional mail forwarding, and flexible desks.',
   keywords: ['Kisumu virtual office', 'coworking Milimani Kisumu', 'business address Kisumu'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/kisumu',
+    canonical: 'https://paperstreet.co.ke/locations/kisumu',
   },
 };
 

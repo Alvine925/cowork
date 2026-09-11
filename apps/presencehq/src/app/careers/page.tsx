@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Explore careers at Paper Street and help build better virtual office, coworking, and business presence services for companies across Africa.',
   keywords: ['Paper Street careers', 'workspace jobs Kenya', 'business services jobs Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/careers',
+    canonical: 'https://paperstreet.co.ke/careers',
   },
 };
 

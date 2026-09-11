@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLoginRateLimit } from '@/hooks/useLoginRateLimit';
+import { detectPromptInjection } from '@/lib/sanitize';
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,7 +23,7 @@ import {
   MessageSquarePlus,
   Package,
   Percent,
-  QrCode,
+  Plus,
   Receipt,
   Share2,
   Sparkles,
@@ -31,6 +33,7 @@ import {
   Wifi,
   X,
 } from 'lucide-react';
+import { DynamicQrCode } from '@/components/portal/DynamicQrCode';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -43,12 +46,31 @@ import {
 } from '@/lib/sanitize';
 import { sendEmailNotification } from '@/lib/emailClient';
 import IndividualBookingPage, { type ServiceSlug } from '@/views/individual-booking';
+import { formatDisplayDateOrDates } from '@/lib/booking-rules-engine';
 import type { User, Session } from '@supabase/supabase-js';
+
+import {
+  usePortalAuth,
+  PortalAuthProvider,
+  type PortalType,
+  type ClientUserData,
+  type AuthContextType,
+} from './auth-context';
+import { PortalShellLayout, ProtectedPortalWrapper } from './layout';
+
+export {
+  usePortalAuth,
+  PortalAuthProvider,
+  type PortalType,
+  type ClientUserData,
+  type AuthContextType,
+  PortalShellLayout,
+  ProtectedPortalWrapper,
+};
 
 // ==========================================
 // TYPES
 // ==========================================
-export type PortalType = 'member' | 'client';
 
 export interface WorkspacePackage {
   id: number | string;
@@ -65,12 +87,29 @@ export interface WorkspacePackage {
   capacity?: string;
 }
 
+export interface ClientPass {
+  id: number | string;
+  user_id: string;
+  booking_id?: number | string;
+  pass_code: string;
+  service_title: string;
+  location: string;
+  valid_date: string;
+  status: string;
+  wifi_network: string;
+  wifi_password?: string;
+  wifi_pass?: string;
+  qr_data?: string;
+  created_at: string;
+}
+
 export interface ClientBooking {
   id: number | string;
   user_id: string;
   client_name: string;
   client_email: string;
   client_phone?: string;
+  company_name?: string;
   service_title: string;
   location: string;
   booking_date: string;
@@ -82,20 +121,22 @@ export interface ClientBooking {
   payment_status: string;
   payment_method: string;
   mpesa_reference?: string;
+  paystack_reference?: string;
+  special_requests?: string;
   created_at: string;
+  client_passes?: ClientPass[];
 }
 
-export interface ClientPass {
-  id: number | string;
-  user_id: string;
-  pass_code: string;
-  service_title: string;
-  location: string;
-  valid_date: string;
-  status: string;
-  wifi_network: string;
-  wifi_password: string;
-  created_at: string;
+export interface ScheduledDayItem {
+  dayNumber: number;
+  dateStr: string;
+  startTime: string;
+  endTime: string;
+  isToday: boolean;
+  isPast: boolean;
+  isUpcoming: boolean;
+  passCode?: string;
+  passStatus?: string;
 }
 
 export interface ClientFeedback {
@@ -383,190 +424,97 @@ export function InvoicesSkeleton() {
   );
 }
 
-// ==========================================
-// PORTAL AUTH & CONTEXT
-// ==========================================
-export interface ClientUserData {
-  id: string;
-  email: string;
-  fullName: string;
-  phone?: string;
-  company?: string;
-  portalType: PortalType;
-  referralCode?: string;
-  discountBalanceKES?: number;
-}
-
-interface AuthContextType {
-  user: User | null;
-  clientUser: ClientUserData | null;
-  session: Session | null;
-  loading: boolean;
-  portalType: PortalType;
-  setPortalType: (type: PortalType) => void;
-  signOut: () => Promise<void>;
-  signInWithDemo: (type: PortalType) => void;
-  loginWithOtpUser: (userData: ClientUserData, token?: string) => void;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  clientUser: null,
-  session: null,
-  loading: true,
-  portalType: 'client',
-  setPortalType: () => {},
-  signOut: async () => {},
-  signInWithDemo: () => {},
-  loginWithOtpUser: () => {},
-});
-
-export const usePortalAuth = () => useContext(AuthContext);
-
-export function PortalAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [clientUser, setClientUser] = useState<ClientUserData | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [portalType, setPortalTypeState] = useState<PortalType>(() => {
-    if (typeof window === 'undefined') return 'client';
-    return (localStorage.getItem('ps_portal_type') as PortalType) || 'client';
-  });
-
-  const setPortalType = (type: PortalType) => {
-    setPortalTypeState(type);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ps_portal_type', type);
-    }
-  };
-
-  useEffect(() => {
-    // 1. Check clientUser from localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const savedClient = localStorage.getItem('ps_client_user');
-        if (savedClient) {
-          const parsed = JSON.parse(savedClient) as ClientUserData;
-          setClientUser(parsed);
-          const mockAuthUser: User = {
-            id: parsed.id,
-            email: parsed.email,
-            user_metadata: {
-              full_name: parsed.fullName,
-              phone: parsed.phone,
-              company: parsed.company,
-              portal_type: parsed.portalType || 'client',
-              referral_code: parsed.referralCode,
-              discount_balance_kes: parsed.discountBalanceKES || 0,
-            },
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-          } as unknown as User;
-          setUser(mockAuthUser);
-          setSession({ user: mockAuthUser, access_token: 'ps-otp-token' } as unknown as Session);
-        }
-      } catch (e) {
-        console.warn('Error reading saved client user:', e);
-      }
-    }
-
-    // 2. Check Supabase auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
-        if (session.user.user_metadata?.portal_type) {
-          setPortalType(session.user.user_metadata.portal_type);
-        }
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setSession(session);
-        setUser(session.user);
-        if (session.user.user_metadata?.portal_type) {
-          setPortalType(session.user.user_metadata.portal_type);
-        }
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loginWithOtpUser = (userData: ClientUserData, token?: string) => {
-    setClientUser(userData);
-    setPortalType(userData.portalType || 'client');
-    const mockUser: User = {
-      id: userData.id,
-      email: userData.email,
-      user_metadata: {
-        full_name: userData.fullName,
-        phone: userData.phone,
-        company: userData.company,
-        portal_type: userData.portalType || 'client',
-        referral_code: userData.referralCode,
-        discount_balance_kes: userData.discountBalanceKES || 0,
-      },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-    } as unknown as User;
-
-    setUser(mockUser);
-    setSession({ user: mockUser, access_token: token || 'ps-otp-token' } as unknown as Session);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ps_client_user', JSON.stringify(userData));
-      localStorage.setItem('ps_portal_type', userData.portalType || 'client');
-    }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setClientUser(null);
-    setSession(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('ps_client_user');
-      localStorage.removeItem('ps_portal_type');
-    }
-  };
-
-  const signInWithDemo = (type: PortalType) => {
-    setPortalType(type);
-    const demoData: ClientUserData = {
-      id: type === 'member' ? 'mem_001' : 'cli_demo_001',
-      fullName: 'Alvine Otieno',
-      email: type === 'member' ? 'alvine@psa.africa' : 'otienoalvine925@gmail.com',
-      phone: '+254 700 000 000',
-      company: type === 'member' ? 'Pamela Steele Associates' : 'Paper Street Client Hub',
-      portalType: type,
-      referralCode: 'PS-ALVI8291',
-      discountBalanceKES: 1000,
-    };
-    loginWithOtpUser(demoData);
-  };
-
+export function MemberDashboardSkeleton() {
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        clientUser,
-        session,
-        loading,
-        portalType,
-        setPortalType,
-        signOut,
-        signInWithDemo,
-        loginWithOtpUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="space-y-2.5">
+            <SkeletonBox className="h-2.5 w-20" />
+            <SkeletonBox className="h-8 w-24" />
+            <SkeletonBox className="h-3 w-32" />
+          </div>
+        ))}
+      </div>
+      <div className="grid md:grid-cols-2 gap-12 pt-4">
+        <div className="space-y-4">
+          <SkeletonBox className="h-6 w-44" />
+          <div className="divide-y divide-navy/10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="py-4 space-y-2">
+                <SkeletonBox className="h-4 w-48" />
+                <SkeletonBox className="h-3 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <SkeletonBox className="h-6 w-44" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <SkeletonBox key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MemberMembershipSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="grid md:grid-cols-2 gap-12 py-6 border-b border-navy/10">
+        <div className="space-y-3">
+          <SkeletonBox className="h-2.5 w-24" />
+          <SkeletonBox className="h-8 w-60" />
+          <SkeletonBox className="h-3.5 w-40" />
+          <SkeletonBox className="h-6 w-28" />
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <SkeletonBox className="h-2.5 w-24" />
+            <SkeletonBox className="h-7 w-20" />
+            <SkeletonBox className="h-3 w-32" />
+          </div>
+          <div className="space-y-2">
+            <SkeletonBox className="h-2.5 w-24" />
+            <SkeletonBox className="h-7 w-28" />
+            <SkeletonBox className="h-3 w-32" />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-4">
+        <SkeletonBox className="h-6 w-56" />
+        <div className="grid md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SkeletonBox key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MemberDocumentsSkeleton() {
+  return (
+    <div className="divide-y divide-navy/10">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="py-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-2 max-w-xl w-full">
+            <div className="flex items-center gap-3">
+              <SkeletonBox className="h-4 w-48" />
+              <SkeletonBox className="h-4 w-20" />
+            </div>
+            <SkeletonBox className="h-3 w-3/4" />
+          </div>
+          <div className="flex items-center gap-4">
+            <SkeletonBox className="h-3 w-28" />
+            <SkeletonBox className="h-8 w-20" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -575,14 +523,111 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
 // ==========================================
 function formatDate(value?: string | null) {
   if (!value) return '—';
-  const date = new Date(value);
+  if (value.includes(',') || value.includes(';')) {
+    return formatDisplayDateOrDates(value);
+  }
+  const date = new Date(value.includes('T') ? value : `${value}T00:00:00Z`);
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('en-KE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(date);
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(date);
+}
+
+export function extractBookingDays(booking: ClientBooking): ScheduledDayItem[] {
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // 1. If passes are linked, use client_passes as authoritative day entries
+  if (booking.client_passes && booking.client_passes.length > 0) {
+    const sorted = [...booking.client_passes].sort((a, b) => (a.valid_date || '').localeCompare(b.valid_date || ''));
+    return sorted.map((p, idx) => {
+      const d = p.valid_date || '';
+      return {
+        dayNumber: idx + 1,
+        dateStr: d,
+        startTime: booking.start_time || '08:00 AM',
+        endTime: booking.end_time || '06:00 PM',
+        isToday: d === todayStr,
+        isPast: d < todayStr,
+        isUpcoming: d > todayStr,
+        passCode: p.pass_code,
+        passStatus: p.status,
+      };
+    });
+  }
+
+  // 2. Check if special_requests contains [SCHEDULE_DATA]
+  if (booking.special_requests && booking.special_requests.includes('[SCHEDULE_DATA]:')) {
+    try {
+      const jsonStr = booking.special_requests.split('[SCHEDULE_DATA]:')[1]?.split(' | ')[0]?.trim();
+      if (jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed.dates) && parsed.dates.length > 0) {
+          return parsed.dates.map((d: string, idx: number) => ({
+            dayNumber: idx + 1,
+            dateStr: d,
+            startTime: parsed.times?.[idx] || booking.start_time || '08:00 AM',
+            endTime: booking.end_time || '06:00 PM',
+            isToday: d === todayStr,
+            isPast: d < todayStr,
+            isUpcoming: d > todayStr,
+            passCode: booking.paystack_reference ? `PS-${booking.paystack_reference}-D${idx + 1}` : undefined,
+            passStatus: booking.status,
+          }));
+        }
+      }
+    } catch (_) { }
+  }
+
+  // 3. Check if booking_date or special_requests has multiple comma-separated dates
+  let dateCandidates: string[] = [];
+  if ((booking.booking_date || '').includes(',')) {
+    dateCandidates = booking.booking_date.split(',').map((s) => s.trim()).filter(Boolean);
+  } else if ((booking.special_requests || '').includes('Schedule:')) {
+    const match = booking.special_requests?.match(/Schedule:\s*([^|]+)/);
+    if (match && match[1]?.includes(',')) {
+      dateCandidates = match[1].split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
+
+  if (dateCandidates.length > 1) {
+    return dateCandidates.map((d, idx) => ({
+      dayNumber: idx + 1,
+      dateStr: d,
+      startTime: booking.start_time || '08:00 AM',
+      endTime: booking.end_time || '06:00 PM',
+      isToday: d === todayStr,
+      isPast: d < todayStr,
+      isUpcoming: d > todayStr,
+      passCode: booking.paystack_reference ? `PS-${booking.paystack_reference}-D${idx + 1}` : undefined,
+      passStatus: booking.status,
+    }));
+  }
+
+  // Single day fallback
+  const singleDate = booking.booking_date || todayStr;
+  return [{
+    dayNumber: 1,
+    dateStr: singleDate,
+    startTime: booking.start_time || '08:00 AM',
+    endTime: booking.end_time || '06:00 PM',
+    isToday: singleDate === todayStr,
+    isPast: singleDate < todayStr,
+    isUpcoming: singleDate > todayStr,
+    passCode: booking.paystack_reference ? `PS-${booking.paystack_reference}` : undefined,
+    passStatus: booking.status,
+  }];
+}
+
+export function isBookingUpcomingOrActive(booking: ClientBooking): boolean {
+  const days = extractBookingDays(booking);
+  const todayStr = new Date().toISOString().split('T')[0];
+  // Active if any day is today or in the future
+  return days.some((day) => day.dateStr >= todayStr);
 }
 
 function formatMoney(value?: number | null) {
@@ -609,18 +654,16 @@ function StatusIndicator({ status }: { status: string }) {
   const isPending = status === 'pending' || status === 'open' || status === 'under_review';
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-semibold border ${
-        isGood
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider font-semibold border ${isGood
           ? 'border-emerald-700/20 bg-emerald-50 text-emerald-800'
           : isPending
             ? 'border-amber-700/20 bg-amber-50 text-amber-800'
             : 'border-rose-700/20 bg-rose-50 text-rose-800'
-      }`}
+        }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          isGood ? 'bg-emerald-600' : isPending ? 'bg-amber-600' : 'bg-rose-600'
-        }`}
+        className={`h-1.5 w-1.5 rounded-full ${isGood ? 'bg-emerald-600' : isPending ? 'bg-amber-600' : 'bg-rose-600'
+          }`}
       />
       {status.replaceAll('_', ' ')}
     </span>
@@ -647,6 +690,10 @@ export function MemberLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const { isLocked, attemptsLeft, lockoutSecondsLeft, recordFailure, resetLimit } =
+    useLoginRateLimit('member', email);
 
   useEffect(() => {
     setPortalType('member');
@@ -658,6 +705,17 @@ export function MemberLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (isLocked) {
+      setError(`Too many failed attempts. Try again in ${Math.ceil(lockoutSecondsLeft / 60)} minute(s).`);
+      return;
+    }
+
+    // Prompt injection check
+    if (detectPromptInjection(email) || detectPromptInjection(password)) {
+      setError('Invalid input detected. Please use your registered credentials.');
+      return;
+    }
 
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
@@ -680,15 +738,22 @@ export function MemberLoginPage() {
       });
       if (authErr) throw authErr;
       if (data.user) {
+        resetLimit();
         setPortalType('member');
         router.push('/portal/member/dashboard');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid member credentials.');
+      recordFailure();
+      const remaining = Math.max(0, attemptsLeft - 1);
+      const msg = err instanceof Error ? err.message : 'Invalid member credentials.';
+      setError(remaining > 0 ? `${msg} ${remaining} attempt(s) remaining.` : msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const lockoutMins = Math.ceil(lockoutSecondsLeft / 60);
+  const lockoutSecs = lockoutSecondsLeft % 60;
 
   return (
     <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
@@ -715,7 +780,23 @@ export function MemberLoginPage() {
             <strong>Member Credentials Notice:</strong> Member accounts are provisioned exclusively upon office lease confirmation. Self-registration is restricted.
           </div>
 
-          {error && (
+          {/* Lockout banner */}
+          {isLocked && (
+            <div className="mb-6 p-4 border border-amber-300 bg-amber-50 text-xs text-amber-900 flex items-start gap-3">
+              <span className="text-lg leading-none">🔒</span>
+              <div>
+                <p className="font-semibold">Account temporarily locked</p>
+                <p className="mt-1 text-amber-800">
+                  Too many failed attempts. Try again in{' '}
+                  <span className="font-mono font-bold">
+                    {lockoutMins}:{String(lockoutSecs).padStart(2, '0')}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {error && !isLocked && (
             <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
               {error}
             </div>
@@ -728,32 +809,54 @@ export function MemberLoginPage() {
               </label>
               <input
                 type="email"
+                id="member-email"
                 required
+                disabled={isLocked}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="member@company.africa"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="email"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="font-mono text-[10px] uppercase tracking-wider text-navy/50 hover:text-navy transition-colors underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <input
                 type="password"
+                id="member-password"
                 required
+                disabled={isLocked}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="current-password"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
+
+            {attemptsLeft < 5 && attemptsLeft > 0 && (
+              <p className="text-[10px] font-mono text-amber-700">
+                Warning: {attemptsLeft} attempt(s) remaining before temporary lockout.
+              </p>
+            )}
 
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                id="member-login-submit"
+                disabled={loading || isLocked}
                 className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Authenticating...' : 'Sign In to Member Portal'}
@@ -779,6 +882,13 @@ export function MemberLoginPage() {
           </div>
         </div>
       </div>
+
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          defaultEmail={email}
+          onClose={() => setShowForgotPassword(false)}
+        />
+      )}
     </main>
   );
 }
@@ -793,6 +903,10 @@ export function ClientLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const { isLocked, attemptsLeft, lockoutSecondsLeft, recordFailure, resetLimit } =
+    useLoginRateLimit('client', email);
 
   useEffect(() => {
     setPortalType('client');
@@ -804,6 +918,17 @@ export function ClientLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (isLocked) {
+      setError(`Too many failed attempts. Try again in ${Math.ceil(lockoutSecondsLeft / 60)} minute(s).`);
+      return;
+    }
+
+    // Prompt injection check
+    if (detectPromptInjection(email) || detectPromptInjection(password)) {
+      setError('Invalid input detected. Please use your registered credentials.');
+      return;
+    }
 
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
@@ -869,16 +994,23 @@ export function ClientLoginPage() {
       }
 
       if (clientProfile) {
+        resetLimit();
         loginWithOtpUser(clientProfile, authData.session?.access_token);
       }
 
       router.push('/portal/client/dashboard');
     } catch (err: any) {
-      setError(err?.message || 'Login failed. Please check your email and password.');
+      recordFailure();
+      const remaining = Math.max(0, attemptsLeft - 1);
+      const msg = err?.message || 'Login failed. Please check your email and password.';
+      setError(remaining > 0 ? `${msg} ${remaining} attempt(s) remaining.` : msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const lockoutMins = Math.ceil(lockoutSecondsLeft / 60);
+  const lockoutSecs = lockoutSecondsLeft % 60;
 
   return (
     <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
@@ -901,7 +1033,23 @@ export function ClientLoginPage() {
         </div>
 
         <div className="border-t border-navy/15 pt-8">
-          {error && (
+          {/* Lockout banner */}
+          {isLocked && (
+            <div className="mb-6 p-4 border border-amber-300 bg-amber-50 text-xs text-amber-900 flex items-start gap-3">
+              <span className="text-lg leading-none">🔒</span>
+              <div>
+                <p className="font-semibold">Account temporarily locked</p>
+                <p className="mt-1 text-amber-800">
+                  Too many failed attempts. Try again in{' '}
+                  <span className="font-mono font-bold">
+                    {lockoutMins}:{String(lockoutSecs).padStart(2, '0')}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {error && !isLocked && (
             <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
               {error}
             </div>
@@ -914,11 +1062,14 @@ export function ClientLoginPage() {
               </label>
               <input
                 type="email"
+                id="client-email"
                 required
+                disabled={isLocked}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="client@company.ke"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="email"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
 
@@ -927,24 +1078,41 @@ export function ClientLoginPage() {
                 <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
                   Password
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="font-mono text-[10px] uppercase tracking-wider text-navy/50 hover:text-navy transition-colors underline"
+                >
+                  Forgot password?
+                </button>
               </div>
               <input
                 type="password"
+                id="client-password"
                 required
+                disabled={isLocked}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                autoComplete="current-password"
+                className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none disabled:opacity-40"
               />
             </div>
+
+            {attemptsLeft < 5 && attemptsLeft > 0 && (
+              <p className="text-[10px] font-mono text-amber-700">
+                Warning: {attemptsLeft} attempt(s) remaining before temporary lockout.
+              </p>
+            )}
 
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                id="client-login-submit"
+                disabled={loading || isLocked}
                 className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
               >
-                {loading ? 'Authenticating...' : 'Sign In to Client Desk \u2192'}
+                {loading ? 'Authenticating...' : 'Sign In to Client Desk →'}
               </button>
             </div>
           </form>
@@ -967,6 +1135,13 @@ export function ClientLoginPage() {
           </div>
         </div>
       </div>
+
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          defaultEmail={email}
+          onClose={() => setShowForgotPassword(false)}
+        />
+      )}
     </main>
   );
 }
@@ -1333,216 +1508,94 @@ export function ClientRegisterPage() {
 }
 
 // ==========================================
-// 3. EDITORIAL SHELL LAYOUT (NO CARDS)
-// ==========================================
-const memberNav = [
-  { href: '/portal/member/dashboard', label: 'Overview', icon: Home },
-  { href: '/portal/member/membership', label: 'Membership Terms', icon: Receipt },
-  { href: '/portal/member/documents', label: 'Documents & Leases', icon: FolderOpen },
-  { href: '/portal/member/support', label: 'Concierge Desk', icon: LifeBuoy },
-  { href: '/portal/member/profile', label: 'Account Profile', icon: UserRound },
-];
-
-const clientNav = [
-  { href: '/portal/client/dashboard', label: 'Client Desk', icon: Home },
-  { href: '/portal/client/packages', label: 'Workspace Packages', icon: Package },
-  { href: '/portal/client/bookings', label: 'Bookings & Schedule', icon: Calendar },
-  { href: '/portal/client/passes', label: 'Entry Passes & QR', icon: Ticket },
-  { href: '/portal/client/feedback', label: 'Complaints & Concerns', icon: MessageSquarePlus },
-  { href: '/portal/client/referrals', label: 'Refer & Earn (KES 500)', icon: Gift },
-  { href: '/portal/client/offers', label: 'Exclusive Offers & Perks', icon: Sparkles },
-  { href: '/portal/client/invoices', label: 'Orders & Receipts', icon: Receipt },
-  { href: '/portal/client/profile', label: 'Profile Settings', icon: UserRound },
-];
-
-export function PortalShellLayout({ children, type }: { children: ReactNode; type: PortalType }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, signOut } = usePortalAuth();
-  const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || (type === 'member' ? 'Member' : 'Client');
-  const navItems = type === 'member' ? memberNav : clientNav;
-
-  const handleSignOut = () => {
-    if (window.confirm('Sign out of Paper Street?')) {
-      void signOut();
-      router.push(type === 'member' ? '/portal/member/login' : '/portal/client/login');
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#FBF8F0] flex">
-      {/* Mobile drawer overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-navy/60 backdrop-blur-xs lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Clean Editorial Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#0F2D52] px-7 py-8 text-white transition-transform duration-300 lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center bg-gold font-serif-app text-lg font-bold text-navy">
-              P
-            </span>
-            <div>
-              <span className="block font-heading text-lg tracking-tight leading-none">Paper Street</span>
-              <span className="block font-mono text-[8px] uppercase tracking-[0.2em] text-white/50 mt-1">
-                {type === 'member' ? 'Member Operating Desk' : 'Client Workspace'}
-              </span>
-            </div>
-          </Link>
-          <button
-            type="button"
-            onClick={() => setMobileOpen(false)}
-            className="p-1 text-white/60 hover:text-white lg:hidden"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="mt-14 flex-1">
-          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-gold font-bold mb-4">
-            Navigation
-          </p>
-          <nav className="space-y-1.5">
-            {navItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 text-xs tracking-wide transition-colors ${
-                    active
-                      ? 'bg-white/10 text-white font-semibold border-l-2 border-gold'
-                      : 'text-white/70 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <Icon size={16} strokeWidth={active ? 2 : 1.5} className={active ? 'text-gold' : ''} />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* User Status Bottom Line */}
-        <div className="pt-6 border-t border-white/10">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center bg-white/10 font-mono text-xs font-bold text-gold">
-              {initials(name)}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-white">{name}</p>
-              <p className="truncate text-[10px] text-white/50 uppercase tracking-wider font-mono">
-                {type === 'member' ? 'Verified Member' : 'Client Access'}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="mt-4 flex items-center gap-2 text-[11px] text-white/50 hover:text-white transition-colors"
-          >
-            <LogOut size={13} /> Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 lg:pl-[280px] flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 h-16 border-b border-navy/10 bg-[#FBF8F0]/95 backdrop-blur-md px-6 md:px-12 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="p-2 text-navy lg:hidden"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="hidden lg:block">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-navy/50 font-bold">
-              Paper Street Workspaces · Nairobi, Kenya · Supabase Realtime
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-4 text-xs text-navy/70">
-            <span className="font-medium">{name}</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600" />
-          </div>
-        </header>
-
-        <main className="flex-1 px-6 md:px-12 py-10 max-w-6xl w-full mx-auto">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
 // 4. MEMBER DASHBOARD VIEWS (Preserved)
 // ==========================================
 export function MemberDashboardView() {
   const { user } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Member';
 
-  const memberPlan = {
-    plan: 'Professional Virtual Office',
-    status: 'active',
-    location: 'Delta Corner, Westlands, Nairobi',
-    billingCycle: 'annual',
-    price: 45000,
-    nextBillingDate: '2026-11-15',
-  };
+  const [subscription, setSubscription] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activities = [
-    { id: 1, label: 'Official Mail Logged', detail: 'KRA Notice scanned and filed to member documents', date: '2026-08-20' },
-    { id: 2, label: 'Annual Lease Term Active', detail: 'KES 45,000 processed via M-Pesa Till', date: '2026-08-15' },
-    { id: 3, label: 'Boardroom Session Reserved', detail: 'Executive Suite booked for 2 hours in Delta Corner', date: '2026-08-10' },
-  ];
+  useEffect(() => {
+    async function loadMemberData() {
+      if (!user?.id) return;
+      try {
+        const { data: sub } = await supabase
+          .from('portal_subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        setSubscription(sub || null);
+
+        const { data: acts } = await supabase
+          .from('portal_activities')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .limit(5);
+        setActivities(acts || []);
+      } catch (err) {
+        console.warn('MemberDashboard load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void loadMemberData();
+  }, [user]);
 
   return (
     <div className="space-y-12 animate-paper-rise">
       <PageHeader
         eyebrow="Member Operating Desk"
         title={`Welcome, ${name}.`}
-        detail="Your registered corporate address and flexible workspace amenities in Westlands are active."
+        detail={subscription
+          ? `Your registered corporate address at ${subscription.location} and workspace amenities are active.`
+          : 'Your account is being set up. Your account manager will activate your membership shortly.'}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Membership</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">{memberPlan.plan}</p>
-          <div className="mt-2"><StatusIndicator status={memberPlan.status} /></div>
+      {loading ? (
+        <MemberDashboardSkeleton />
+      ) : subscription ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Membership</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1">{subscription.plan}</p>
+            <div className="mt-2"><StatusIndicator status={subscription.status} /></div>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Annual Rate</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1">{formatMoney(subscription.annual_price)}</p>
+            <p className="text-xs text-navy/60 mt-1">Renews {formatDate(subscription.renewal_date)}</p>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Documents</p>
+            <p className="font-heading text-2xl font-light text-navy mt-1">On File</p>
+            <p className="text-xs text-navy/60 mt-1">Lease &amp; Utility Proofs</p>
+          </div>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Primary Location</p>
+            <p className="font-heading text-lg font-light text-navy mt-1">{subscription.location}</p>
+          </div>
         </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Annual Rate</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">{formatMoney(memberPlan.price)}</p>
-          <p className="text-xs text-navy/60 mt-1">Renews {formatDate(memberPlan.nextBillingDate)}</p>
+      ) : (
+        <div className="py-10 px-8 border border-amber-200 bg-amber-50">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-amber-700 font-bold">Account Pending Activation</p>
+          <h2 className="font-heading text-2xl text-navy mt-2">No Active Membership Assigned Yet</h2>
+          <p className="text-xs text-navy/70 mt-2 max-w-lg leading-relaxed">
+            Your account has been created but your virtual office membership has not yet been linked.
+            Please contact your account manager or email <strong>hello@paperstreet.co.ke</strong> to get started.
+          </p>
         </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Documents</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">4 Verified</p>
-          <p className="text-xs text-navy/60 mt-1">Lease & Utility Proofs</p>
-        </div>
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Primary Location</p>
-          <p className="font-heading text-2xl font-light text-navy mt-1">Delta Corner</p>
-          <p className="text-xs text-navy/60 mt-1">Westlands, Nairobi</p>
-        </div>
-      </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-12 pt-4">
         <div>
           <h2 className="font-heading text-2xl text-navy font-light mb-6">Recent Activity Log</h2>
           <div className="divide-y divide-navy/10">
-            {activities.map((act) => (
+            {activities.length > 0 ? activities.map((act) => (
               <div key={act.id} className="py-4 first:pt-0">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-navy">{act.label}</span>
@@ -1550,7 +1603,9 @@ export function MemberDashboardView() {
                 </div>
                 <p className="text-xs text-navy/65 mt-1 leading-relaxed">{act.detail}</p>
               </div>
-            ))}
+            )) : (
+              <p className="text-xs text-navy/40 py-6">No recent activity recorded yet. Your mail handling, boardroom bookings, and account events will appear here.</p>
+            )}
           </div>
         </div>
 
@@ -1597,22 +1652,40 @@ export function MemberDashboardView() {
 }
 
 export function MemberMembershipView() {
-  const data = {
-    plan: 'Professional Virtual Office',
-    location: 'Delta Corner, Westlands, Nairobi',
-    status: 'active',
-    billingCycle: 'annual',
-    annualPrice: 45000,
-    depositAmount: 10000,
-    includedServices: [
-      'Prestigious Nairobi Business Address (Delta Corner, Westlands)',
-      'Official Mail Handling & Reception Notification',
-      'Daily Mail Forwarding to Email (High-Resolution PDF Scans)',
-      '4 Hours Boardroom / Meeting Space per month',
-      'Certified Proof of Address Utility Documents for KRA & Banking',
-      'Front Desk Receptionist & Call Answering in Your Entity Name',
-    ],
-  };
+  const { user } = usePortalAuth();
+  const [subscription, setSubscription] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('portal_subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        setSubscription(data || null);
+      } catch (err) {
+        console.warn('MemberMembership load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [user]);
+
+  const defaultServices = [
+    'Registered Business Address at Paper Street',
+    'Official Mail Handling & Reception Notification',
+    'Daily Mail Forwarding to Email (High-Resolution PDF Scans)',
+    '4 Hours Boardroom / Meeting Space per month',
+    'Certified Proof of Address Utility Documents for KRA & Banking',
+    'Front Desk Receptionist & Call Answering in Your Entity Name',
+  ];
+
+  const services: string[] = subscription?.included_services ?? defaultServices;
 
   return (
     <div className="space-y-12 animate-paper-rise">
@@ -1622,84 +1695,131 @@ export function MemberMembershipView() {
         detail="A clear view of your active services, billing cycles, and legal provisions."
       />
 
-      <div className="grid md:grid-cols-2 gap-12 py-6 border-b border-navy/10">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Plan & Location</p>
-          <h2 className="font-heading text-3xl text-navy mt-1">{data.plan}</h2>
-          <p className="text-xs text-navy/60 mt-2">{data.location}</p>
-          <div className="mt-4"><StatusIndicator status={data.status} /></div>
+      {loading ? (
+        <MemberMembershipSkeleton />
+      ) : !subscription ? (
+        <div className="py-10 px-8 border border-amber-200 bg-amber-50">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-amber-700 font-bold">No Active Contract</p>
+          <h2 className="font-heading text-2xl text-navy mt-2">Membership Not Yet Activated</h2>
+          <p className="text-xs text-navy/70 mt-2 leading-relaxed">Contact <strong>hello@paperstreet.co.ke</strong> to activate your virtual office membership.</p>
         </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Billing Frequency</p>
-            <p className="font-heading text-2xl text-navy mt-1 capitalize">{data.billingCycle}</p>
-            <p className="text-xs text-navy/60 mt-1">{formatMoney(data.annualPrice)} / year</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Security Deposit</p>
-            <p className="font-heading text-2xl text-navy mt-1">{formatMoney(data.depositAmount)}</p>
-            <p className="text-xs text-navy/60 mt-1">Refundable on lease exit</p>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-heading text-2xl text-navy font-light mb-6">Included Services Checklist</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.includedServices.map((service, i) => (
-            <div key={i} className="flex items-start gap-3 py-3 border-b border-navy/10 text-xs text-navy/80">
-              <Check className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-              <span>{service}</span>
+      ) : (
+        <>
+          <div className="grid md:grid-cols-2 gap-12 py-6 border-b border-navy/10">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Plan &amp; Location</p>
+              <h2 className="font-heading text-3xl text-navy mt-1">{subscription.plan}</h2>
+              <p className="text-xs text-navy/60 mt-2">{subscription.location}</p>
+              <div className="mt-4"><StatusIndicator status={subscription.status} /></div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Billing Frequency</p>
+                <p className="font-heading text-2xl text-navy mt-1 capitalize">{subscription.billing_cycle}</p>
+                <p className="text-xs text-navy/60 mt-1">{formatMoney(subscription.annual_price)} / year</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Security Deposit</p>
+                <p className="font-heading text-2xl text-navy mt-1">{formatMoney(subscription.deposit_amount)}</p>
+                <p className="text-xs text-navy/60 mt-1">Refundable on lease exit</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-heading text-2xl text-navy font-light mb-6">Included Services Checklist</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {services.map((service: string, i: number) => (
+                <div key={i} className="flex items-start gap-3 py-3 border-b border-navy/10 text-xs text-navy/80">
+                  <Check className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                  <span>{service}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 export function MemberDocumentsView() {
-  const documents = [
-    { id: 1, name: 'Paper Street Virtual Office Lease Agreement', category: 'Legal', status: 'ready', description: 'Fully executed annual agreement with building management.', updatedDate: '2026-08-15' },
-    { id: 2, name: 'Proof of Address Letter (KRA & Bank verified)', category: 'Compliance', status: 'ready', description: 'Official certified utility bill and landlord consent letter.', updatedDate: '2026-08-15' },
-    { id: 3, name: 'August 2026 Scanned Post & Mail Receipt', category: 'Mail', status: 'ready', description: '3 parcels collected and signed by reception.', updatedDate: '2026-08-20' },
-    { id: 4, name: 'Annual Membership Tax Invoice & ETR', category: 'Billing', status: 'ready', description: 'M-Pesa Till payment receipt with VAT breakdown.', updatedDate: '2025-11-15' },
-  ];
+  const { user } = usePortalAuth();
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('portal_documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_date', { ascending: false });
+        setDocuments(data || []);
+      } catch (err) {
+        console.warn('Documents load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, [user]);
 
   return (
     <div className="space-y-12 animate-paper-rise">
       <PageHeader
         eyebrow="Records & Compliance"
         title="Document Shelf"
-        detail="Official lease contracts, bank utility proofs, and scanned mail logs."
+        detail="Official lease contracts, bank utility proofs, and scanned mail logs issued by Paper Street."
       />
 
-      <div className="divide-y divide-navy/10">
-        {documents.map((doc) => (
-          <div key={doc.id} className="py-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-3">
-                <h3 className="text-sm font-semibold text-navy">{doc.name}</h3>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 bg-navy/5 px-2 py-0.5">
-                  {doc.category}
-                </span>
+      {loading ? (
+        <MemberDocumentsSkeleton />
+      ) : documents.length === 0 ? (
+        <div className="py-12 border-y border-navy/10 text-center">
+          <FolderOpen className="w-10 h-10 text-navy/20 mx-auto mb-3" />
+          <p className="font-heading text-xl text-navy/50">No documents issued yet</p>
+          <p className="text-xs text-navy/40 mt-2 max-w-xs mx-auto leading-relaxed">
+            Your proof of address letters, utility bills, and lease agreements will appear here once your membership is activated and processed by our team.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-navy/10">
+          {documents.map((doc) => (
+            <div key={doc.id} className="py-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold text-navy">{doc.name}</h3>
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 bg-navy/5 px-2 py-0.5">
+                    {doc.category}
+                  </span>
+                </div>
+                <p className="text-xs text-navy/60 mt-1">{doc.description}</p>
               </div>
-              <p className="text-xs text-navy/60 mt-1">{doc.description}</p>
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-[10px] text-navy/40">Updated {formatDate(doc.updated_date)}</span>
+                {doc.download_url ? (
+                  <a
+                    href={doc.download_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 border border-navy/20 px-3.5 py-1.5 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors"
+                  >
+                    <Download size={13} /> PDF
+                  </a>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 border border-navy/10 px-3.5 py-1.5 text-xs uppercase tracking-wider font-semibold text-navy/30 cursor-not-allowed">
+                    <Download size={13} /> Processing
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-[10px] text-navy/40">Updated {formatDate(doc.updatedDate)}</span>
-              <button
-                type="button"
-                onClick={() => alert(`Downloading ${doc.name} (PDF)`)}
-                className="inline-flex items-center gap-1.5 border border-navy/20 px-3.5 py-1.5 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors"
-              >
-                <Download size={13} /> PDF
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1721,7 +1841,7 @@ export function MemberSupportView() {
             Request courier dispatch of received original parcels to your physical location.
           </p>
           <a
-            href="mailto:hello@paperstreet.africa?subject=Mail%20Forwarding%20Request"
+            href="mailto:hello@paperstreet.co.ke?subject=Mail%20Forwarding%20Request"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
             Dispatch Request &rarr;
@@ -1735,7 +1855,7 @@ export function MemberSupportView() {
             Reserve the 6-person or 12-person boardroom with your monthly member credits.
           </p>
           <a
-            href="mailto:hello@paperstreet.africa?subject=Boardroom%20Reservation"
+            href="mailto:hello@paperstreet.co.ke?subject=Boardroom%20Reservation"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
             Book Room &rarr;
@@ -1749,10 +1869,10 @@ export function MemberSupportView() {
             Call the front desk during office hours (Mon-Fri 8:30 AM - 5:30 PM EAT).
           </p>
           <a
-            href="tel:+254709123456"
+            href="tel:0110486677"
             className="inline-block mt-6 text-xs font-semibold text-navy underline"
           >
-            +254 709 123 456 &rarr;
+            0110486677 (+254 110 486 677) &rarr;
           </a>
         </div>
       </div>
@@ -1761,266 +1881,9 @@ export function MemberSupportView() {
 }
 
 // ==========================================
-// 5. CLIENT DASHBOARD OVERVIEW VIEW
+// 5. CLIENT DASHBOARD OVERVIEW VIEW (MODULAR FILE: client-dashboard.tsx)
 // ==========================================
-export function ClientDashboardView() {
-  const { user } = usePortalAuth();
-  const name = user?.user_metadata?.full_name || 'Client';
-  const [bookings, setBookings] = useState<ClientBooking[]>([]);
-  const [passes, setPasses] = useState<ClientPass[]>([]);
-  const [feedbackCount, setFeedbackCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const { data: bData } = await supabase
-          .from('client_bookings')
-          .select('*')
-          .order('booking_date', { ascending: true });
-
-        const { data: pData } = await supabase
-          .from('client_passes')
-          .select('*')
-          .eq('status', 'active');
-
-        const { count } = await supabase
-          .from('client_feedback')
-          .select('*', { count: 'exact', head: true });
-
-        if (bData && bData.length > 0) {
-          setBookings(bData);
-        } else {
-          setBookings([
-            {
-              id: 1,
-              user_id: user?.id || 'cli_demo',
-              client_name: name,
-              client_email: user?.email || 'client@paperstreet.ke',
-              service_title: 'The Glasshouse Meeting Suite (6 Pax)',
-              location: 'Westlands (Delta Corner)',
-              booking_date: '2026-08-26',
-              start_time: '10:00 AM',
-              end_time: '12:00 PM',
-              duration_hours: 2,
-              total_amount_kes: 5000,
-              status: 'confirmed',
-              payment_status: 'paid',
-              payment_method: 'M-Pesa',
-              created_at: new Date().toISOString(),
-            },
-          ]);
-        }
-
-        if (pData && pData.length > 0) {
-          setPasses(pData);
-        } else {
-          setPasses([
-            {
-              id: 1,
-              user_id: user?.id || 'cli_demo',
-              pass_code: 'PS-PASS-8291',
-              service_title: 'Full-Day Hot Desk Pass',
-              location: 'Westlands (Delta Corner)',
-              valid_date: '2026-08-26',
-              status: 'active',
-              wifi_network: 'PaperStreet-Guest-5G',
-              wifi_password: 'Westlands2026!',
-              created_at: new Date().toISOString(),
-            },
-          ]);
-        }
-
-        setFeedbackCount(count || 1);
-      } catch (err) {
-        console.warn('DB load err:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    void loadData();
-  }, [user, name]);
-
-  const activePass = passes[0];
-  const nextBooking = bookings[0];
-
-  return (
-    <div className="space-y-12 animate-paper-rise">
-      <PageHeader
-        eyebrow="On-Demand Client Desk"
-        title={`Welcome, ${name}.`}
-        detail="Manage your active day passes, workspace reservations, packages, and complaints desk."
-      />
-
-      {/* Key Metrics Strip */}
-      {loading ? (
-        <DashboardMetricsSkeleton />
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-b border-navy/10">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Active Passes</p>
-            <p className="font-heading text-3xl font-light text-navy mt-1">{passes.length}</p>
-            <p className="text-xs text-navy/60 mt-1">Ready for check-in</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Reservations</p>
-            <p className="font-heading text-3xl font-light text-navy mt-1">{bookings.length}</p>
-            <p className="text-xs text-navy/60 mt-1">Scheduled sessions</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Support Tickets</p>
-            <p className="font-heading text-3xl font-light text-navy mt-1">{feedbackCount}</p>
-            <p className="text-xs text-navy/60 mt-1">Concierge queue</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">WiFi Pass</p>
-            <p className="font-heading text-2xl font-light text-navy mt-1 font-mono">PS-GUEST</p>
-            <p className="text-xs text-emerald-800 font-semibold mt-1">200Mbps Active</p>
-          </div>
-        </div>
-      )}
-
-      {/* Active Entry Pass Spotlight */}
-      {loading ? (
-        <ActivePassSkeleton />
-      ) : activePass ? (
-        <div className="p-8 border border-navy/20 bg-navy/5 flex flex-wrap items-center justify-between gap-6">
-          <div>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-navy font-bold">
-              Active Digital Entry Pass
-            </span>
-            <h2 className="font-heading text-3xl text-navy font-light mt-1">{activePass.service_title}</h2>
-            <p className="text-xs text-navy/70 mt-2">
-              <strong>Location:</strong> {activePass.location} · <strong>Date:</strong> {formatDate(activePass.valid_date)}
-            </p>
-            <p className="text-xs text-navy/60 mt-1 flex items-center gap-2">
-              <Wifi size={13} className="text-emerald-700" />
-              <span>WiFi: <strong className="text-navy">{activePass.wifi_network}</strong> (Password: <code className="bg-navy/10 px-1 py-0.5">{activePass.wifi_password}</code>)</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <p className="font-mono text-[10px] uppercase text-navy/50">Reception Pass Code</p>
-              <p className="font-mono text-2xl font-bold text-navy tracking-wider">{activePass.pass_code}</p>
-            </div>
-            <div className="p-2 bg-white border border-navy/15">
-              <QrCode size={52} className="text-navy" />
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Quick Action Shortcuts */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Link
-          href="/portal/client/packages"
-          className="group p-6 border border-navy/15 hover:border-navy hover:bg-navy/5 transition-all flex flex-col justify-between"
-        >
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">Workspace Plans</p>
-            <h3 className="font-heading text-2xl text-navy font-light mt-2">Browse Packages</h3>
-            <p className="text-xs text-navy/60 mt-2 leading-relaxed">
-              Explore full-day passes, 5-day bundles, podcast booths, and conference rooms.
-            </p>
-          </div>
-          <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-navy group-hover:text-navy-600 transition-colors">
-            View All Packages &rarr;
-          </span>
-        </Link>
-
-        <Link
-          href="/portal/client/bookings"
-          className="group p-6 border border-navy/15 hover:border-navy hover:bg-navy/5 transition-all flex flex-col justify-between"
-        >
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">Instant Booking</p>
-            <h3 className="font-heading text-2xl text-navy font-light mt-2">Reserve Space</h3>
-            <p className="text-xs text-navy/60 mt-2 leading-relaxed">
-              Select date, duration, and hub with immediate M-Pesa receipt & pass generation.
-            </p>
-          </div>
-          <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-navy group-hover:text-navy-600 transition-colors">
-            Book Meeting Room &rarr;
-          </span>
-        </Link>
-
-        <Link
-          href="/portal/client/feedback"
-          className="group p-6 border border-navy/15 hover:border-navy hover:bg-navy/5 transition-all flex flex-col justify-between"
-        >
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">Client Care</p>
-            <h3 className="font-heading text-2xl text-navy font-light mt-2">Complaints & Feedback</h3>
-            <p className="text-xs text-navy/60 mt-2 leading-relaxed">
-              File issues regarding Wi-Fi, AV, facilities, or billing directly to management.
-            </p>
-          </div>
-          <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-navy group-hover:text-navy-600 transition-colors">
-            Submit Feedback Ticket &rarr;
-          </span>
-        </Link>
-      </div>
-
-      {/* Upcoming Bookings Stream */}
-      <div>
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-navy/10">
-          <div>
-            <span className="font-mono text-[9px] uppercase tracking-widest text-navy/50 font-bold block">
-              Live Schedule
-            </span>
-            <h2 className="font-heading text-2xl text-navy font-light mt-0.5">Upcoming Reservations</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/portal/client/bookings?tab=schedule"
-              className="text-xs font-semibold text-navy hover:underline hidden sm:inline-block"
-            >
-              Full Schedule &amp; History &rarr;
-            </Link>
-            <Link
-              href="/portal/client/bookings"
-              className="bg-navy text-white text-[11px] uppercase tracking-wider font-semibold px-4 py-2 hover:bg-navy-700 transition-colors"
-            >
-              + Book Space
-            </Link>
-          </div>
-        </div>
-
-        {loading ? (
-          <BookingsListSkeleton />
-        ) : bookings.length === 0 ? (
-          <p className="text-xs text-navy/50 py-6">No scheduled reservations yet.</p>
-        ) : (
-          <div className="divide-y divide-navy/10">
-            {bookings.slice(0, 4).map((b) => (
-              <div key={b.id} className="py-5 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-navy">{b.service_title}</h3>
-                  <p className="text-xs text-navy/60 mt-0.5">
-                    <strong>{formatDate(b.booking_date)}</strong> · {b.start_time} - {b.end_time} ({b.duration_hours} hrs)
-                  </p>
-                  <p className="font-mono text-[10px] text-navy/40 mt-1">{b.location}</p>
-                </div>
-                <div className="flex items-center gap-4 text-right">
-                  <div>
-                    <p className="text-sm font-semibold text-navy">{formatMoney(b.total_amount_kes)}</p>
-                    <div className="mt-1"><StatusIndicator status={b.status} /></div>
-                  </div>
-                  <Link
-                    href="/portal/client/passes"
-                    className="border border-navy/20 text-navy text-[11px] uppercase tracking-wider font-semibold px-3 py-1.5 hover:bg-navy hover:text-white transition-colors"
-                  >
-                    Pass &rarr;
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+export { ClientDashboardView } from './client-dashboard';
 
 // ==========================================
 // 6. CLIENT WORKSPACE PACKAGES VIEW (DAY PASS & MEETING ROOMS ONLY)
@@ -2060,8 +1923,8 @@ export function ClientPackagesView() {
               features: Array.isArray(pkg.features)
                 ? pkg.features
                 : typeof pkg.features === 'string'
-                ? JSON.parse(pkg.features)
-                : [],
+                  ? JSON.parse(pkg.features)
+                  : [],
               badge: pkg.badge || (pkg.slug === 'hot-desk' ? 'Flexible Coworking' : 'Executive Boardroom'),
               capacity: pkg.slug === 'meeting-rooms' ? '6–12 Persons' : '1 Person',
             };
@@ -2108,11 +1971,10 @@ export function ClientPackagesView() {
             key={cat}
             type="button"
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all ${
-              activeCategory === cat
+            className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all ${activeCategory === cat
                 ? 'bg-navy text-white'
                 : 'border border-navy/20 text-navy/70 hover:border-navy hover:text-navy'
-            }`}
+              }`}
           >
             {cat}
           </button>
@@ -2323,62 +2185,40 @@ export function ClientBookingsView() {
             setActiveSlug(parsed.slug as ServiceSlug);
           }
           localStorage.removeItem('ps_selected_package');
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   }, []);
 
   useEffect(() => {
     async function fetchBookings() {
+      if (!user?.id && !email) {
+        setBookings([]);
+        setLoadingBookings(false);
+        return;
+      }
       setLoadingBookings(true);
       try {
-        const { data, error } = await supabase
+        const guestUserId = email ? `guest_${email.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
+        let bQuery = supabase
           .from('client_bookings')
-          .select('*')
+          .select('*, client_passes(*)')
           .order('booking_date', { ascending: false });
+
+        if (user?.id && email) {
+          bQuery = bQuery.or(`user_id.eq.${user.id},user_id.eq.${guestUserId},client_email.eq.${email}`);
+        } else if (user?.id) {
+          bQuery = bQuery.eq('user_id', user.id);
+        } else if (email) {
+          bQuery = bQuery.eq('client_email', email);
+        }
+
+        const { data, error } = await bQuery;
 
         if (!error && data && data.length > 0) {
           setBookings(data);
         } else {
-          // Fallback initial demo schedule for clear visibility
-          setBookings([
-            {
-              id: 101,
-              user_id: user?.id || 'cli_current',
-              client_name: name || 'Valued Client',
-              client_email: email || 'client@paperstreet.ke',
-              service_title: 'Full-Day Hot Desk Pass',
-              location: 'Kisumu CBD (CBD Commercial Center)',
-              booking_date: '2026-08-27',
-              start_time: '08:00 AM',
-              end_time: '06:00 PM',
-              duration_hours: 10,
-              total_amount_kes: 1500,
-              status: 'confirmed',
-              payment_status: 'paid',
-              payment_method: 'Paystack / M-Pesa',
-              mpesa_reference: 'QKE829104',
-              created_at: new Date().toISOString(),
-            },
-            {
-              id: 102,
-              user_id: user?.id || 'cli_current',
-              client_name: name || 'Valued Client',
-              client_email: email || 'client@paperstreet.ke',
-              service_title: 'Executive Boardroom (Half-Day Block)',
-              location: 'Kisumu CBD (CBD Commercial Center)',
-              booking_date: '2026-08-29',
-              start_time: '09:00 AM',
-              end_time: '01:00 PM',
-              duration_hours: 4,
-              total_amount_kes: 7000,
-              status: 'confirmed',
-              payment_status: 'paid',
-              payment_method: 'Paystack / Card',
-              mpesa_reference: 'QKE947210',
-              created_at: new Date().toISOString(),
-            },
-          ]);
+          setBookings([]);
         }
       } catch (err) {
         console.warn('Could not load client bookings:', err);
@@ -2390,15 +2230,23 @@ export function ClientBookingsView() {
     void fetchBookings();
   }, [user, name, email]);
 
-  const upcomingBookings = bookings.filter((b) => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return (b.booking_date || '') >= todayStr;
-  });
+  const [scheduleViewMode, setScheduleViewMode] = useState<'cards' | 'timeline'>('cards');
 
-  const pastBookings = bookings.filter((b) => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return (b.booking_date || '') < todayStr;
-  });
+  const upcomingBookings = bookings.filter((b) => isBookingUpcomingOrActive(b));
+  const pastBookings = bookings.filter((b) => !isBookingUpcomingOrActive(b));
+
+  // Build flattened chronological timeline of all active/upcoming days across bookings
+  const allTimelineSessions = upcomingBookings.flatMap((b) => {
+    const days = extractBookingDays(b);
+    return days.map((day) => ({
+      ...day,
+      bookingId: b.id,
+      serviceTitle: b.service_title,
+      location: b.location,
+      totalDays: days.length,
+      isMultiDay: days.length > 1,
+    }));
+  }).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
 
   return (
     <div className="space-y-8 animate-paper-rise">
@@ -2414,11 +2262,10 @@ export function ClientBookingsView() {
           <button
             type="button"
             onClick={() => setMainTab('reserve')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-2 ${
-              mainTab === 'reserve'
+            className={`px-5 py-2.5 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-2 ${mainTab === 'reserve'
                 ? 'bg-navy text-white shadow-xs'
                 : 'border border-navy/20 text-navy/70 hover:border-navy hover:text-navy bg-white/50'
-            }`}
+              }`}
           >
             <Ticket size={14} />
             Reserve Workspace
@@ -2427,17 +2274,15 @@ export function ClientBookingsView() {
           <button
             type="button"
             onClick={() => setMainTab('schedule')}
-            className={`px-5 py-2.5 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-2 ${
-              mainTab === 'schedule'
+            className={`px-5 py-2.5 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-2 ${mainTab === 'schedule'
                 ? 'bg-navy text-white shadow-xs'
                 : 'border border-navy/20 text-navy/70 hover:border-navy hover:text-navy bg-white/50'
-            }`}
+              }`}
           >
             <Calendar size={14} />
             My Schedule &amp; History
-            <span className={`font-mono text-[10px] px-1.5 py-0.2 rounded-full ${
-              mainTab === 'schedule' ? 'bg-white/20 text-white' : 'bg-navy/10 text-navy'
-            }`}>
+            <span className={`font-mono text-[10px] px-1.5 py-0.2 rounded-full ${mainTab === 'schedule' ? 'bg-white/20 text-white' : 'bg-navy/10 text-navy'
+              }`}>
               {bookings.length}
             </span>
           </button>
@@ -2464,11 +2309,10 @@ export function ClientBookingsView() {
                 setActiveSlug('hot-desk');
                 setSelectedTier(undefined);
               }}
-              className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer ${
-                activeSlug === 'hot-desk'
+              className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer ${activeSlug === 'hot-desk'
                   ? 'border-b-2 border-navy text-navy font-bold'
                   : 'text-navy/60 hover:text-navy'
-              }`}
+                }`}
             >
               Hot Desk &amp; Day Passes
             </button>
@@ -2478,11 +2322,10 @@ export function ClientBookingsView() {
                 setActiveSlug('meeting-rooms');
                 setSelectedTier(undefined);
               }}
-              className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer ${
-                activeSlug === 'meeting-rooms'
+              className={`px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer ${activeSlug === 'meeting-rooms'
                   ? 'border-b-2 border-navy text-navy font-bold'
                   : 'text-navy/60 hover:text-navy'
-              }`}
+                }`}
             >
               Meeting &amp; Boardrooms
             </button>
@@ -2527,7 +2370,7 @@ export function ClientBookingsView() {
             <div className="space-y-10">
               {/* Upcoming / Active Schedule */}
               <div>
-                <div className="flex items-center justify-between border-b border-navy/15 pb-3 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-navy/15 pb-3 mb-6">
                   <div>
                     <span className="font-mono text-[10px] uppercase tracking-widest text-navy/60 font-bold block">
                       Confirmed Itinerary
@@ -2536,67 +2379,208 @@ export function ClientBookingsView() {
                       Upcoming Scheduled Sessions ({upcomingBookings.length})
                     </h2>
                   </div>
+
+                  {/* Schedule View Toggle: Reservation Cards vs Day-by-Day Timeline */}
+                  {allTimelineSessions.length > 0 && (
+                    <div className="flex items-center gap-1.5 p-1 bg-navy/5 border border-navy/15">
+                      <button
+                        type="button"
+                        onClick={() => setScheduleViewMode('cards')}
+                        className={`px-3 py-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer ${scheduleViewMode === 'cards'
+                            ? 'bg-navy text-white shadow-xs'
+                            : 'text-navy/70 hover:text-navy'
+                          }`}
+                      >
+                        By Reservation
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleViewMode('timeline')}
+                        className={`px-3 py-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer ${scheduleViewMode === 'timeline'
+                            ? 'bg-navy text-white shadow-xs'
+                            : 'text-navy/70 hover:text-navy'
+                          }`}
+                      >
+                        Day-by-Day Schedule ({allTimelineSessions.length})
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {upcomingBookings.length === 0 ? (
                   <p className="text-xs text-navy/60 italic py-4">No upcoming sessions scheduled.</p>
-                ) : (
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {upcomingBookings.map((bk) => (
+                ) : scheduleViewMode === 'timeline' ? (
+                  /* Chronological Day-by-Day Schedule Timeline */
+                  <div className="border border-navy/20 bg-white divide-y divide-navy/10">
+                    {allTimelineSessions.map((item, idx) => (
                       <div
-                        key={bk.id}
-                        className="p-6 border border-navy/20 bg-white shadow-xs space-y-4 hover:border-navy transition-all"
+                        key={`${item.bookingId}-${item.dayNumber}-${idx}`}
+                        className={`p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 transition-colors ${item.isToday ? 'bg-emerald-50/40 border-l-4 border-l-emerald-600' : 'hover:bg-navy/[0.02]'
+                          }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 border border-emerald-700/20 mb-2">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                              {bk.status || 'Confirmed'} · {bk.payment_status || 'Paid'}
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 text-center shrink-0">
+                            <span className="font-mono text-[10px] uppercase font-bold text-navy/50 block">
+                              {new Date(item.dateStr.includes('T') ? item.dateStr : `${item.dateStr}T00:00:00Z`).toLocaleDateString('en-KE', { weekday: 'short', timeZone: 'UTC' })}
                             </span>
-                            <h3 className="font-heading text-xl text-navy font-normal">{bk.service_title}</h3>
+                            <span className="font-heading text-2xl text-navy font-light leading-none mt-1 block">
+                              {new Date(item.dateStr.includes('T') ? item.dateStr : `${item.dateStr}T00:00:00Z`).getUTCDate()}
+                            </span>
                           </div>
-                          <span className="font-mono text-sm font-bold text-navy">
-                            {formatMoney(bk.total_amount_kes)}
-                          </span>
-                        </div>
 
-                        <div className="space-y-2 text-xs text-navy/70 border-t border-navy/10 pt-3">
-                          <div className="flex items-center gap-2">
-                            <CalendarDays size={14} className="text-navy/50 shrink-0" />
-                            <span><strong>Date:</strong> {formatDate(bk.booking_date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-navy/50 shrink-0" />
-                            <span><strong>Time:</strong> {bk.start_time} &rarr; {bk.end_time} ({bk.duration_hours} hrs)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin size={14} className="text-navy/50 shrink-0" />
-                            <span><strong>Location:</strong> {bk.location}</span>
-                          </div>
-                          {bk.mpesa_reference && (
-                            <div className="flex items-center gap-2 font-mono text-[11px] text-navy/50">
-                              <CreditCard size={13} />
-                              <span>Ref: {bk.mpesa_reference}</span>
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm font-semibold text-navy">{item.serviceTitle}</h4>
+                              {item.isMultiDay && (
+                                <span className="font-mono text-[10px] px-2 py-0.5 bg-navy/10 text-navy font-bold">
+                                  Day {item.dayNumber} of {item.totalDays}
+                                </span>
+                              )}
+                              <span className={`text-[10px] font-mono px-2 py-0.5 font-semibold border ${item.isToday
+                                  ? 'border-emerald-700/20 bg-emerald-50 text-emerald-800 animate-pulse'
+                                  : item.isPast
+                                    ? 'border-gray-200 bg-gray-100 text-gray-500'
+                                    : 'border-blue-700/20 bg-blue-50 text-blue-800'
+                                }`}>
+                                {item.isToday ? '● Active Today' : item.isPast ? 'Completed' : 'Upcoming Session'}
+                              </span>
                             </div>
-                          )}
+
+                            <p className="text-xs text-navy/70 flex items-center gap-3">
+                              <span className="flex items-center gap-1">
+                                <Clock size={12} className="text-navy/50" />
+                                {item.startTime} &rarr; {item.endTime}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MapPin size={12} className="text-navy/50" />
+                                {item.location}
+                              </span>
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="pt-2 border-t border-navy/10 flex items-center justify-between gap-3">
-                          <Link
-                            href="/portal/client/passes"
-                            className="bg-navy text-white text-[11px] uppercase tracking-wider font-semibold px-4 py-2 hover:bg-navy-700 transition-colors inline-flex items-center gap-1.5"
-                          >
-                            <QrCode size={13} /> View Entry Pass &rarr;
-                          </Link>
-                          <Link
-                            href="/portal/client/invoices"
-                            className="border border-navy/20 text-navy text-[11px] uppercase tracking-wider font-semibold px-3 py-2 hover:bg-navy/5 transition-colors"
-                          >
-                            Receipt
-                          </Link>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] px-3 py-1.5 bg-navy/5 border border-navy/15 text-navy font-semibold">
+                            Check-in by Name or Ref
+                          </span>
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  /* Standard Cards View with Detailed Multi-Day Itinerary */
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {upcomingBookings.map((bk) => {
+                      const days = extractBookingDays(bk);
+                      const isMulti = days.length > 1;
+                      const nextDay = days.find((d) => !d.isPast) || days[0];
+                      const remainingCount = days.filter((d) => !d.isPast).length;
+
+                      return (
+                        <div
+                          key={bk.id}
+                          className="p-6 border border-navy/20 bg-white shadow-xs space-y-4 hover:border-navy transition-all flex flex-col justify-between"
+                        >
+                          <div className="space-y-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 border border-emerald-700/20 mb-2">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                                  {bk.status || 'Confirmed'} · {bk.payment_status || 'Paid'}
+                                </span>
+                                <h3 className="font-heading text-xl text-navy font-normal">{bk.service_title}</h3>
+                              </div>
+                              <span className="font-mono text-sm font-bold text-navy">
+                                {formatMoney(bk.total_amount_kes)}
+                              </span>
+                            </div>
+
+                            {/* Multi-Day Banner */}
+                            {isMulti && (
+                              <div className="p-2.5 bg-navy/5 border border-navy/15 flex items-center justify-between text-xs">
+                                <span className="font-mono text-[10px] uppercase font-bold text-navy">
+                                  {days.length}-Day Flexi Package
+                                </span>
+                                <span className="font-mono text-[10px] font-bold text-emerald-800">
+                                  {remainingCount} of {days.length} Days Remaining
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="space-y-2 text-xs text-navy/70 border-t border-navy/10 pt-3">
+                              <div className="flex items-center gap-2">
+                                <CalendarDays size={14} className="text-navy/50 shrink-0" />
+                                <span>
+                                  <strong>{isMulti ? 'Next Session Date:' : 'Date:'}</strong> {formatDate(nextDay?.dateStr || bk.booking_date)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Clock size={14} className="text-navy/50 shrink-0" />
+                                <span>
+                                  <strong>Time:</strong> {nextDay?.startTime || bk.start_time} &rarr; {nextDay?.endTime || bk.end_time} ({bk.duration_hours} hrs)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin size={14} className="text-navy/50 shrink-0" />
+                                <span><strong>Location:</strong> {bk.location}</span>
+                              </div>
+                              {bk.mpesa_reference && (
+                                <div className="flex items-center gap-2 font-mono text-[11px] text-navy/50">
+                                  <CreditCard size={13} />
+                                  <span>Ref: {bk.mpesa_reference}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Detailed Multi-Day Itinerary Table */}
+                            {isMulti && (
+                              <div className="pt-3 border-t border-navy/10 space-y-2">
+                                <span className="font-mono text-[10px] uppercase tracking-wider text-navy/70 font-bold block">
+                                  Scheduled Day-by-Day Sessions ({days.length} Days)
+                                </span>
+                                <div className="divide-y divide-navy/10 border border-navy/15 bg-navy/[0.02]">
+                                  {days.map((day) => (
+                                    <div key={day.dayNumber} className="p-2.5 flex flex-wrap items-center justify-between text-xs gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] px-1.5 py-0.5 bg-navy/10 font-bold text-navy">
+                                          Day {day.dayNumber}
+                                        </span>
+                                        <span className="font-semibold text-navy">{formatDate(day.dateStr)}</span>
+                                        <span className="text-[11px] text-navy/60 hidden sm:inline">
+                                          ({day.startTime} – {day.endTime})
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[9px] font-mono px-2 py-0.5 font-semibold border ${day.isToday
+                                            ? 'border-emerald-700/20 bg-emerald-50 text-emerald-800 animate-pulse'
+                                            : day.isPast
+                                              ? 'border-gray-200 bg-gray-100 text-gray-500'
+                                              : 'border-blue-700/20 bg-blue-50 text-blue-800'
+                                          }`}>
+                                          {day.isToday ? '● Active Today' : day.isPast ? 'Completed' : 'Upcoming'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="pt-3 border-t border-navy/10 flex items-center justify-between gap-3">
+                            <span className="text-[11px] text-navy/60 font-mono">
+                              Ref: <strong className="text-navy">{bk.mpesa_reference || bk.id}</strong>
+                            </span>
+                            <Link
+                              href="/portal/client/invoices"
+                              className="border border-navy/20 text-navy text-[11px] uppercase tracking-wider font-semibold px-3 py-2 hover:bg-navy/5 transition-colors"
+                            >
+                              Receipt
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -2614,28 +2598,48 @@ export function ClientBookingsView() {
                   </div>
 
                   <div className="divide-y divide-navy/10">
-                    {pastBookings.map((bk) => (
-                      <div key={bk.id} className="py-4 flex flex-wrap items-center justify-between gap-4 text-xs">
-                        <div>
-                          <p className="font-semibold text-navy text-sm">{bk.service_title}</p>
-                          <p className="text-navy/60 text-[11px] mt-0.5">
-                            {formatDate(bk.booking_date)} ({bk.start_time} - {bk.end_time}) · {bk.location}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 text-right">
+                    {pastBookings.map((bk) => {
+                      const days = extractBookingDays(bk);
+                      const isMulti = days.length > 1;
+
+                      return (
+                        <div key={bk.id} className="py-4 flex flex-wrap items-center justify-between gap-4 text-xs">
                           <div>
-                            <p className="font-mono font-bold text-navy">{formatMoney(bk.total_amount_kes)}</p>
-                            <p className="font-mono text-[10px] text-navy/40 uppercase">{bk.payment_method || 'Paid'}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-navy text-sm">{bk.service_title}</p>
+                              {isMulti && (
+                                <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.2 bg-navy/10 text-navy font-bold">
+                                  {days.length} Days
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-navy/60 text-[11px] mt-0.5">
+                              {isMulti ? (
+                                <>
+                                  Completed {days.length} Sessions: {days.map((d) => formatDate(d.dateStr)).join(' · ')}
+                                </>
+                              ) : (
+                                <>
+                                  {formatDate(bk.booking_date)} ({bk.start_time} - {bk.end_time}) · {bk.location}
+                                </>
+                              )}
+                            </p>
                           </div>
-                          <Link
-                            href="/portal/client/invoices"
-                            className="border border-navy/20 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-navy hover:bg-navy hover:text-white transition-colors"
-                          >
-                            View Invoice
-                          </Link>
+                          <div className="flex items-center gap-4 text-right">
+                            <div>
+                              <p className="font-mono font-bold text-navy">{formatMoney(bk.total_amount_kes)}</p>
+                              <p className="font-mono text-[10px] text-navy/40 uppercase">{bk.payment_method || 'Paid'}</p>
+                            </div>
+                            <Link
+                              href="/portal/client/invoices"
+                              className="border border-navy/20 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-navy hover:bg-navy hover:text-white transition-colors"
+                            >
+                              View Invoice
+                            </Link>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -2652,35 +2656,36 @@ export function ClientBookingsView() {
 // ==========================================
 export function ClientPassesView() {
   const { user } = usePortalAuth();
+  const email = user?.email || '';
   const [passes, setPasses] = useState<ClientPass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterMode, setFilterMode] = useState<'active_upcoming' | 'all'>('active_upcoming');
 
   useEffect(() => {
     async function loadPasses() {
+      if (!user?.id && !email) {
+        setPasses([]);
+        setLoading(false);
+        return;
+      }
       try {
-        const { data } = await supabase
+        const guestUserId = email ? `guest_${email.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
+        let pQuery = supabase
           .from('client_passes')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('valid_date', { ascending: false });
 
-        if (data && data.length > 0) {
-          setPasses(data);
-        } else {
-          setPasses([
-            {
-              id: 1,
-              user_id: user?.id || 'cli_demo',
-              pass_code: 'PS-PASS-8291',
-              service_title: 'The Glasshouse Meeting Suite (6 Pax)',
-              location: 'Westlands (Delta Corner)',
-              valid_date: '2026-08-26',
-              status: 'active',
-              wifi_network: 'PaperStreet-Guest-5G',
-              wifi_password: 'Westlands2026!',
-              created_at: new Date().toISOString(),
-            },
-          ]);
+        if (user?.id && guestUserId) {
+          pQuery = pQuery.or(`user_id.eq.${user.id},user_id.eq.${guestUserId}`);
+        } else if (user?.id) {
+          pQuery = pQuery.eq('user_id', user.id);
+        } else if (guestUserId) {
+          pQuery = pQuery.eq('user_id', guestUserId);
         }
+
+        const { data } = await pQuery;
+
+        setPasses(data || []);
       } catch (err) {
         console.warn('Load passes error:', err);
       } finally {
@@ -2688,57 +2693,163 @@ export function ClientPassesView() {
       }
     }
     void loadPasses();
-  }, [user]);
+  }, [user, email]);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const sortedPasses = [...passes].sort((a, b) => {
+    const aIsToday = a.valid_date === todayStr ? 2 : (a.valid_date || '') > todayStr ? 1 : 0;
+    const bIsToday = b.valid_date === todayStr ? 2 : (b.valid_date || '') > todayStr ? 1 : 0;
+    if (aIsToday !== bIsToday) return bIsToday - aIsToday;
+    return (a.valid_date || '').localeCompare(b.valid_date || '');
+  });
+
+  const displayedPasses = filterMode === 'active_upcoming'
+    ? sortedPasses.filter((p) => (p.valid_date || '') >= todayStr || p.status === 'active')
+    : sortedPasses;
 
   return (
-    <div className="space-y-12 animate-paper-rise">
-      <PageHeader
-        eyebrow="Reception Access"
-        title="Active Entry Passes"
-        detail="Present your pass code or QR token at reception for building security check-in, desk allocation, and Wi-Fi access."
-      />
+    <div className="space-y-10 animate-paper-rise">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-navy/10 pb-8">
+        <div className="max-w-2xl">
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold">Reception Access</p>
+          <h1 className="mt-2 font-heading text-4xl md:text-5xl font-light text-navy tracking-tight">Entry Passes &amp; QR Tokens</h1>
+          <p className="mt-3 text-sm leading-relaxed text-navy/65">
+            Present your digital reception pass code or QR token at reception upon arrival for physical desk allocation, building security clearance, and Wi-Fi access.
+          </p>
+        </div>
+
+        {passes.length > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFilterMode('active_upcoming')}
+              className={`px-3.5 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer ${filterMode === 'active_upcoming'
+                  ? 'bg-navy text-white shadow-xs'
+                  : 'border border-navy/20 text-navy/70 hover:border-navy hover:text-navy bg-white'
+                }`}
+            >
+              Active &amp; Upcoming ({sortedPasses.filter((p) => (p.valid_date || '') >= todayStr).length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode('all')}
+              className={`px-3.5 py-1.5 text-xs font-mono font-semibold uppercase tracking-wider transition-all cursor-pointer ${filterMode === 'all'
+                  ? 'bg-navy text-white shadow-xs'
+                  : 'border border-navy/20 text-navy/70 hover:border-navy hover:text-navy bg-white'
+                }`}
+            >
+              All Passes ({passes.length})
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <PassesListSkeleton />
-      ) : passes.length === 0 ? (
-        <p className="text-xs text-navy/50 py-6">No active entry passes found.</p>
+      ) : displayedPasses.length === 0 ? (
+        <div className="py-12 border-y border-navy/10 text-center space-y-3">
+          <Ticket className="w-8 h-8 text-navy/20 mx-auto" />
+          <p className="font-heading text-xl text-navy/50">
+            {filterMode === 'active_upcoming' && passes.length > 0
+              ? 'No Upcoming Entry Passes'
+              : 'No Entry Passes Found'}
+          </p>
+          <p className="text-xs text-navy/40 max-w-sm mx-auto leading-relaxed">
+            {filterMode === 'active_upcoming' && passes.length > 0
+              ? 'All your scheduled pass sessions have concluded. Switch to "All Passes" to view past records.'
+              : 'Entry passes are generated automatically for every session day when you reserve workspace.'}
+          </p>
+          {filterMode === 'active_upcoming' && passes.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setFilterMode('all')}
+              className="inline-block mt-3 text-xs font-semibold text-navy underline cursor-pointer"
+            >
+              View Past Completed Passes ({passes.length}) &rarr;
+            </button>
+          ) : (
+            <Link
+              href="/portal/client/packages"
+              className="inline-block mt-5 px-5 py-2 bg-navy text-white text-xs font-semibold uppercase tracking-widest hover:bg-navy/90 transition-colors"
+            >
+              Browse Packages &rarr;
+            </Link>
+          )}
+        </div>
       ) : (
         <div className="divide-y divide-navy/15">
-          {passes.map((pass) => (
-            <div key={pass.id} className="py-8 flex flex-wrap items-center justify-between gap-8 first:pt-0">
-              <div className="max-w-md">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">
-                  Pass Status: <strong className="text-emerald-700 font-semibold">{pass.status}</strong>
-                </span>
-                <h2 className="font-heading text-3xl text-navy font-light mt-1">{pass.service_title}</h2>
-                <p className="text-xs text-navy/70 mt-2">
-                  <strong>Facility:</strong> {pass.location} · <strong>Date:</strong> {formatDate(pass.valid_date)}
-                </p>
-                <div className="mt-4 p-3 bg-navy/5 inline-block text-xs text-navy/80">
-                  <span className="font-mono text-[10px] uppercase text-navy/50 block">High-Speed Wi-Fi Credentials</span>
-                  <p className="mt-0.5">Network: <strong className="text-navy">{pass.wifi_network}</strong></p>
-                  <p>Password: <code className="font-mono bg-white px-1.5 py-0.5 border border-navy/10">{pass.wifi_password}</code></p>
-                </div>
-              </div>
+          {displayedPasses.map((pass) => {
+            const isToday = pass.valid_date === todayStr;
+            const isPast = (pass.valid_date || '') < todayStr;
+            const isUpcoming = (pass.valid_date || '') > todayStr;
+            const dayMatch = pass.pass_code.match(/-D(\d+)/);
 
-              <div className="flex items-center gap-8">
-                <div className="text-right">
-                  <p className="font-mono text-[10px] uppercase text-navy/40">Reception PIN</p>
-                  <p className="font-mono text-2xl font-bold text-navy tracking-widest">{pass.pass_code}</p>
-                  <button
-                    type="button"
-                    onClick={() => alert(`Showing Entry Pass ${pass.pass_code}`)}
-                    className="mt-2 text-[11px] font-semibold text-navy underline hover:text-navy-600"
-                  >
-                    Download Mobile Pass &rarr;
-                  </button>
+            return (
+              <div
+                key={pass.id}
+                className={`py-8 flex flex-wrap items-center justify-between gap-8 first:pt-0 transition-all ${isToday ? 'p-6 bg-emerald-50/50 border border-emerald-300 shadow-xs my-3' : ''
+                  }`}
+              >
+                <div className="max-w-md space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">
+                      Pass Status: <strong className="text-emerald-700 font-semibold">{pass.status}</strong>
+                    </span>
+                    {isToday && (
+                      <span className="font-mono text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 bg-emerald-600 text-white animate-pulse">
+                        ● Valid Today
+                      </span>
+                    )}
+                    {isUpcoming && (
+                      <span className="font-mono text-[9px] uppercase font-semibold tracking-wider px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200">
+                        Upcoming Session
+                      </span>
+                    )}
+                    {isPast && (
+                      <span className="font-mono text-[9px] uppercase font-semibold tracking-wider px-2 py-0.5 bg-gray-100 text-gray-500 border border-gray-200">
+                        Past Session
+                      </span>
+                    )}
+                    {dayMatch && (
+                      <span className="font-mono text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 bg-navy/10 text-navy">
+                        Session Day {dayMatch[1]}
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="font-heading text-3xl text-navy font-light mt-1">{pass.service_title}</h2>
+                  <p className="text-xs text-navy/70">
+                    <strong>Facility:</strong> {pass.location} · <strong>Access Date:</strong> {formatDate(pass.valid_date)}
+                  </p>
+
+                  {pass.wifi_network && (
+                    <div className="mt-3 p-3 bg-navy/5 inline-block text-xs text-navy/80 border border-navy/10">
+                      <span className="font-mono text-[10px] uppercase text-navy/50 block font-semibold">High-Speed Wi-Fi</span>
+                      <p className="mt-0.5">Network: <strong className="text-navy">{pass.wifi_network}</strong></p>
+                      <p className="text-navy/50 mt-0.5 text-[10px]">PIN credentials verified at reception upon arrival.</p>
+                    </div>
+                  )}
                 </div>
-                <div className="p-3 bg-white border border-navy/20 shadow-xs">
-                  <QrCode size={64} className="text-navy" />
+
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="font-mono text-[10px] uppercase text-navy/40">Reception PIN</p>
+                    <p className="font-mono text-2xl font-bold text-navy tracking-widest">{pass.pass_code}</p>
+                    <span className="font-mono text-[10px] text-navy/50 block mt-0.5">
+                      Valid: {formatDate(pass.valid_date)}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-white border border-navy/20 shadow-xs">
+                    <DynamicQrCode
+                      value={`https://paperstreet.co.ke/checkin?code=${pass.pass_code}`}
+                      size={96}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -2751,7 +2862,7 @@ export function ClientPassesView() {
 export function ClientFeedbackView() {
   const { user } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Client';
-  const email = user?.email || 'otienoalvine925@gmail.com';
+  const email = user?.email || '';
   const phone = user?.user_metadata?.phone || '';
 
   const [category, setCategory] = useState<'facility' | 'wifi' | 'meeting_room' | 'billing' | 'urgent_concern' | 'general'>('general');
@@ -2772,22 +2883,7 @@ export function ClientFeedbackView() {
       if (data?.tickets && data.tickets.length > 0) {
         setTickets(data.tickets);
       } else {
-        setTickets([
-          {
-            id: 'TCK-201',
-            user_id: user?.id || 'cli_demo',
-            client_name: name,
-            client_email: email,
-            category: 'wifi',
-            priority: 'urgent',
-            subject: 'Meeting Room Screen Casting Assistance',
-            message: 'Need help connecting AirPlay to the 4K display in the Glasshouse Room.',
-            location: 'Kisumu CBD Flagship',
-            status: 'resolved',
-            admin_notes: 'Front desk steward configured receiver and provided direct HDMI cable.',
-            created_at: new Date().toISOString(),
-          },
-        ]);
+        setTickets([]);
       }
     } catch (err) {
       console.warn('Fetch tickets error:', err);
@@ -2992,29 +3088,55 @@ export function ClientFeedbackView() {
 export function ClientReferralsView() {
   const { user, clientUser } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Client';
-  const email = user?.email || 'otienoalvine925@gmail.com';
-  const referralCode = clientUser?.referralCode || user?.user_metadata?.referral_code || `PS-${email.slice(0, 4).toUpperCase()}2026`;
-  const discountBalance = clientUser?.discountBalanceKES ?? (user?.user_metadata?.discount_balance_kes ?? 1000);
+  const email = user?.email || '';
+  const initialCode = clientUser?.referralCode || user?.user_metadata?.referral_code || (email ? `PS-${email.slice(0, 4).toUpperCase()}${new Date().getFullYear()}` : 'PS-CLIENT');
+  const initialBalance = clientUser?.discountBalanceKES ?? (user?.user_metadata?.discount_balance_kes ?? 0);
+
+  const [referralCode, setReferralCode] = useState(initialCode);
+  const [referralLink, setReferralLink] = useState(
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/book?ref=${initialCode}`
+      : `https://paperstreet.co.ke/book?ref=${initialCode}`
+  );
+  const [discountBalance, setDiscountBalance] = useState(initialBalance);
 
   const [referredEmail, setReferredEmail] = useState('');
   const [inviting, setInviting] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadReferrals() {
+      if (!email) {
+        setLoading(false);
+        return;
+      }
       try {
+        // 1. Fetch or create unique DB-backed referral code & share link
+        const codeRes = await fetch('/api/portal/referrals/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get_or_create_code', email, fullName: name }),
+        });
+        const codeData = await codeRes.json();
+        if (codeData?.success) {
+          setReferralCode(codeData.referralCode);
+          setReferralLink(codeData.referralLink);
+          if (typeof codeData.discountBalanceKES === 'number') {
+            setDiscountBalance(codeData.discountBalanceKES);
+          }
+        }
+
+        // 2. Fetch logged referrals history
         const res = await fetch(`/api/portal/referrals?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data?.referrals && data.referrals.length > 0) {
           setReferrals(data.referrals);
         } else {
-          setReferrals([
-            { id: 1, referred_email: 'sarah.mwangi@techfirm.ke', status: 'rewarded', reward_kes: 500, created_at: '2026-08-18' },
-            { id: 2, referred_email: 'david.otieno@consultancy.africa', status: 'rewarded', reward_kes: 500, created_at: '2026-08-22' },
-          ]);
+          setReferrals([]);
         }
       } catch (err) {
         console.warn('Referrals load err:', err);
@@ -3023,13 +3145,21 @@ export function ClientReferralsView() {
       }
     }
     void loadReferrals();
-  }, [email]);
+  }, [email, name]);
 
   const handleCopyCode = () => {
     if (typeof navigator !== 'undefined') {
       navigator.clipboard.writeText(referralCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2500);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(referralLink);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
     }
   };
 
@@ -3051,8 +3181,14 @@ export function ClientReferralsView() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to send invite');
 
-      setInviteSuccess(`Referral invite logged for ${referredEmail}! You will earn KES 500 upon their first booking.`);
+      setInviteSuccess(`Referral invite logged for ${referredEmail}! Your KES 500 credit is deposited automatically when they book their first service.`);
       setReferredEmail('');
+      // Reload referrals list
+      const updated = await fetch(`/api/portal/referrals?email=${encodeURIComponent(email)}`);
+      const updatedData = await updated.json();
+      if (updatedData?.referrals) {
+        setReferrals(updatedData.referrals);
+      }
     } catch (err: any) {
       alert(err?.message || 'Error creating invite');
     } finally {
@@ -3061,7 +3197,7 @@ export function ClientReferralsView() {
   };
 
   const shareText = encodeURIComponent(
-    `Hey, join Paper Street Workspaces for on-demand hot desks, conference rooms, and business addresses. Use my referral code ${referralCode} for 10% off your first reservation: https://paperstreet.africa/portal/client/register`
+    `Hey, join Paper Street Workspaces for on-demand hot desks, conference rooms, and business addresses. Use my referral link for 10% off your first booking: ${referralLink}`
   );
 
   return (
@@ -3069,7 +3205,7 @@ export function ClientReferralsView() {
       <PageHeader
         eyebrow="Referral Program"
         title="Refer Colleagues &amp; Earn Discounts"
-        detail="Share your exclusive invite passcode. Your friends get 10% off their first booking, and you earn KES 500 in workspace credits for every referral."
+        detail="Share your exclusive invite link. Your friends get 10% off their first booking, and you earn KES 500 in workspace credits the moment they book a service."
       />
 
       {loading ? (
@@ -3081,47 +3217,67 @@ export function ClientReferralsView() {
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Available Credit Balance</p>
               <p className="font-heading text-4xl text-emerald-800 font-light mt-1">{formatMoney(discountBalance)}</p>
-              <p className="text-xs text-navy/60 mt-1">Automatically applied at checkout</p>
+              <p className="text-xs text-navy/60 mt-1">Automatically applied at booking checkout</p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Successful Referrals</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Rewarded Bookings</p>
               <p className="font-heading text-4xl text-navy font-light mt-1">{referrals.filter(r => r.status === 'rewarded').length}</p>
-              <p className="text-xs text-navy/60 mt-1">Friends joined &amp; booked</p>
+              <p className="text-xs text-navy/60 mt-1">Friends joined &amp; completed bookings</p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Reward Per Referral</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-navy/50">Reward Per Completed Booking</p>
               <p className="font-heading text-4xl text-navy font-light mt-1">KES 500</p>
-              <p className="text-xs text-navy/60 mt-1">+ 10% discount for referee</p>
+              <p className="text-xs text-navy/60 mt-1">+ 10% discount for your colleague</p>
             </div>
           </div>
 
-          {/* Referral Code Spotlight */}
-          <div className="p-8 border border-navy/20 bg-navy/5 space-y-4">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-navy font-bold">
-              Your Unique Referral Passcode
-            </span>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="bg-white border border-navy/20 px-6 py-3 font-mono text-2xl font-bold tracking-widest text-navy">
-                {referralCode}
+          {/* Referral Link & Code Spotlight */}
+          <div className="p-8 border border-navy/20 bg-navy/5 space-y-6">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-navy font-bold">
+                Your Unique Referral Link
+              </span>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <input
+                  type="text"
+                  readOnly
+                  value={referralLink}
+                  className="flex-1 min-w-[280px] bg-white border border-navy/20 px-4 py-3 font-mono text-xs text-navy select-all outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="border border-navy bg-navy text-white px-5 py-3 text-xs uppercase tracking-wider font-semibold hover:bg-navy/90 transition-colors flex items-center gap-2"
+                >
+                  <Copy size={14} /> {copiedLink ? 'Link Copied!' : 'Copy Link'}
+                </button>
+                <a
+                  href={`https://wa.me/?text=${shareText}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#1c3227] text-white px-5 py-3 text-xs uppercase tracking-wider font-semibold hover:bg-[#233e31] transition-colors flex items-center gap-2"
+                >
+                  <Share2 size={14} /> WhatsApp
+                </a>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-navy/10 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase text-navy/50">Passcode Alternative</p>
+                <p className="font-mono text-2xl font-bold text-navy tracking-widest mt-0.5">{referralCode}</p>
               </div>
               <button
                 type="button"
                 onClick={handleCopyCode}
-                className="border border-navy/20 px-5 py-3 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors flex items-center gap-2"
+                className="border border-navy/20 px-4 py-2 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors flex items-center gap-2"
               >
-                <Copy size={14} /> {copied ? 'Copied to Clipboard!' : 'Copy Passcode'}
+                <Copy size={13} /> {copiedCode ? 'Code Copied!' : 'Copy Code Only'}
               </button>
-              <a
-                href={`https://wa.me/?text=${shareText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#166534] text-white px-5 py-3 text-xs uppercase tracking-wider font-semibold hover:bg-[#14532d] transition-colors flex items-center gap-2"
-              >
-                <Share2 size={14} /> Share on WhatsApp
-              </a>
             </div>
-            <p className="text-xs text-navy/70 pt-2">
-              Colleagues can enter this passcode at registration or during booking checkout to claim their 10% early-bird rate.
+
+            <p className="text-xs text-navy/70 pt-1">
+              Colleagues booking via this link receive an automatic 10% discount on their reservation. Once their payment is confirmed at reception or online, your KES 500 reward balance activates instantly.
             </p>
           </div>
 
@@ -3315,94 +3471,9 @@ export function ClientOffersView() {
 }
 
 // ==========================================
-// 12. CLIENT INVOICES & RECEIPTS VIEW
+// 12. CLIENT INVOICES & RECEIPTS VIEW (MODULAR FILE: client-invoices.tsx)
 // ==========================================
-export function ClientInvoicesView() {
-  const { user } = usePortalAuth();
-  const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadInvoices() {
-      try {
-        const { data } = await supabase
-          .from('client_invoices')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (data && data.length > 0) {
-          setInvoices(data);
-        } else {
-          setInvoices([
-            {
-              id: 1,
-              user_id: user?.id || 'cli_demo',
-              invoice_number: 'INV-2026-081',
-              description: 'The Glasshouse Meeting Suite (2 hrs)',
-              amount_kes: 5000,
-              payment_method: 'M-Pesa',
-              status: 'paid',
-              created_at: '2026-08-24T10:00:00Z',
-            },
-            {
-              id: 2,
-              user_id: user?.id || 'cli_demo',
-              invoice_number: 'INV-2026-074',
-              description: '5-Day Flexible Desk Pass Bundle',
-              amount_kes: 9000,
-              payment_method: 'M-Pesa',
-              status: 'paid',
-              created_at: '2026-08-12T14:30:00Z',
-            },
-          ]);
-        }
-      } catch (err) {
-        console.warn('Invoices load err:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    void loadInvoices();
-  }, [user]);
-
-  return (
-    <div className="space-y-12 animate-paper-rise">
-      <PageHeader
-        eyebrow="Billing History"
-        title="Orders & Tax Invoices"
-        detail="Download official KRA-compliant receipts and tax invoices for accounting and expense filing."
-      />
-
-      {loading ? (
-        <InvoicesSkeleton />
-      ) : invoices.length === 0 ? (
-        <p className="text-xs text-navy/50 py-6">No invoices or tax receipts found.</p>
-      ) : (
-        <div className="divide-y divide-navy/10">
-          {invoices.map((inv) => (
-            <div key={inv.id} className="py-5 flex items-center justify-between gap-4 text-xs">
-              <div>
-                <span className="font-mono text-navy/50">{inv.invoice_number}</span>
-                <h3 className="font-semibold text-navy mt-0.5">{inv.description}</h3>
-                <p className="font-mono text-[10px] text-navy/40 mt-1">{formatDate(inv.created_at)} · {inv.payment_method}</p>
-              </div>
-              <div className="flex items-center gap-6">
-                <span className="font-semibold text-navy text-sm">{formatMoney(inv.amount_kes)}</span>
-                <button
-                  type="button"
-                  onClick={() => alert(`Downloading official ETR tax receipt for ${inv.invoice_number}`)}
-                  className="border border-navy/20 px-3.5 py-1.5 text-[11px] uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors flex items-center gap-1.5"
-                >
-                  <Download size={12} /> PDF Receipt
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+export { ClientInvoicesView } from './client-invoices';
 
 // ==========================================
 // 13. PROFILE SETTINGS VIEW
@@ -3410,8 +3481,8 @@ export function ClientInvoicesView() {
 export function PortalProfileView({ type }: { type: PortalType }) {
   const { user, signOut } = usePortalAuth();
   const name = user?.user_metadata?.full_name || 'Paper Street User';
-  const email = user?.email || 'user@paperstreet.africa';
-  const phone = user?.user_metadata?.phone || '+254 700 000 000';
+  const email = user?.email || 'user@paperstreet.co.ke';
+  const phone = user?.user_metadata?.phone || '+254 110 486 677';
 
   return (
     <div className="space-y-12 animate-paper-rise">
@@ -3463,23 +3534,336 @@ export function PortalProfileView({ type }: { type: PortalType }) {
   );
 }
 
-export function ProtectedPortalWrapper({ children, type }: { children: ReactNode; type: PortalType }) {
-  const { user, loading } = usePortalAuth();
+// ==========================================
+// FORGOT PASSWORD MODAL
+// ==========================================
+function ForgotPasswordModal({
+  defaultEmail,
+  onClose,
+}: {
+  defaultEmail?: string;
+  onClose: () => void;
+}) {
+  const [email, setEmail] = useState(defaultEmail || '');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Close on backdrop click
+  const handleBackdrop = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (detectPromptInjection(email)) {
+      setErrorMsg('Invalid input detected.');
+      return;
+    }
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setErrorMsg(emailCheck.error || 'Please enter a valid email address');
+      return;
+    }
+
+    setStatus('loading');
+    try {
+      const redirectTo = `${window.location.origin}/portal/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        sanitizeInput(email, 120).toLowerCase(),
+        { redirectTo },
+      );
+      if (error) throw error;
+      setStatus('sent');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to send reset email. Please try again.');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleBackdrop}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm px-4"
+    >
+      <div className="relative w-full max-w-sm bg-white border border-navy/15 p-8 animate-paper-rise">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 text-navy/40 hover:text-navy transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {status === 'sent' ? (
+          <div className="text-center py-4">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+              <Check className="h-5 w-5 text-emerald-600" />
+            </div>
+            <h2 className="font-heading text-2xl font-light text-navy">Check your inbox</h2>
+            <p className="mt-3 text-xs text-navy/60 leading-relaxed">
+              We've sent a password reset link to <strong>{email}</strong>.
+              It expires in 1 hour. Check your spam folder if it doesn't arrive.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 w-full border border-navy/20 py-2.5 text-xs uppercase tracking-wider font-semibold text-navy hover:bg-navy hover:text-white transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <>
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold">
+              Password Reset
+            </span>
+            <h2 className="mt-2 font-heading text-2xl font-light text-navy">Forgot your password?</h2>
+            <p className="mt-2 text-xs text-navy/60 leading-relaxed">
+              Enter your registered email and we'll send you a secure reset link.
+            </p>
+
+            {(status === 'error') && (
+              <div className="mt-4 p-3 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  id="forgot-password-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  className="w-full border-b border-navy/20 bg-transparent py-2.5 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                />
+              </div>
+              <button
+                id="forgot-password-submit"
+                type="submit"
+                disabled={status === 'loading'}
+                className="w-full bg-navy text-white py-3 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+              >
+                {status === 'loading' ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// RESET PASSWORD PAGE (handles Supabase redirect)
+// ==========================================
+export function ResetPasswordPage() {
   const router = useRouter();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Live match state — only show after user starts typing in confirm field
+  const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
+  const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push(type === 'member' ? '/portal/member/login' : '/portal/client/login');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setStatus('idle');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (detectPromptInjection(newPassword) || detectPromptInjection(confirmPassword)) {
+      setErrorMsg('Invalid characters detected in password.');
+      return;
     }
-  }, [loading, user, router, type]);
 
-  if (loading) {
-    return <div className="min-h-screen bg-[#FBF8F0] p-12 text-center text-navy/50">Loading session...</div>;
-  }
+    const passCheck = validatePassword(newPassword);
+    if (!passCheck.valid) {
+      setErrorMsg(passCheck.error || 'Invalid password');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      return;
+    }
 
-  if (!user) {
-    return null;
-  }
+    setStatus('loading');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setStatus('done');
+      setTimeout(() => router.push('/login'), 2500);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update password. Please request a new reset link.');
+      setStatus('error');
+    }
+  };
 
-  return <PortalShellLayout type={type}>{children}</PortalShellLayout>;
+  return (
+    <main className="min-h-screen bg-[#FBF8F0] pt-20 pb-20 px-6">
+      <div className="max-w-md mx-auto">
+        <div className="mb-10">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold">
+            Account Security
+          </span>
+          <h1 className="mt-2 font-heading text-4xl font-light text-navy">Set New Password</h1>
+          <p className="mt-2 text-xs text-navy/60 leading-relaxed">
+            Choose a strong password for your Paper Street account.
+          </p>
+        </div>
+
+        <div className="border-t border-navy/15 pt-8">
+          {status === 'done' ? (
+            <div className="text-center py-8">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                <Check className="h-5 w-5 text-emerald-600" />
+              </div>
+              <h2 className="font-heading text-2xl font-light text-navy">Password updated</h2>
+              <p className="mt-2 text-xs text-navy/60">Redirecting you to login…</p>
+            </div>
+          ) : (
+            <>
+              {status === 'error' && (
+                <div className="mb-6 p-3.5 border-l-2 border-rose-600 bg-rose-50 text-xs text-rose-800">
+                  {errorMsg}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* New Password */}
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-navy/70 mb-1.5">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="new-password"
+                      type={showNew ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      autoComplete="new-password"
+                      className="w-full border-b border-navy/20 bg-transparent py-2.5 pr-8 text-sm text-navy placeholder:text-navy/30 focus:border-navy focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew((v) => !v)}
+                      aria-label={showNew ? 'Hide password' : 'Show password'}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy transition-colors p-1"
+                    >
+                      {showNew ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                      )}
+                    </button>
+                  </div>
+                  {newPassword.length > 0 && newPassword.length < 6 && (
+                    <p className="mt-1.5 text-[10px] font-mono text-amber-600">
+                      Password must be at least 6 characters
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-mono text-[10px] uppercase tracking-wider text-navy/70">
+                      Confirm Password
+                    </label>
+                    {/* Live match indicator */}
+                    {passwordsMatch && (
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                        Passwords match
+                      </span>
+                    )}
+                    {passwordsMismatch && (
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-rose-600 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        Doesn't match
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="confirm-password"
+                      type={showConfirm ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      autoComplete="new-password"
+                      className={`w-full border-b bg-transparent py-2.5 pr-8 text-sm text-navy placeholder:text-navy/30 focus:outline-none transition-colors ${passwordsMatch
+                          ? 'border-emerald-500 focus:border-emerald-600'
+                          : passwordsMismatch
+                            ? 'border-rose-400 focus:border-rose-500'
+                            : 'border-navy/20 focus:border-navy'
+                        }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 text-navy/40 hover:text-navy transition-colors p-1"
+                    >
+                      {showConfirm ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    id="reset-password-submit"
+                    type="submit"
+                    disabled={status === 'loading' || passwordsMismatch || newPassword.length < 6}
+                    className="w-full bg-navy text-white py-3.5 text-xs uppercase tracking-[0.15em] font-semibold hover:bg-navy/90 transition-colors disabled:opacity-50"
+                  >
+                    {status === 'loading' ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </main>
+  );
 }
+

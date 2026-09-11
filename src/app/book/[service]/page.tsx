@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? `Request ${config.title} Quotation | Paper Street Kisumu`
       : `Book ${config.title} in Kisumu CBD | Paper Street`,
     description: config.description,
-    alternates: { canonical: `https://paperstreet.africa/${isMembership ? 'quote' : 'book'}/${slug}` },
+    alternates: { canonical: `https://paperstreet.co.ke/${isMembership ? 'quote' : 'book'}/${slug}` },
   }
 }
 

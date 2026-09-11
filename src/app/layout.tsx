@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 import { CookieBanner } from '@/components/layout/CookieBanner';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://paperstreet.africa'),
+  metadataBase: new URL('https://paperstreet.co.ke'),
   title: {
     default: 'Coworking Space & Virtual Office in Kenya | Paper Street',
     template: '%s | Paper Street',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_KE',
-    url: 'https://paperstreet.africa',
+    url: 'https://paperstreet.co.ke',
     siteName: 'Paper Street',
     title: 'Coworking Space & Virtual Office in Kenya | Paper Street',
     description:
@@ -55,7 +55,14 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
 };
 
@@ -65,8 +72,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-[#fbfaf7] text-[#2D2D2D] antialiased flex flex-col font-sans">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-[#fbfaf7] text-[#2D2D2D] antialiased flex flex-col font-sans"
+      >
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

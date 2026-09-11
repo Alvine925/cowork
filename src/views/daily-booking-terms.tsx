@@ -81,7 +81,7 @@ export default function DailyBookingTermsView() {
               <strong>Validity Window:</strong> The newly selected date must fall within <strong>30 calendar days</strong> of the original booking date and is subject to desk or room availability.
             </li>
             <li>
-              <strong>How to Reschedule:</strong> Contact reception via email at <a href="mailto:hello@paperstreet.africa" className="underline font-semibold">hello@paperstreet.africa</a> or call +254 709 123 456 quoting your official Booking Reference.
+              <strong>How to Reschedule:</strong> Contact reception via email at <a href="mailto:hello@paperstreet.co.ke" className="underline font-semibold">hello@paperstreet.co.ke</a> or call 0110486677 (+254 110 486 677) quoting your official Booking Reference.
             </li>
           </ul>
 
@@ -144,9 +144,9 @@ export default function DailyBookingTermsView() {
           <p className="text-sm">
             <strong>Paper Street Workspaces</strong><br />
             CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya<br />
-            Telephone: +254 709 123 456<br />
-            Email: <a href="mailto:hello@paperstreet.africa" className="underline font-semibold">hello@paperstreet.africa</a><br />
-            Website: <a href="https://paperstreet.africa" className="underline font-semibold">www.paperstreet.africa</a>
+            Telephone: 0110486677 / +254 110 486 677<br />
+            Email: <a href="mailto:hello@paperstreet.co.ke" className="underline font-semibold">hello@paperstreet.co.ke</a><br />
+            Website: <a href="https://paperstreet.co.ke" className="underline font-semibold">www.paperstreet.co.ke</a>
           </p>
 
         </div>

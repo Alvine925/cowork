@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Review the terms of service, acceptable use policies, and virtual office membership rules for Paper Street in Kenya.',
   keywords: ['Paper Street terms of service', 'virtual office rules Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/terms-of-service',
+    canonical: 'https://paperstreet.co.ke/terms-of-service',
   },
 };
 

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Daily Booking Terms & Cancellation Policy | Paper Street Workspaces',
   description: 'Terms, conditions, and cancellation policies for short-term workspace bookings, day passes, hot desks, and meeting rooms at Paper Street Kisumu CBD.',
   alternates: {
-    canonical: 'https://paperstreet.africa/daily-booking-terms',
+    canonical: 'https://paperstreet.co.ke/daily-booking-terms',
   },
 }
 

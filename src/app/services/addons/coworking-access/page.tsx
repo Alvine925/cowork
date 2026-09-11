@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     'freelance desk Kisumu',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/addons/coworking-access',
+    canonical: 'https://paperstreet.co.ke/services/addons/coworking-access',
   },
   openGraph: {
     title: 'Drop-In Coworking Day Access in Kisumu CBD | Paper Street',
     description:
       'Flexible day pass bundles for ergonomic open-plan workstations, soundproof phone booths, and uninterrupted power backup in Kisumu CBD.',
-    url: 'https://paperstreet.africa/services/addons/coworking-access',
+    url: 'https://paperstreet.co.ke/services/addons/coworking-access',
     siteName: 'Paper Street',
     locale: 'en_KE',
     type: 'website',

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Complete support for Kenyan company incorporation, eCitizen BRS documentation, registered office address, KRA PIN, and CR12 setup.',
   keywords: ['company registration Kenya', 'eCitizen business registration', 'BRS company setup Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/company-registration',
+    canonical: 'https://paperstreet.co.ke/services/company-registration',
   },
 };
 

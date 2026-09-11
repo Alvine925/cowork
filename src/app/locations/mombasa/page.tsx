@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Establish your coastal trade presence at Nyali Executive Tower, Mombasa. Complete virtual office, local phone answering, and port logistics support.',
   keywords: ['Mombasa virtual office', 'coworking Nyali Mombasa', 'business address Mombasa'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/mombasa',
+    canonical: 'https://paperstreet.co.ke/locations/mombasa',
   },
 };
 

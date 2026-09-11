@@ -677,7 +677,9 @@ export default function IndividualBookingPage({
 
     try {
       const datesFormatted = multiplier > 1 ? customDates.join(', ') : validation.sanitized.startDate
-      
+      const primaryDate = multiplier > 1 && customDates[0] ? customDates[0] : validation.sanitized.startDate
+      const allActiveDates = multiplier > 1 && customDates.length > 0 ? customDates : [primaryDate]
+
       // 1. Generate clean alphanumeric booking code, payment reference, and QR token
       const todayFormatted = new Date().toISOString().slice(2, 10).replace(/-/g, '')
       const alphaCode = Math.random().toString(36).substring(2, 6).toUpperCase()
@@ -690,6 +692,20 @@ export default function IndividualBookingPage({
       const qrToken = `QR-${passCode}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
       const userId = `guest_${validation.sanitized.email.replace(/[^a-zA-Z0-9]/g, '_')}`
 
+      const scheduleDataJson = JSON.stringify({
+        isMultiDay: multiplier > 1,
+        totalDays: allActiveDates.length,
+        dates: allActiveDates,
+        times: customStartTimes,
+      })
+
+      const formattedNotes = [
+        validation.sanitized.notes,
+        validation.sanitized.companyName ? `Company: ${validation.sanitized.companyName}` : null,
+        multiplier > 1 ? `Schedule: ${allActiveDates.join(', ')}` : null,
+        `[SCHEDULE_DATA]:${scheduleDataJson}`,
+      ].filter(Boolean).join(' | ')
+
       const payload = {
         clientName: validation.sanitized.fullName,
         clientEmail: validation.sanitized.email,
@@ -700,8 +716,9 @@ export default function IndividualBookingPage({
         tierName: selectedTier.name,
         tierId: selectedTier.id,
         location: 'Kisumu CBD (CBD Commercial Center)',
-        bookingDate: datesFormatted,
-        selectedDates: customDates,
+        bookingDate: primaryDate,
+        datesFormatted: datesFormatted,
+        selectedDates: allActiveDates,
         multiplier: multiplier,
         startTime: calculation.engineResult.startTime,
         endTime: calculation.engineResult.calculatedEndTime,
@@ -711,7 +728,7 @@ export default function IndividualBookingPage({
         overtimeHours: calculation.engineResult.chargeableOvertimeHours,
         overtimeFeeKES: calculation.engineResult.overtimeFeeKES,
         totalAmountKES: calculation.initialTotal,
-        specialRequests: validation.sanitized.notes,
+        specialRequests: formattedNotes,
         reference: reference,
         passCode: passCode,
         qrToken: qrToken,
@@ -734,7 +751,7 @@ export default function IndividualBookingPage({
               company_name: validation.sanitized.companyName || null,
               service_title: `${config.title} (${selectedTier.name})`,
               location: 'Kisumu CBD (CBD Commercial Center)',
-              booking_date: datesFormatted,
+              booking_date: primaryDate,
               start_time: calculation.engineResult.startTime,
               end_time: calculation.engineResult.calculatedEndTime,
               calculated_end_time: calculation.engineResult.calculatedEndTime,
@@ -751,7 +768,7 @@ export default function IndividualBookingPage({
               paystack_reference: reference,
               check_in_status: 'pending',
               qr_code_token: passCode,
-              special_requests: validation.sanitized.notes || (validation.sanitized.companyName ? `Company: ${validation.sanitized.companyName}` : null),
+              special_requests: formattedNotes,
               utm_source: attribution.utm_source || null,
               utm_medium: attribution.utm_medium || null,
               utm_campaign: attribution.utm_campaign || null,
@@ -762,29 +779,12 @@ export default function IndividualBookingPage({
           .select('id')
           .single()
 
-        if (newBooking?.id) {
-          const firstDate = datesFormatted.split(',')[0].trim()
-          await supabase.from('client_passes').insert([
-            {
-              user_id: userId,
-              booking_id: newBooking.id,
-              pass_code: passCode,
-              service_title: `${config.title} (${selectedTier.name})`,
-              location: 'Kisumu CBD (CBD Commercial Center)',
-              valid_date: firstDate,
-              qr_data: JSON.stringify({ passCode, paystackReference: reference, email: validation.sanitized.email, dates: datesFormatted }),
-              status: 'pending',
-              wifi_network: 'PaperStreet-CBD-5G',
-              wifi_pass: 'PaperStreet2026!',
-            }
-          ])
-        }
       } catch (insertErr) {
         console.warn('[Pre-DB Insert Warning]', insertErr)
       }
 
       let data: any = null
-      
+
       // 3. Invoke Supabase initialize-paystack Edge Function
       const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('initialize-paystack', {
         body: payload,
@@ -815,7 +815,7 @@ export default function IndividualBookingPage({
           if (data.reference) {
             sessionStorage.setItem(`ps_pending_${data.reference}`, JSON.stringify(payload))
           }
-        } catch (_) {}
+        } catch (_) { }
       }
 
       // 4. Load Paystack Inline script and trigger popup modal
@@ -827,23 +827,25 @@ export default function IndividualBookingPage({
           email: validation.sanitized.email,
           amount: Math.round(calculation.initialTotal * 100),
           currency: 'KES',
-          callback: async function (response: { reference: string }) {
+          callback: function (response: { reference: string }) {
             const finalRef = response?.reference || data?.reference || reference
             if (hideNavigation) {
-              try {
-                await fetch(`/api/paystack/verify?reference=${encodeURIComponent(finalRef)}`)
-              } catch (_) {}
-              setConfirmedInlineBooking({
-                ...payload,
-                reference: finalRef,
-                passCode: passCode,
-                serviceTitle: `${config.title} (${selectedTier.name})`,
-                datesFormatted,
-                totalAmount: calculation.initialTotal,
-                status: 'confirmed',
-                payment_status: 'paid',
-              })
-              setSubmitting(false)
+              void (async () => {
+                try {
+                  await fetch(`/api/paystack/verify?reference=${encodeURIComponent(finalRef)}`)
+                } catch (_) { }
+                setConfirmedInlineBooking({
+                  ...payload,
+                  reference: finalRef,
+                  passCode: passCode,
+                  serviceTitle: `${config.title} (${selectedTier.name})`,
+                  datesFormatted,
+                  totalAmount: calculation.initialTotal,
+                  status: 'confirmed',
+                  payment_status: 'paid',
+                })
+                setSubmitting(false)
+              })()
             } else {
               window.location.href = `/book/confirmation?reference=${encodeURIComponent(finalRef)}`
             }
@@ -853,19 +855,17 @@ export default function IndividualBookingPage({
           },
         }
 
-        // When backend already initialized the transaction on Paystack, attach via access_code
+        setupOptions.ref = data.reference || reference
         if (data.access_code) {
           setupOptions.access_code = data.access_code
-        } else {
-          setupOptions.ref = data.reference
-          setupOptions.metadata = {
-            custom_fields: [
-              { display_name: 'Client Name', variable_name: 'client_name', value: validation.sanitized.fullName },
-              { display_name: 'Service', variable_name: 'service_title', value: `${config.title} (${selectedTier.name} x${multiplier})` },
-              { display_name: 'Phone', variable_name: 'phone', value: validation.sanitized.phone },
-              { display_name: 'Schedule', variable_name: 'schedule', value: `${datesFormatted} (${calculation.engineResult.startTime} - ${calculation.engineResult.calculatedEndTime})` },
-            ],
-          }
+        }
+        setupOptions.metadata = {
+          custom_fields: [
+            { display_name: 'Client Name', variable_name: 'client_name', value: validation.sanitized.fullName },
+            { display_name: 'Service', variable_name: 'service_title', value: `${config.title} (${selectedTier.name} x${multiplier})` },
+            { display_name: 'Phone', variable_name: 'phone', value: validation.sanitized.phone },
+            { display_name: 'Schedule', variable_name: 'schedule', value: `${datesFormatted} (${calculation.engineResult.startTime} - ${calculation.engineResult.calculatedEndTime})` },
+          ],
         }
 
         const handler = (window as any).PaystackPop.setup(setupOptions)
@@ -936,11 +936,11 @@ export default function IndividualBookingPage({
               <p className="text-xs text-navy/70">
                 Scheduled for <strong className="text-navy">{confirmedInlineBooking.datesFormatted}</strong> · Kisumu CBD Hub.
               </p>
-              
+
               <div className="grid sm:grid-cols-2 gap-4 pt-3 border-t border-emerald-600/20">
                 <div className="p-3.5 bg-white border border-emerald-200">
-                  <p className="font-mono text-[9px] uppercase tracking-wider text-navy/60">Digital Check-in PIN</p>
-                  <p className="font-mono text-lg font-bold text-navy mt-0.5">{confirmedInlineBooking.passCode}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-wider text-navy/60">Booking Reference</p>
+                  <p className="font-mono text-base font-bold text-navy mt-0.5">{confirmedInlineBooking.reference}</p>
                 </div>
                 <div className="p-3.5 bg-white border border-emerald-200">
                   <p className="font-mono text-[9px] uppercase tracking-wider text-navy/60">High-Speed Wi-Fi</p>
@@ -951,14 +951,17 @@ export default function IndividualBookingPage({
               <p className="text-[11px] text-emerald-900 pt-1">
                 &check; Automated confirmation emails dispatched to <strong>{confirmedInlineBooking.clientEmail || email}</strong> and the management concierge desk.
               </p>
+              <p className="text-[11px] text-navy/70">
+                Simply present your Booking Reference or Name at reception upon arrival for seamless check-in.
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
-                href="/portal/client/passes"
+                href="/portal/client/bookings?tab=schedule"
                 className="bg-navy text-white px-6 py-3.5 text-xs uppercase tracking-wider font-semibold hover:bg-navy-700 transition-colors inline-flex items-center gap-2"
               >
-                Open Digital Entry Pass &rarr;
+                View My Schedule &amp; Bookings &rarr;
               </Link>
               <button
                 type="button"
@@ -975,744 +978,732 @@ export default function IndividualBookingPage({
               {/* Left Column: Seamless Flow Directly on Canvas */}
               <div className="lg:col-span-7 space-y-12">
 
-              {/* Section 1: Plan & Billing Term */}
-              <div className="space-y-6">
-                <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-navy font-bold">01</span>
-                    <h2 className="font-heading text-xl md:text-2xl text-navy">Select Plan &amp; Billing Term</h2>
-                  </div>
-                  <span className="text-[11px] text-navy/50 font-mono">{config.tiers.length} Options</span>
-                </div>
-
-                <div className="space-y-4">
-                  {config.tiers.map((tier) => {
-                    const isSelected = tier.id === selectedTierId
-                    return (
-                      <div
-                        key={tier.id}
-                        onClick={() => handleTierSelect(tier.id)}
-                        className={`p-5 cursor-pointer transition-all border-l-2 ${
-                          isSelected
-                            ? 'border-navy bg-navy/[0.04]'
-                            : 'border-navy/15 hover:border-navy/40 hover:bg-navy/[0.015]'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-heading text-lg font-semibold text-navy">{tier.name}</h3>
-                              {tier.isPopular && (
-                                <span className="bg-navy text-white text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold">
-                                  Best Value
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-navy/70 mt-1 leading-relaxed">{tier.subtext}</p>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="font-mono text-base font-bold text-navy block">
-                              {tier.rateDisplay}
-                            </span>
-                            <span className="font-mono text-[10px] text-navy/50">
-                              {tier.billingPeriod}
-                            </span>
-                          </div>
-                        </div>
-
-                        {tier.depositMonths > 0 && isSelected && (
-                          <div className="mt-3 pt-3 border-t border-navy/10 flex items-center gap-2 text-xs text-navy/80 font-medium">
-                            <Shield size={13} className="text-navy shrink-0" />
-                            <span>
-                              Refundable Security Deposit: <strong>{tier.depositMonths} {tier.depositMonths === 1 ? 'Month' : 'Months'} (KES {tier.depositAmountKES.toLocaleString()})</strong> held securely.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Multiplier (Hourly or Days) */}
-                {selectedTier.id === 'hourly' && (
-                  <div className="pt-4 border-t border-navy/10 space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy">
-                      Number of hours needed
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[1, 2, 3, 4].map((hrs) => (
-                        <button
-                          key={hrs}
-                          type="button"
-                          onClick={() => setMultiplier(hrs)}
-                          className={`py-2.5 text-center font-mono text-xs font-semibold transition-all border ${
-                            multiplier === hrs
-                              ? 'bg-navy text-white border-navy'
-                              : 'bg-transparent text-navy border-navy/20 hover:border-navy/50'
-                          }`}
-                        >
-                          {hrs} {hrs === 1 ? 'Hour' : 'Hours'}
-                        </button>
-                      ))}
+                {/* Section 1: Plan & Billing Term */}
+                <div className="space-y-6">
+                  <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs text-navy font-bold">01</span>
+                      <h2 className="font-heading text-xl md:text-2xl text-navy">Select Plan &amp; Billing Term</h2>
                     </div>
+                    <span className="text-[11px] text-navy/50 font-mono">{config.tiers.length} Options</span>
                   </div>
-                )}
 
-                {selectedTier.id === 'full-day' && config.hasDayMultiplier && (
-                  <div className="pt-4 border-t border-navy/10 space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy">
-                      Number of day passes
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[1, 2, 3, 5].map((days) => (
-                        <button
-                          key={days}
-                          type="button"
-                          onClick={() => handleMultiplierChange(days)}
-                          className={`py-2.5 text-center font-mono text-xs font-semibold transition-all border ${
-                            multiplier === days
-                              ? 'bg-navy text-white border-navy'
-                              : 'bg-transparent text-navy border-navy/20 hover:border-navy/50'
-                          }`}
+                  <div className="space-y-4">
+                    {config.tiers.map((tier) => {
+                      const isSelected = tier.id === selectedTierId
+                      return (
+                        <div
+                          key={tier.id}
+                          onClick={() => handleTierSelect(tier.id)}
+                          className={`p-5 cursor-pointer transition-all border-l-2 ${isSelected
+                              ? 'border-navy bg-navy/[0.04]'
+                              : 'border-navy/15 hover:border-navy/40 hover:bg-navy/[0.015]'
+                            }`}
                         >
-                          {days} {days === 1 ? 'Day' : 'Days'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Section 2: Schedule & Hub Location */}
-              <div className="space-y-6">
-                <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-navy font-bold">02</span>
-                    <h2 className="font-heading text-xl md:text-2xl text-navy">
-                      {isPhysical ? 'Schedule &amp; Operating Hours' : 'Start Date &amp; Hub Location'}
-                    </h2>
-                  </div>
-                  {isPhysical && (
-                    <span className="text-[10px] font-mono text-navy/60 uppercase tracking-wider">
-                      {calculation.engineResult.daySchedule?.label || 'Mon-Fri: 8am-6pm | Sat: 9am-4:30pm'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="w-full bg-navy/[0.03] border border-navy/20 p-3 text-xs text-navy">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 block">Hub Location</span>
-                    <strong className="text-navy text-sm">Kisumu CBD · CBD Commercial Center (Oginga Odinga St)</strong>
-                  </div>
-
-                  {/* Single Date & Time Picker if 1 Day */}
-                  {multiplier <= 1 ? (
-                    <>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5 flex items-center justify-between">
-                          <span>Booking Date *</span>
-                          {isPhysical && (
-                            <span className="text-[10px] text-navy/60 lowercase">
-                              (closed Sundays)
-                            </span>
-                          )}
-                        </label>
-                        <input
-                          type="date"
-                          required
-                          value={startDate}
-                          onChange={(e) => {
-                            setStartDate(e.target.value)
-                            setCustomDates([e.target.value])
-                            if (errors.startDate) setErrors((prev) => ({ ...prev, startDate: undefined }))
-                          }}
-                          min={getNairobiDate().dateStr}
-                          className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                            errors.startDate || (isPhysical && calculation.engineResult.isSunday)
-                              ? 'border-red-600 bg-red-50/20'
-                              : 'border-navy/20 focus:border-navy focus:bg-white'
-                          }`}
-                        />
-                        {errors.startDate && (
-                          <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                            <AlertCircle size={12} /> {errors.startDate}
-                          </p>
-                        )}
-                        {isPhysical && calculation.engineResult.isSunday && (
-                          <p className="mt-1.5 text-[11px] text-red-600 bg-red-50 p-2 border border-red-200 flex items-center gap-1 font-medium">
-                            <AlertCircle size={13} className="shrink-0" />
-                            Paper Street is closed on Sundays. Please select Monday to Saturday.
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Smart Time Selection for Single Physical Day */}
-                      {isPhysical && !calculation.engineResult.isSunday && (
-                        <div className="space-y-3 pt-2">
-                          <div className="flex items-center justify-between">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-navy flex items-center gap-1.5">
-                              <Clock size={13} className="text-navy" />
-                              <span>Select Start Time &amp; Calculated End Time</span>
-                            </label>
-                            <span className="text-[11px] font-mono text-navy/70">
-                              Duration: <strong>{calculation.engineResult.durationHours} Hours</strong>
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto p-1 border border-navy/15 bg-navy/[0.015]">
-                            {availableSlots.length > 0 ? (
-                              availableSlots.map((slot) => {
-                                const isSelected = startTime === slot.time
-                                return (
-                                  <button
-                                    key={slot.time}
-                                    type="button"
-                                    disabled={slot.isPast}
-                                    onClick={() => {
-                                      setStartTime(slot.time)
-                                      setCustomStartTimes([slot.time])
-                                    }}
-                                    className={`p-2.5 text-left text-xs transition-all border flex flex-col justify-between ${
-                                      slot.isPast
-                                        ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200 text-gray-400'
-                                        : isSelected
-                                        ? 'bg-navy text-white border-navy shadow-xs'
-                                        : 'bg-white text-navy border-navy/15 hover:border-navy/40 hover:bg-navy/[0.02]'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-mono font-bold">{slot.time}</span>
-                                      {slot.isOvertime && (
-                                        <span className={`text-[9px] px-1 py-0.2 font-mono uppercase font-semibold ${
-                                          isSelected ? 'bg-gold/30 text-amber-200' : 'bg-amber-100 text-amber-800'
-                                        }`}>
-                                          +KES {slot.overtimeHours * 200}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <span className={`text-[10px] mt-1 ${isSelected ? 'text-white/80' : 'text-navy/60'}`}>
-                                      Ends at {slot.endTime}
-                                    </span>
-                                  </button>
-                                )
-                              })
-                            ) : (
-                              <div className="col-span-full py-4 text-center text-xs text-navy/60">
-                                No operating time slots available for this date.
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Calculated Time & Overtime Summary Banner */}
-                          <div className="p-3 bg-navy/[0.03] border border-navy/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-start justify-between gap-4">
                             <div>
-                              <span className="text-navy/60 block text-[10px] uppercase tracking-wider font-mono">Calculated Reservation Window</span>
-                              <span className="font-semibold text-navy text-sm">
-                                {calculation.engineResult.startTime} &rarr; {calculation.engineResult.calculatedEndTime}
-                              </span>
-                              <span className="text-navy/60 text-[11px] block mt-0.5">
-                                Normal Closing: {calculation.engineResult.normalClosingTime}
-                              </span>
-                            </div>
-
-                            {calculation.engineResult.isOvertime ? (
-                              <div className="sm:text-right bg-amber-50 border border-amber-200 p-2.5 text-amber-900 rounded-none">
-                                <span className="font-bold text-xs flex items-center gap-1.5 sm:justify-end text-amber-900">
-                                  <Clock size={13} className="text-amber-700" /> Extended-Hours Access
-                                </span>
-                                <p className="text-[11px] text-amber-800 mt-0.5">
-                                  {calculation.engineResult.overtimeDisplay}
-                                </p>
-                                <button
-                                  type="button"
-                                  onClick={() => setShowOvertimeModal(true)}
-                                  className="mt-1 text-[10px] text-amber-900 font-semibold underline hover:text-amber-950 inline-flex items-center gap-1 cursor-pointer"
-                                >
-                                  <Info size={11} /> How is this calculated?
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="sm:text-right text-emerald-800 font-medium text-[11px] flex items-center gap-1 sm:justify-end">
-                                <Check size={13} /> Within Standard Operating Hours (No Extra Fee)
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    /* Multi-Day: Dedicated Date & Time Slot for Each Day */
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-navy flex items-center gap-1.5">
-                          <Calendar size={13} className="text-navy" />
-                          <span>Select Dates &amp; Times for Your {multiplier} Day Passes *</span>
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setCustomDates(generateConsecutiveDates(customDates[0] || startDate, multiplier))}
-                            className="text-[11px] text-navy font-semibold underline hover:text-navy-600 cursor-pointer"
-                          >
-                            Autofill Next Workdays &rarr;
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleApplyDay1TimeToAll}
-                            className="text-[11px] text-navy/70 font-semibold underline hover:text-navy cursor-pointer"
-                          >
-                            Apply Day 1 Time to All
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Array.from({ length: multiplier }).map((_, idx) => {
-                          const dateVal = customDates[idx] || ''
-                          const dObj = new Date(`${dateVal}T00:00:00Z`)
-                          const isSunday = !isNaN(dObj.getTime()) && dObj.getUTCDay() === 0
-                          const duration = selectedTier.id === 'half-day' ? 4 : 8
-                          const slotsForThisDay = getAvailableStartTimesForDate(dateVal, duration)
-                          const currentStartTime = customStartTimes[idx] || startTime || '08:00 AM'
-                          const dayCalc = dayCalculations[idx]
-
-                          const isDuplicate = duplicateIndices.has(idx)
-
-                          return (
-                            <div key={idx} className={`p-4 bg-white border shadow-xs space-y-3 ${isDuplicate ? 'border-red-400 bg-red-50/10' : 'border-navy/20'}`}>
-                              <div className="flex items-center justify-between border-b border-navy/10 pb-2">
-                                <span className="font-mono text-xs font-bold uppercase tracking-wider text-navy">
-                                  Day {idx + 1} Pass
-                                </span>
-                                {dayCalc && !isSunday && !isDuplicate && (
-                                  <span className="font-mono text-[11px] text-navy font-semibold">
-                                    {dayCalc.startTime} &rarr; {dayCalc.calculatedEndTime}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-heading text-lg font-semibold text-navy">{tier.name}</h3>
+                                {tier.isPopular && (
+                                  <span className="bg-navy text-white text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold">
+                                    Best Value
                                   </span>
                                 )}
                               </div>
+                              <p className="text-xs text-navy/70 mt-1 leading-relaxed">{tier.subtext}</p>
+                            </div>
 
-                              <div>
-                                <label className="block text-[11px] font-semibold uppercase tracking-wider text-navy/70 mb-1">
-                                  Pass Date
-                                </label>
-                                <input
-                                  type="date"
-                                  required
-                                  value={dateVal}
-                                  onChange={(e) => handleCustomDateChange(idx, e.target.value)}
-                                  min={getNairobiDate().dateStr}
-                                  className={`w-full bg-white border p-2 text-xs text-navy outline-none ${
-                                    isSunday || isDuplicate ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy'
-                                  }`}
-                                />
-                                {isSunday && (
-                                  <p className="mt-1 text-[10px] text-red-600 font-medium flex items-center gap-1">
-                                    <AlertCircle size={10} /> Closed Sunday (Please choose Mon - Sat)
-                                  </p>
-                                )}
-                                {isDuplicate && !isSunday && (
-                                  <p className="mt-1 text-[10px] text-red-600 font-medium flex items-center gap-1">
-                                    <AlertCircle size={10} /> Duplicate date! Please choose a unique date for each pass.
-                                  </p>
-                                )}
-                              </div>
+                            <div className="text-right shrink-0">
+                              <span className="font-mono text-base font-bold text-navy block">
+                                {tier.rateDisplay}
+                              </span>
+                              <span className="font-mono text-[10px] text-navy/50">
+                                {tier.billingPeriod}
+                              </span>
+                            </div>
+                          </div>
 
-                              {!isSunday && (
-                                <div>
-                                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-navy/70 mb-1 flex items-center justify-between">
-                                    <span>Select Start Time</span>
-                                    <span className="text-[10px] lowercase text-navy/50">
-                                      ({duration}h session)
-                                    </span>
-                                  </label>
-                                  <select
-                                    value={currentStartTime}
-                                    onChange={(e) => handleCustomStartTimeChange(idx, e.target.value)}
-                                    className="w-full bg-navy/[0.02] border border-navy/20 p-2 text-xs font-mono text-navy outline-none focus:border-navy focus:bg-white"
-                                  >
-                                    {slotsForThisDay.map((slot) => (
-                                      <option key={slot.time} value={slot.time} disabled={slot.isPast}>
-                                        {slot.time} &rarr; Ends at {slot.endTime} {slot.isOvertime ? `(+KES ${slot.overtimeHours * 200} overtime)` : ''} {slot.isPast ? '(Passed)' : ''}
-                                      </option>
-                                    ))}
-                                  </select>
+                          {tier.depositMonths > 0 && isSelected && (
+                            <div className="mt-3 pt-3 border-t border-navy/10 flex items-center gap-2 text-xs text-navy/80 font-medium">
+                              <Shield size={13} className="text-navy shrink-0" />
+                              <span>
+                                Refundable Security Deposit: <strong>{tier.depositMonths} {tier.depositMonths === 1 ? 'Month' : 'Months'} (KES {tier.depositAmountKES.toLocaleString()})</strong> held securely.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
 
-                                  {dayCalc && dayCalc.isOvertime && (
-                                    <p className="mt-1 text-[10px] text-amber-800 font-medium flex items-center gap-1">
-                                      <Clock size={10} /> +{dayCalc.chargeableOvertimeHours} hr extended-hours (+KES {dayCalc.overtimeFeeKES.toLocaleString()})
-                                    </p>
-                                  )}
+                  {/* Multiplier (Hourly or Days) */}
+                  {selectedTier.id === 'hourly' && (
+                    <div className="pt-4 border-t border-navy/10 space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-navy">
+                        Number of hours needed
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[1, 2, 3, 4].map((hrs) => (
+                          <button
+                            key={hrs}
+                            type="button"
+                            onClick={() => setMultiplier(hrs)}
+                            className={`py-2.5 text-center font-mono text-xs font-semibold transition-all border ${multiplier === hrs
+                                ? 'bg-navy text-white border-navy'
+                                : 'bg-transparent text-navy border-navy/20 hover:border-navy/50'
+                              }`}
+                          >
+                            {hrs} {hrs === 1 ? 'Hour' : 'Hours'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedTier.id === 'full-day' && config.hasDayMultiplier && (
+                    <div className="pt-4 border-t border-navy/10 space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-navy">
+                        Number of day passes
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[1, 2, 3, 5].map((days) => (
+                          <button
+                            key={days}
+                            type="button"
+                            onClick={() => handleMultiplierChange(days)}
+                            className={`py-2.5 text-center font-mono text-xs font-semibold transition-all border ${multiplier === days
+                                ? 'bg-navy text-white border-navy'
+                                : 'bg-transparent text-navy border-navy/20 hover:border-navy/50'
+                              }`}
+                          >
+                            {days} {days === 1 ? 'Day' : 'Days'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 2: Schedule & Hub Location */}
+                <div className="space-y-6">
+                  <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs text-navy font-bold">02</span>
+                      <h2 className="font-heading text-xl md:text-2xl text-navy">
+                        {isPhysical ? 'Schedule &amp; Operating Hours' : 'Start Date &amp; Hub Location'}
+                      </h2>
+                    </div>
+                    {isPhysical && (
+                      <span className="text-[10px] font-mono text-navy/60 uppercase tracking-wider">
+                        {calculation.engineResult.daySchedule?.label || 'Mon-Fri: 8am-6pm | Sat: 9am-4:30pm'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="w-full bg-navy/[0.03] border border-navy/20 p-3 text-xs text-navy">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 block">Hub Location</span>
+                      <strong className="text-navy text-sm">Kisumu CBD · CBD Commercial Center (Oginga Odinga St)</strong>
+                    </div>
+
+                    {/* Single Date & Time Picker if 1 Day */}
+                    {multiplier <= 1 ? (
+                      <>
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5 flex items-center justify-between">
+                            <span>Booking Date *</span>
+                            {isPhysical && (
+                              <span className="text-[10px] text-navy/60 lowercase">
+                                (closed Sundays)
+                              </span>
+                            )}
+                          </label>
+                          <input
+                            type="date"
+                            required
+                            value={startDate}
+                            onChange={(e) => {
+                              setStartDate(e.target.value)
+                              setCustomDates([e.target.value])
+                              if (errors.startDate) setErrors((prev) => ({ ...prev, startDate: undefined }))
+                            }}
+                            min={getNairobiDate().dateStr}
+                            className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.startDate || (isPhysical && calculation.engineResult.isSunday)
+                                ? 'border-red-600 bg-red-50/20'
+                                : 'border-navy/20 focus:border-navy focus:bg-white'
+                              }`}
+                          />
+                          {errors.startDate && (
+                            <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
+                              <AlertCircle size={12} /> {errors.startDate}
+                            </p>
+                          )}
+                          {isPhysical && calculation.engineResult.isSunday && (
+                            <p className="mt-1.5 text-[11px] text-red-600 bg-red-50 p-2 border border-red-200 flex items-center gap-1 font-medium">
+                              <AlertCircle size={13} className="shrink-0" />
+                              Paper Street is closed on Sundays. Please select Monday to Saturday.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Smart Time Selection for Single Physical Day */}
+                        {isPhysical && !calculation.engineResult.isSunday && (
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-semibold uppercase tracking-wider text-navy flex items-center gap-1.5">
+                                <Clock size={13} className="text-navy" />
+                                <span>Select Start Time &amp; Calculated End Time</span>
+                              </label>
+                              <span className="text-[11px] font-mono text-navy/70">
+                                Duration: <strong>{calculation.engineResult.durationHours} Hours</strong>
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto p-1 border border-navy/15 bg-navy/[0.015]">
+                              {availableSlots.length > 0 ? (
+                                availableSlots.map((slot) => {
+                                  const isSelected = startTime === slot.time
+                                  return (
+                                    <button
+                                      key={slot.time}
+                                      type="button"
+                                      disabled={slot.isPast}
+                                      onClick={() => {
+                                        setStartTime(slot.time)
+                                        setCustomStartTimes([slot.time])
+                                      }}
+                                      className={`p-2.5 text-left text-xs transition-all border flex flex-col justify-between ${slot.isPast
+                                          ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200 text-gray-400'
+                                          : isSelected
+                                            ? 'bg-navy text-white border-navy shadow-xs'
+                                            : 'bg-white text-navy border-navy/15 hover:border-navy/40 hover:bg-navy/[0.02]'
+                                        }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-mono font-bold">{slot.time}</span>
+                                        {slot.isOvertime && (
+                                          <span className={`text-[9px] px-1 py-0.2 font-mono uppercase font-semibold ${isSelected ? 'bg-gold/30 text-amber-200' : 'bg-amber-100 text-amber-800'
+                                            }`}>
+                                            +KES {slot.overtimeHours * 200}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className={`text-[10px] mt-1 ${isSelected ? 'text-white/80' : 'text-navy/60'}`}>
+                                        Ends at {slot.endTime}
+                                      </span>
+                                    </button>
+                                  )
+                                })
+                              ) : (
+                                <div className="col-span-full py-4 text-center text-xs text-navy/60">
+                                  No operating time slots available for this date.
                                 </div>
                               )}
                             </div>
-                          )
-                        })}
-                      </div>
 
-                      {/* Multi-Day Overview Banner */}
-                      <div className="p-3.5 bg-navy/[0.03] border border-navy/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div>
-                          <span className="text-navy/60 block text-[10px] uppercase tracking-wider font-mono">
-                            Multi-Day Passes Schedule Summary
-                          </span>
-                          <p className="font-semibold text-navy mt-0.5">
-                            {multiplier} Sessions Booked across selected dates
-                          </p>
-                        </div>
+                            {/* Calculated Time & Overtime Summary Banner */}
+                            <div className="p-3 bg-navy/[0.03] border border-navy/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                              <div>
+                                <span className="text-navy/60 block text-[10px] uppercase tracking-wider font-mono">Calculated Reservation Window</span>
+                                <span className="font-semibold text-navy text-sm">
+                                  {calculation.engineResult.startTime} &rarr; {calculation.engineResult.calculatedEndTime}
+                                </span>
+                                <span className="text-navy/60 text-[11px] block mt-0.5">
+                                  Normal Closing: {calculation.engineResult.normalClosingTime}
+                                </span>
+                              </div>
 
-                        {calculation.engineResult.isOvertime ? (
-                          <div className="sm:text-right bg-amber-50 border border-amber-200 p-2 text-amber-900">
-                            <span className="font-bold text-xs flex items-center gap-1 sm:justify-end text-amber-900">
-                              <Clock size={12} className="text-amber-700" /> Multi-Day Extended Hours
-                            </span>
-                            <p className="text-[11px] text-amber-800 mt-0.5">
-                              {calculation.engineResult.overtimeDisplay}
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="sm:text-right text-emerald-800 font-medium text-[11px] flex items-center gap-1 sm:justify-end">
-                            <Check size={13} /> All sessions within standard operating hours
+                              {calculation.engineResult.isOvertime ? (
+                                <div className="sm:text-right bg-amber-50 border border-amber-200 p-2.5 text-amber-900 rounded-none">
+                                  <span className="font-bold text-xs flex items-center gap-1.5 sm:justify-end text-amber-900">
+                                    <Clock size={13} className="text-amber-700" /> Extended-Hours Access
+                                  </span>
+                                  <p className="text-[11px] text-amber-800 mt-0.5">
+                                    {calculation.engineResult.overtimeDisplay}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOvertimeModal(true)}
+                                    className="mt-1 text-[10px] text-amber-900 font-semibold underline hover:text-amber-950 inline-flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Info size={11} /> How is this calculated?
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="sm:text-right text-emerald-800 font-medium text-[11px] flex items-center gap-1 sm:justify-end">
+                                  <Check size={13} /> Within Standard Operating Hours (No Extra Fee)
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
+                      </>
+                    ) : (
+                      /* Multi-Day: Dedicated Date & Time Slot for Each Day */
+                      <div className="space-y-4 pt-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-navy flex items-center gap-1.5">
+                            <Calendar size={13} className="text-navy" />
+                            <span>Select Dates &amp; Times for Your {multiplier} Day Passes *</span>
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setCustomDates(generateConsecutiveDates(customDates[0] || startDate, multiplier))}
+                              className="text-[11px] text-navy font-semibold underline hover:text-navy-600 cursor-pointer"
+                            >
+                              Autofill Next Workdays &rarr;
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleApplyDay1TimeToAll}
+                              className="text-[11px] text-navy/70 font-semibold underline hover:text-navy cursor-pointer"
+                            >
+                              Apply Day 1 Time to All
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Array.from({ length: multiplier }).map((_, idx) => {
+                            const dateVal = customDates[idx] || ''
+                            const dObj = new Date(`${dateVal}T00:00:00Z`)
+                            const isSunday = !isNaN(dObj.getTime()) && dObj.getUTCDay() === 0
+                            const duration = selectedTier.id === 'half-day' ? 4 : 8
+                            const slotsForThisDay = getAvailableStartTimesForDate(dateVal, duration)
+                            const currentStartTime = customStartTimes[idx] || startTime || '08:00 AM'
+                            const dayCalc = dayCalculations[idx]
+
+                            const isDuplicate = duplicateIndices.has(idx)
+
+                            return (
+                              <div key={idx} className={`p-4 bg-white border shadow-xs space-y-3 ${isDuplicate ? 'border-red-400 bg-red-50/10' : 'border-navy/20'}`}>
+                                <div className="flex items-center justify-between border-b border-navy/10 pb-2">
+                                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-navy">
+                                    Day {idx + 1} Pass
+                                  </span>
+                                  {dayCalc && !isSunday && !isDuplicate && (
+                                    <span className="font-mono text-[11px] text-navy font-semibold">
+                                      {dayCalc.startTime} &rarr; {dayCalc.calculatedEndTime}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-navy/70 mb-1">
+                                    Pass Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    required
+                                    value={dateVal}
+                                    onChange={(e) => handleCustomDateChange(idx, e.target.value)}
+                                    min={getNairobiDate().dateStr}
+                                    className={`w-full bg-white border p-2 text-xs text-navy outline-none ${isSunday || isDuplicate ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy'
+                                      }`}
+                                  />
+                                  {isSunday && (
+                                    <p className="mt-1 text-[10px] text-red-600 font-medium flex items-center gap-1">
+                                      <AlertCircle size={10} /> Closed Sunday (Please choose Mon - Sat)
+                                    </p>
+                                  )}
+                                  {isDuplicate && !isSunday && (
+                                    <p className="mt-1 text-[10px] text-red-600 font-medium flex items-center gap-1">
+                                      <AlertCircle size={10} /> Duplicate date! Please choose a unique date for each pass.
+                                    </p>
+                                  )}
+                                </div>
+
+                                {!isSunday && (
+                                  <div>
+                                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-navy/70 mb-1 flex items-center justify-between">
+                                      <span>Select Start Time</span>
+                                      <span className="text-[10px] lowercase text-navy/50">
+                                        ({duration}h session)
+                                      </span>
+                                    </label>
+                                    <select
+                                      value={currentStartTime}
+                                      onChange={(e) => handleCustomStartTimeChange(idx, e.target.value)}
+                                      className="w-full bg-navy/[0.02] border border-navy/20 p-2 text-xs font-mono text-navy outline-none focus:border-navy focus:bg-white"
+                                    >
+                                      {slotsForThisDay.map((slot) => (
+                                        <option key={slot.time} value={slot.time} disabled={slot.isPast}>
+                                          {slot.time} &rarr; Ends at {slot.endTime} {slot.isOvertime ? `(+KES ${slot.overtimeHours * 200} overtime)` : ''} {slot.isPast ? '(Passed)' : ''}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    {dayCalc && dayCalc.isOvertime && (
+                                      <p className="mt-1 text-[10px] text-amber-800 font-medium flex items-center gap-1">
+                                        <Clock size={10} /> +{dayCalc.chargeableOvertimeHours} hr extended-hours (+KES {dayCalc.overtimeFeeKES.toLocaleString()})
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* Multi-Day Overview Banner */}
+                        <div className="p-3.5 bg-navy/[0.03] border border-navy/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div>
+                            <span className="text-navy/60 block text-[10px] uppercase tracking-wider font-mono">
+                              Multi-Day Passes Schedule Summary
+                            </span>
+                            <p className="font-semibold text-navy mt-0.5">
+                              {multiplier} Sessions Booked across selected dates
+                            </p>
+                          </div>
+
+                          {calculation.engineResult.isOvertime ? (
+                            <div className="sm:text-right bg-amber-50 border border-amber-200 p-2 text-amber-900">
+                              <span className="font-bold text-xs flex items-center gap-1 sm:justify-end text-amber-900">
+                                <Clock size={12} className="text-amber-700" /> Multi-Day Extended Hours
+                              </span>
+                              <p className="text-[11px] text-amber-800 mt-0.5">
+                                {calculation.engineResult.overtimeDisplay}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="sm:text-right text-emerald-800 font-medium text-[11px] flex items-center gap-1 sm:justify-end">
+                              <Check size={13} /> All sessions within standard operating hours
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Section 3: Contact & Organization Details */}
-              <div className="space-y-6">
-                <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-navy font-bold">03</span>
-                    <h2 className="font-heading text-xl md:text-2xl text-navy">
-                      {config.slug === 'hot-desk'
-                        ? 'Pass Holder Details'
-                        : config.slug === 'meeting-rooms'
-                        ? 'Meeting Organizer Details'
-                        : config.slug === 'virtual-office'
-                        ? 'Director & Company Details'
-                        : config.slug === 'business-address'
-                        ? 'Business Registrant Details'
-                        : 'Resident Member Details'}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className={`grid gap-5 ${config.slug === 'hot-desk' ? 'sm:grid-cols-1 md:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
-                      {config.slug === 'hot-desk'
-                        ? 'Your Full Name *'
-                        : config.slug === 'meeting-rooms'
-                        ? 'Organizer Full Name *'
-                        : config.slug === 'dedicated-desk'
-                        ? 'Resident Member Name *'
-                        : 'Director / Applicant Name *'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value)
-                        if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: undefined }))
-                      }}
-                      placeholder="e.g. Alvine Otieno"
-                      className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                        errors.fullName ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
-                      }`}
-                    />
-                    {errors.fullName && (
-                      <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                        <AlertCircle size={12} /> {errors.fullName}
-                      </p>
                     )}
                   </div>
+                </div>
 
-                  {config.slug !== 'hot-desk' && (
+                {/* Section 3: Contact & Organization Details */}
+                <div className="space-y-6">
+                  <div className="flex items-baseline justify-between border-b border-navy/15 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs text-navy font-bold">03</span>
+                      <h2 className="font-heading text-xl md:text-2xl text-navy">
+                        {config.slug === 'hot-desk'
+                          ? 'Pass Holder Details'
+                          : config.slug === 'meeting-rooms'
+                            ? 'Meeting Organizer Details'
+                            : config.slug === 'virtual-office'
+                              ? 'Director & Company Details'
+                              : config.slug === 'business-address'
+                                ? 'Business Registrant Details'
+                                : 'Resident Member Details'}
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className={`grid gap-5 ${config.slug === 'hot-desk' ? 'sm:grid-cols-1 md:grid-cols-3' : 'sm:grid-cols-2'}`}>
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
-                        {config.slug === 'business-address'
-                          ? 'Registered / Proposed Entity Name *'
-                          : config.slug === 'virtual-office'
-                          ? 'Registered Company / Business Name *'
+                        {config.slug === 'hot-desk'
+                          ? 'Your Full Name *'
                           : config.slug === 'meeting-rooms'
-                          ? 'Company / Organization (Optional)'
-                          : 'Company / Practice Name (Optional)'}
+                            ? 'Organizer Full Name *'
+                            : config.slug === 'dedicated-desk'
+                              ? 'Resident Member Name *'
+                              : 'Director / Applicant Name *'}
                       </label>
                       <input
                         type="text"
-                        value={companyName}
+                        required
+                        value={fullName}
                         onChange={(e) => {
-                          setCompanyName(e.target.value)
-                          if (errors.companyName) setErrors((prev) => ({ ...prev, companyName: undefined }))
+                          setFullName(e.target.value)
+                          if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: undefined }))
                         }}
-                        placeholder={config.slug === 'meeting-rooms' ? 'e.g. Acme Africa Ltd' : 'e.g. Acme Solutions Africa Ltd'}
-                        className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                          errors.companyName ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
-                        }`}
+                        placeholder="e.g. Alvine Otieno"
+                        className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.fullName ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
+                          }`}
                       />
-                      {errors.companyName && (
+                      {errors.fullName && (
                         <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                          <AlertCircle size={12} /> {errors.companyName}
+                          <AlertCircle size={12} /> {errors.fullName}
                         </p>
                       )}
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
-                      {config.slug === 'hot-desk' ? 'Email (For Pass & Wi-Fi) *' : 'Official Contact Email *'}
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value)
-                        if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
-                      }}
-                      placeholder={config.slug === 'hot-desk' ? 'e.g. alvine@gmail.com' : 'e.g. alvine@company.africa'}
-                      className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                        errors.email ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
-                      }`}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                        <AlertCircle size={12} /> {errors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
-                      M-Pesa Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value)
-                        if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }))
-                      }}
-                      placeholder="e.g. 0712 345 678"
-                      className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                        errors.phone ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
-                      }`}
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                        <AlertCircle size={12} /> {errors.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
-                    {config.slug === 'hot-desk'
-                      ? 'Special Preferences (Optional)'
-                      : config.slug === 'meeting-rooms'
-                      ? 'Room Setup / AV Requirements (Optional)'
-                      : config.slug === 'virtual-office'
-                      ? 'Mail Handling & Compliance Notes (Optional)'
-                      : 'Special Instructions / Requirements (Optional)'}
-                  </label>
-                  <textarea
-                    rows={2}
-                    maxLength={350}
-                    value={notes}
-                    onChange={(e) => {
-                      setNotes(e.target.value)
-                      if (errors.notes) setErrors((prev) => ({ ...prev, notes: undefined }))
-                    }}
-                    placeholder={
-                      config.slug === 'hot-desk'
-                        ? 'e.g. Quiet booth preference, dual monitor power outlet...'
-                        : config.slug === 'meeting-rooms'
-                        ? 'e.g. 4K screen presentation casting, whiteboard, tea/coffee service...'
-                        : config.slug === 'virtual-office'
-                        ? 'e.g. eCitizen BRS company registration, KRA PIN compliance, mail scanning preferences...'
-                        : 'e.g. Specific start date, proof of address certificate requirements...'
-                    }
-                    className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${
-                      errors.notes ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
-                    }`}
-                  />
-                  {errors.notes && (
-                    <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
-                      <AlertCircle size={12} /> {errors.notes}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Column: Editorial Ledger Breakdown */}
-            <div className="lg:col-span-5 sticky top-28 space-y-8 border-l border-navy/15 lg:pl-10">
-              <div className="space-y-6">
-                <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold block mb-1">
-                    Reservation Ledger
-                  </span>
-                  <h3 className="font-heading text-2xl md:text-3xl text-navy">{config.title}</h3>
-                  <p className="text-xs font-semibold text-navy/80 mt-1">{selectedTier.name}</p>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-navy/15 text-xs text-navy/80">
-                  <div className="flex justify-between py-1 border-b border-navy/10">
-                    <span className="text-navy/60">Plan Rate:</span>
-                    <span className="font-mono font-semibold">{selectedTier.rateDisplay}</span>
-                  </div>
-
-                  {calculation.activeMultiplier > 1 && (
-                    <div className="flex justify-between py-1 border-b border-navy/10">
-                      <span className="text-navy/60">Duration Multiplier:</span>
-                      <span className="font-mono font-semibold">{calculation.activeMultiplier}x</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between py-1 border-b border-navy/10">
-                    <span className="text-navy/60">Base Package Price:</span>
-                    <span className="font-mono font-semibold">KES {calculation.rentBase.toLocaleString()}</span>
-                  </div>
-
-                  {/* Overtime Fee item if applicable */}
-                  {calculation.engineResult.isOvertime && (
-                    <div className="flex justify-between py-2 border-b border-navy/10 bg-amber-50 px-2.5 text-amber-900">
+                    {config.slug !== 'hot-desk' && (
                       <div>
-                        <span className="font-semibold block">Extended-Hours Fee ({calculation.engineResult.chargeableOvertimeHours} hr{calculation.engineResult.chargeableOvertimeHours > 1 ? 's' : ''}):</span>
-                        <span className="text-[10px] text-amber-700 block">KES 200/hr past {calculation.engineResult.normalClosingTime}</span>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
+                          {config.slug === 'business-address'
+                            ? 'Registered / Proposed Entity Name *'
+                            : config.slug === 'virtual-office'
+                              ? 'Registered Company / Business Name *'
+                              : config.slug === 'meeting-rooms'
+                                ? 'Company / Organization (Optional)'
+                                : 'Company / Practice Name (Optional)'}
+                        </label>
+                        <input
+                          type="text"
+                          value={companyName}
+                          onChange={(e) => {
+                            setCompanyName(e.target.value)
+                            if (errors.companyName) setErrors((prev) => ({ ...prev, companyName: undefined }))
+                          }}
+                          placeholder={config.slug === 'meeting-rooms' ? 'e.g. Acme Africa Ltd' : 'e.g. Acme Solutions Africa Ltd'}
+                          className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.companyName ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
+                            }`}
+                        />
+                        {errors.companyName && (
+                          <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
+                            <AlertCircle size={12} /> {errors.companyName}
+                          </p>
+                        )}
                       </div>
-                      <span className="font-mono font-bold">+ KES {calculation.engineResult.overtimeFeeKES.toLocaleString()}</span>
-                    </div>
-                  )}
+                    )}
 
-                  {calculation.depositAmount > 0 ? (
-                    <div className="flex justify-between py-2 border-b border-navy/10 bg-navy/[0.03] px-2">
-                      <span className="text-navy font-semibold">Refundable Security Deposit ({calculation.depositMonths} mo):</span>
-                      <span className="font-mono font-bold text-navy">+ KES {calculation.depositAmount.toLocaleString()}</span>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between py-1 border-b border-navy/10 text-emerald-800">
-                      <span>Security Deposit:</span>
-                      <span className="font-semibold">Zero Deposit on Day Passes</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between py-1 text-emerald-800">
-                    <span className="text-navy/60">Generator Backup &amp; Fibre:</span>
-                    <span className="font-semibold">Included</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t-2 border-navy">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-mono text-xs font-bold uppercase tracking-wider text-navy">Total Amount Payable</span>
-                    <span className="font-heading text-3xl font-bold text-navy font-mono">
-                      KES {calculation.initialTotal.toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-navy/50 font-mono mt-1">
-                    {calculation.engineResult.isOvertime
-                      ? `(Base: KES ${calculation.rentBase.toLocaleString()} + Overtime: KES ${calculation.engineResult.overtimeFeeKES.toLocaleString()})`
-                      : calculation.depositAmount > 0
-                      ? `(Rent: KES ${calculation.rentBase.toLocaleString()} + Deposit: KES ${calculation.depositAmount.toLocaleString()})`
-                      : `(${selectedTier.billingPeriod})`}
-                  </p>
-                </div>
-
-                {/* Terms checkbox */}
-                <div className="pt-4 border-t border-navy/10">
-                  <label className="flex items-start gap-2.5 text-xs text-navy/75 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      required
-                      checked={agreedTerms}
-                      onChange={(e) => setAgreedTerms(e.target.checked)}
-                      className="mt-0.5 rounded-none accent-navy"
-                    />
-                    <span>
-                      {isPhysical || slug === 'hot-desk' || slug === 'meeting-rooms' ? (
-                        <>
-                          I agree to the{' '}
-                          <Link href="/daily-booking-terms" target="_blank" className="underline text-navy font-semibold">
-                            Daily Booking Terms &amp; Cancellation Policy
-                          </Link>
-                          <span className="text-navy/60 block mt-1 text-[11px] leading-tight">
-                            (Rescheduling is 100% free with 24h notice. Cancellations require at least 2 days notice for 90% refund; 10% fee applies. Unutilized bookings are non-refundable).
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          I agree to the{' '}
-                          <Link href="/terms-of-service" target="_blank" className="underline text-navy font-semibold">
-                            Terms of Service
-                          </Link>{' '}
-                          and{' '}
-                          <Link href="/refund-policy" target="_blank" className="underline text-navy font-semibold">
-                            Refund Policy
-                          </Link>
-                          .
-                        </>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
+                        {config.slug === 'hot-desk' ? 'Email (For Pass & Wi-Fi) *' : 'Official Contact Email *'}
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
+                        }}
+                        placeholder={config.slug === 'hot-desk' ? 'e.g. alvine@gmail.com' : 'e.g. alvine@company.africa'}
+                        className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.email ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
+                          }`}
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
+                          <AlertCircle size={12} /> {errors.email}
+                        </p>
                       )}
-                    </span>
-                  </label>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
+                        M-Pesa Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => {
+                          setPhone(e.target.value)
+                          if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }))
+                        }}
+                        placeholder="e.g. 0712 345 678"
+                        className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.phone ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
+                          }`}
+                      />
+                      {errors.phone && (
+                        <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
+                          <AlertCircle size={12} /> {errors.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-navy mb-1.5">
+                      {config.slug === 'hot-desk'
+                        ? 'Special Preferences (Optional)'
+                        : config.slug === 'meeting-rooms'
+                          ? 'Room Setup / AV Requirements (Optional)'
+                          : config.slug === 'virtual-office'
+                            ? 'Mail Handling & Compliance Notes (Optional)'
+                            : 'Special Instructions / Requirements (Optional)'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      maxLength={350}
+                      value={notes}
+                      onChange={(e) => {
+                        setNotes(e.target.value)
+                        if (errors.notes) setErrors((prev) => ({ ...prev, notes: undefined }))
+                      }}
+                      placeholder={
+                        config.slug === 'hot-desk'
+                          ? 'e.g. Quiet booth preference, dual monitor power outlet...'
+                          : config.slug === 'meeting-rooms'
+                            ? 'e.g. 4K screen presentation casting, whiteboard, tea/coffee service...'
+                            : config.slug === 'virtual-office'
+                              ? 'e.g. eCitizen BRS company registration, KRA PIN compliance, mail scanning preferences...'
+                              : 'e.g. Specific start date, proof of address certificate requirements...'
+                      }
+                      className={`w-full bg-navy/[0.03] border p-2.5 text-xs text-navy outline-none transition-colors ${errors.notes ? 'border-red-600 bg-red-50/20' : 'border-navy/20 focus:border-navy focus:bg-white'
+                        }`}
+                    />
+                    {errors.notes && (
+                      <p className="mt-1 text-[11px] text-red-600 flex items-center gap-1 font-medium">
+                        <AlertCircle size={12} /> {errors.notes}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Error Banner */}
-                {submitError && (
-                  <div className="p-3.5 bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
-                    <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                    <span>{submitError}</span>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={submitting || (isPhysical && !calculation.engineResult.isValid)}
-                  className="w-full bg-navy text-white py-4 text-xs uppercase tracking-[0.16em] font-semibold hover:bg-navy-600 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? (
-                    'Securing checkout...'
-                  ) : (
-                    <>
-                      Proceed to Payment (KES {calculation.initialTotal.toLocaleString()}) <ArrowRight size={14} />
-                    </>
-                  )}
-                </button>
               </div>
 
-              {/* Inclusions List Directly in Ledger */}
-              <div className="pt-6 border-t border-navy/15 space-y-3">
-                <div className="text-navy font-semibold text-xs uppercase tracking-wider font-heading flex items-center gap-2">
-                  <Check size={14} className="text-navy" />
-                  <span>Everything Included</span>
+              {/* Right Column: Editorial Ledger Breakdown */}
+              <div className="lg:col-span-5 sticky top-28 space-y-8 border-l border-navy/15 lg:pl-10">
+                <div className="space-y-6">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold block mb-1">
+                      Reservation Ledger
+                    </span>
+                    <h3 className="font-heading text-2xl md:text-3xl text-navy">{config.title}</h3>
+                    <p className="text-xs font-semibold text-navy/80 mt-1">{selectedTier.name}</p>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-navy/15 text-xs text-navy/80">
+                    <div className="flex justify-between py-1 border-b border-navy/10">
+                      <span className="text-navy/60">Plan Rate:</span>
+                      <span className="font-mono font-semibold">{selectedTier.rateDisplay}</span>
+                    </div>
+
+                    {calculation.activeMultiplier > 1 && (
+                      <div className="flex justify-between py-1 border-b border-navy/10">
+                        <span className="text-navy/60">Duration Multiplier:</span>
+                        <span className="font-mono font-semibold">{calculation.activeMultiplier}x</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between py-1 border-b border-navy/10">
+                      <span className="text-navy/60">Base Package Price:</span>
+                      <span className="font-mono font-semibold">KES {calculation.rentBase.toLocaleString()}</span>
+                    </div>
+
+                    {/* Overtime Fee item if applicable */}
+                    {calculation.engineResult.isOvertime && (
+                      <div className="flex justify-between py-2 border-b border-navy/10 bg-amber-50 px-2.5 text-amber-900">
+                        <div>
+                          <span className="font-semibold block">Extended-Hours Fee ({calculation.engineResult.chargeableOvertimeHours} hr{calculation.engineResult.chargeableOvertimeHours > 1 ? 's' : ''}):</span>
+                          <span className="text-[10px] text-amber-700 block">KES 200/hr past {calculation.engineResult.normalClosingTime}</span>
+                        </div>
+                        <span className="font-mono font-bold">+ KES {calculation.engineResult.overtimeFeeKES.toLocaleString()}</span>
+                      </div>
+                    )}
+
+                    {calculation.depositAmount > 0 ? (
+                      <div className="flex justify-between py-2 border-b border-navy/10 bg-navy/[0.03] px-2">
+                        <span className="text-navy font-semibold">Refundable Security Deposit ({calculation.depositMonths} mo):</span>
+                        <span className="font-mono font-bold text-navy">+ KES {calculation.depositAmount.toLocaleString()}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between py-1 border-b border-navy/10 text-emerald-800">
+                        <span>Security Deposit:</span>
+                        <span className="font-semibold">Zero Deposit on Day Passes</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between py-1 text-emerald-800">
+                      <span className="text-navy/60">Generator Backup &amp; Fibre:</span>
+                      <span className="font-semibold">Included</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t-2 border-navy">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-navy">Total Amount Payable</span>
+                      <span className="font-heading text-3xl font-bold text-navy font-mono">
+                        KES {calculation.initialTotal.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-navy/50 font-mono mt-1">
+                      {calculation.engineResult.isOvertime
+                        ? `(Base: KES ${calculation.rentBase.toLocaleString()} + Overtime: KES ${calculation.engineResult.overtimeFeeKES.toLocaleString()})`
+                        : calculation.depositAmount > 0
+                          ? `(Rent: KES ${calculation.rentBase.toLocaleString()} + Deposit: KES ${calculation.depositAmount.toLocaleString()})`
+                          : `(${selectedTier.billingPeriod})`}
+                    </p>
+                  </div>
+
+                  {/* Terms checkbox */}
+                  <div className="pt-4 border-t border-navy/10">
+                    <label className="flex items-start gap-2.5 text-xs text-navy/75 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        required
+                        checked={agreedTerms}
+                        onChange={(e) => setAgreedTerms(e.target.checked)}
+                        className="mt-0.5 rounded-none accent-navy"
+                      />
+                      <span>
+                        {isPhysical || slug === 'hot-desk' || slug === 'meeting-rooms' ? (
+                          <>
+                            I agree to the{' '}
+                            <Link href="/daily-booking-terms" target="_blank" className="underline text-navy font-semibold">
+                              Daily Booking Terms &amp; Cancellation Policy
+                            </Link>
+                            <span className="text-navy/60 block mt-1 text-[11px] leading-tight">
+                              (Rescheduling is 100% free with 24h notice. Cancellations require at least 2 days notice for 90% refund; 10% fee applies. Unutilized bookings are non-refundable).
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            I agree to the{' '}
+                            <Link href="/terms-of-service" target="_blank" className="underline text-navy font-semibold">
+                              Terms of Service
+                            </Link>{' '}
+                            and{' '}
+                            <Link href="/refund-policy" target="_blank" className="underline text-navy font-semibold">
+                              Refund Policy
+                            </Link>
+                            .
+                          </>
+                        )}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Error Banner */}
+                  {submitError && (
+                    <div className="p-3.5 bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={submitting || (isPhysical && !calculation.engineResult.isValid)}
+                    className="w-full bg-navy text-white py-4 text-xs uppercase tracking-[0.16em] font-semibold hover:bg-navy-600 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? (
+                      'Securing checkout...'
+                    ) : (
+                      <>
+                        Proceed to Payment (KES {calculation.initialTotal.toLocaleString()}) <ArrowRight size={14} />
+                      </>
+                    )}
+                  </button>
                 </div>
-                <ul className="space-y-2 text-xs text-navy/70">
-                  {config.inclusions.map((inc, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check size={12} className="text-navy shrink-0 mt-0.5" />
-                      <span>{inc}</span>
-                    </li>
-                  ))}
-                </ul>
+
+                {/* Inclusions List Directly in Ledger */}
+                <div className="pt-6 border-t border-navy/15 space-y-3">
+                  <div className="text-navy font-semibold text-xs uppercase tracking-wider font-heading flex items-center gap-2">
+                    <Check size={14} className="text-navy" />
+                    <span>Everything Included</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-navy/70">
+                    {config.inclusions.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check size={12} className="text-navy shrink-0 mt-0.5" />
+                        <span>{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
         )}
 
         {/* Extended-Hours Calculation Breakdown Modal Popup */}
         {showOvertimeModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-xs animate-in fade-in duration-200">
             <div className="bg-white border border-navy/20 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-6 text-navy">
-              
+
               {/* Modal Header */}
               <div className="flex items-start justify-between border-b border-navy/15 pb-4">
                 <div>

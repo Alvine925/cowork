@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Dedicated telephone answering in your company name, live call forwarding, and front desk visitor greeting in Nairobi.',
   keywords: ['reception services Kenya', 'virtual receptionist Nairobi', 'phone answering Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/reception-services',
+    canonical: 'https://paperstreet.co.ke/services/reception-services',
   },
 };
 

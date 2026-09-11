@@ -9,7 +9,7 @@ export default function MeetingRoomsPage() {
         eyebrow: 'On-Demand Workspace',
         title: 'Meeting Room.',
         subtitle: 'An acoustically isolated meeting room equipped with 4K presentation display and video conferencing in Kisumu.',
-        image: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?w=1600&auto=format&q=80',
+        image: '/meeting-room.webp',
         imageAlt: 'Professional meeting room with 4K display and conference table',
         description:
           'From client presentations and team catch-ups to interviews and project reviews, the Paper Street meeting room gives you a quiet, professional environment equipped with presentation technology bookable by the hour.',

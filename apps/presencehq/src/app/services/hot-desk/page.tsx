@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Flexible hot desking in prime Kenyan locations with high-speed internet, power backup, specialty coffee, and collaborative amenities.',
   keywords: ['hot desk Kenya', 'flexible desk Nairobi', 'coworking day pass Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/hot-desk',
+    canonical: 'https://paperstreet.co.ke/services/hot-desk',
   },
 };
 

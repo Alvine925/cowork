@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     'meeting rooms Westlands',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/',
+    canonical: 'https://paperstreet.co.ke/',
   },
 };
 

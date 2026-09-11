@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'How Much Does It Cost to Hire a Meeting Room in Kisumu?',
     description: 'Exact hourly and daily rates for private meeting rooms and boardrooms in Kisumu CBD.',
-    url: 'https://paperstreet.africa/meeting-room-cost-kisumu',
+    url: 'https://paperstreet.co.ke/meeting-room-cost-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/meeting-room-cost-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/meeting-room-cost-kisumu' },
 }
 
 export default function MeetingRoomCostKisumuPage() {

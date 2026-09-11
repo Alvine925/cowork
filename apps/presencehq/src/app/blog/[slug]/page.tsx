@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ],
     },
     alternates: {
-      canonical: `https://paperstreet.africa/blog/${slug}`,
+      canonical: `https://paperstreet.co.ke/blog/${slug}`,
     },
   };
 }

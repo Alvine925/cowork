@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Coworking Space in Kisumu CBD | Paper Street',
     description: 'Professional coworking in Kisumu CBD — enterprise internet, generator backup, commercial address. From KES 1,000/day.',
-    url: 'https://paperstreet.africa/coworking-space-kisumu-cbd',
+    url: 'https://paperstreet.co.ke/coworking-space-kisumu-cbd',
   },
-  alternates: { canonical: 'https://paperstreet.africa/coworking-space-kisumu-cbd' },
+  alternates: { canonical: 'https://paperstreet.co.ke/coworking-space-kisumu-cbd' },
 }
 
 export default function CoworkingSpaceKisumuCBDPage() {

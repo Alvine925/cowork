@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSystemConfig } from '@/lib/config-service'
+import { dispatchBookingEmails, BookingEmailData } from '@/lib/brevo-service'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -44,6 +45,36 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
       const existingPass = existing.client_passes?.[0] || {}
 
       if (existing.payment_status === 'paid') {
+        // Dispatch emails if not yet sent — use real DB data (never the generic fallback)
+        if (!existing.email_sent) {
+          try {
+            const emailData: BookingEmailData = {
+              clientName: existing.client_name || 'Client',
+              clientEmail: existing.client_email,
+              clientPhone: existing.client_phone || '—',
+              companyName: existing.company_name || '',
+              serviceTitle: existing.service_title || 'Workspace Reservation',
+              tierName: '',
+              location: existing.location || 'Kisumu CBD (CBD Commercial Center)',
+              bookingDate: existing.booking_date || '',
+              startTime: existing.start_time || '08:00 AM',
+              endTime: existing.end_time || '06:00 PM',
+              durationHours: existing.duration_hours || 10,
+              rentAmountKES: existing.rent_amount_kes || existing.total_amount_kes || 0,
+              depositAmountKES: existing.deposit_amount_kes || 0,
+              overtimeHours: existing.overtime_hours || 0,
+              overtimeFeeKES: existing.overtime_fee_kes || 0,
+              totalAmountKES: existing.total_amount_kes || 0,
+              paystackReference: existing.paystack_reference || reference,
+              passCode: existingPass.pass_code || existing.qr_code_token || `PS-${reference}`,
+              specialRequests: existing.special_requests || '',
+            }
+            await dispatchBookingEmails(emailData)
+          } catch (emailErr) {
+            console.error('[AlreadyProcessed Email Dispatch Error]', emailErr)
+          }
+        }
+
         return NextResponse.json({
           success: true,
           alreadyProcessed: true,
@@ -102,6 +133,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
 
       const tx = verifyData.data
       paidAmountKES = tx.amount ? tx.amount / 100 : 0
+      // Paystack customer email (real mode)
       customerEmail = tx.customer?.email || ''
       paymentChannel = tx.channel || 'Paystack'
       paymentDate = tx.paid_at || new Date().toISOString()
@@ -109,9 +141,15 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
     } else {
       // Test / Simulated mode fallback
       paidAmountKES = bookingMeta.totalAmountKES || 1500
-      customerEmail = bookingMeta.clientEmail || 'client@paperstreet.africa'
+      customerEmail = bookingMeta.clientEmail || ''
       paymentChannel = 'Simulated Paystack'
     }
+
+    // Always prefer the email from the pre-saved DB record — it's captured
+    // directly from the booking form and is always accurate. Paystack metadata
+    // can be missing/wrong especially in test mode.
+    const dbClientEmail = existingBookings?.[0]?.client_email || ''
+    if (dbClientEmail) customerEmail = dbClientEmail
 
     // Extract custom_fields
     const customFields: Record<string, string> = {}
@@ -131,7 +169,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
       customerEmail.split('@')[0] ||
       'Client'
 
-    const clientEmail = customerEmail || bookingMeta.clientEmail || bookingMeta.client_email || 'client@paperstreet.africa'
+    const clientEmail = customerEmail || bookingMeta.clientEmail || bookingMeta.client_email || 'client@paperstreet.co.ke'
     const clientPhone = bookingMeta.clientPhone || bookingMeta.client_phone || customFields.phone || '—'
     const companyName = bookingMeta.companyName || bookingMeta.company_name || ''
     const serviceTitle = bookingMeta.serviceTitle || bookingMeta.service_title || customFields.service_title || 'Hot Desk & Day Passes'
@@ -139,18 +177,26 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
     const serviceSlug = bookingMeta.serviceSlug || bookingMeta.service_slug || 'hot-desk'
     const location = bookingMeta.location || 'Kisumu CBD (CBD Commercial Center)'
 
-    let bookingDate = ''
+    let selectedDatesList: string[] = []
     if (Array.isArray(bookingMeta.selectedDates) && bookingMeta.selectedDates.length > 0) {
-      bookingDate = bookingMeta.selectedDates.join(', ')
+      selectedDatesList = bookingMeta.selectedDates
     } else if (Array.isArray(bookingMeta.selected_dates) && bookingMeta.selected_dates.length > 0) {
-      bookingDate = bookingMeta.selected_dates.join(', ')
+      selectedDatesList = bookingMeta.selected_dates
     } else if (bookingMeta.bookingDate || bookingMeta.booking_date) {
-      bookingDate = bookingMeta.bookingDate || bookingMeta.booking_date
+      const rawDate = String(bookingMeta.bookingDate || bookingMeta.booking_date)
+      selectedDatesList = rawDate.includes(',')
+        ? rawDate.split(',').map((s) => s.trim()).filter(Boolean)
+        : [rawDate.trim()]
     } else if (customFields.schedule) {
-      bookingDate = customFields.schedule
+      selectedDatesList = customFields.schedule.includes(',')
+        ? customFields.schedule.split(',').map((s) => s.trim()).filter(Boolean)
+        : [customFields.schedule.trim()]
     } else {
-      bookingDate = new Date().toISOString().split('T')[0]
+      selectedDatesList = [new Date().toISOString().split('T')[0]]
     }
+
+    const primaryDate = selectedDatesList[0] || new Date().toISOString().split('T')[0]
+    const bookingDateDisplay = selectedDatesList.join(', ')
 
     const startTime = bookingMeta.startTime || bookingMeta.start_time || '08:00 AM'
     const endTime = bookingMeta.endTime || bookingMeta.end_time || bookingMeta.calculatedEndTime || '06:00 PM'
@@ -160,7 +206,20 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
     const overtimeHours = bookingMeta.overtimeHours || bookingMeta.overtime_hours || 0
     const overtimeFeeKES = bookingMeta.overtimeFeeKES || bookingMeta.overtime_fee_kes || 0
     const totalAmountKES = paidAmountKES || bookingMeta.totalAmountKES || (rentAmountKES + depositAmountKES + overtimeFeeKES)
-    const specialRequests = bookingMeta.specialRequests || bookingMeta.special_requests || ''
+
+    const scheduleMetadata = selectedDatesList.length > 1 ? {
+      isMultiDay: true,
+      totalDays: selectedDatesList.length,
+      dates: selectedDatesList,
+    } : null
+
+    const formattedSpecialRequests = [
+      bookingMeta.specialRequests || bookingMeta.special_requests || '',
+      companyName ? `Company: ${companyName}` : null,
+      selectedDatesList.length > 1 ? `Schedule: ${bookingDateDisplay}` : null,
+      scheduleMetadata ? `[SCHEDULE_DATA]:${JSON.stringify(scheduleMetadata)}` : null,
+    ].filter(Boolean).join(' | ')
+
     const qrCodeToken = bookingMeta.qrToken || `QR-${reference}`
 
     const passSuffix = serviceSlug.substring(0, 3).toUpperCase()
@@ -184,7 +243,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
             client_phone: clientPhone,
             company_name: companyName || null,
             service_title: `${serviceTitle} (${tierName})`,
-            booking_date: bookingDate,
+            booking_date: primaryDate,
             start_time: startTime,
             end_time: endTime,
             calculated_end_time: endTime,
@@ -194,6 +253,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
             overtime_hours: overtimeHours,
             overtime_fee_kes: overtimeFeeKES,
             total_amount_kes: totalAmountKES,
+            special_requests: formattedSpecialRequests,
           })
           .eq('id', savedBookingId)
 
@@ -213,7 +273,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
               company_name: companyName || null,
               service_title: `${serviceTitle} (${tierName})`,
               location: location,
-              booking_date: bookingDate,
+              booking_date: primaryDate,
               start_time: startTime,
               end_time: endTime,
               calculated_end_time: endTime,
@@ -234,7 +294,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
               utm_medium: bookingMeta.utm_medium || null,
               utm_campaign: bookingMeta.utm_campaign || null,
               utm_referrer: bookingMeta.utm_referrer || null,
-              special_requests: specialRequests || (companyName ? `Company: ${companyName}` : null),
+              special_requests: formattedSpecialRequests,
             }
           ])
           .select()
@@ -242,32 +302,75 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
 
         if (!bookingErr && bookingData?.id) {
           savedBookingId = bookingData.id
+        }
 
-          // 5. Insert into Supabase `client_passes` table
-          const firstDate = bookingDate.split(',')[0].trim()
-          await supabase.from('client_passes').insert([
-            {
-              user_id: userId,
-              booking_id: bookingData.id,
-              pass_code: passCode,
-              service_title: `${serviceTitle} (${tierName})`,
-              location: location,
-              valid_date: firstDate,
-              qr_data: JSON.stringify({ passCode, paystackReference: reference, email: clientEmail, date: bookingDate }),
-              status: 'active',
-              wifi_network: 'PaperStreet-CBD-5G',
-              wifi_pass: 'PaperStreet2026!',
-            }
-          ])
+        // 5.b Reward referral if referee completed this booking
+        try {
+          const { data: refPending } = await supabase
+            .from('client_referrals')
+            .select('*')
+            .eq('referred_email', clientEmail.toLowerCase().trim())
+            .eq('status', 'pending')
+            .maybeSingle()
+
+          if (refPending) {
+            await supabase
+              .from('client_referrals')
+              .update({ status: 'rewarded', rewarded_at: new Date().toISOString() })
+              .eq('id', refPending.id)
+
+            const { data: refProfile } = await supabase
+              .from('client_profiles')
+              .select('discount_balance_kes')
+              .eq('email', refPending.referrer_email)
+              .maybeSingle()
+
+            const newBalance = (Number(refProfile?.discount_balance_kes) || 0) + (Number(refPending.reward_kes) || 500)
+            await supabase
+              .from('client_profiles')
+              .update({ discount_balance_kes: newBalance, updated_at: new Date().toISOString() })
+              .eq('email', refPending.referrer_email)
+          }
+        } catch (refErr) {
+          console.warn('[Referral Reward Notice]', refErr)
         }
       }
     } catch (dbErr) {
       console.error('[Database Insertion Warning]', dbErr)
     }
 
-    // 6. Return complete confirmed reservation details
-    // NOTE: Email dispatch is handled exclusively by the Paystack webhook (api/webhooks/paystack)
-    // to prevent duplicate sends. Do not dispatch emails here.
+    // 6. Dispatch customer confirmation email (with clean PDF receipt) and admin notification email
+    try {
+      const emailData: BookingEmailData = {
+        clientName,
+        clientEmail,
+        clientPhone,
+        companyName,
+        serviceTitle,
+        tierName,
+        location,
+        bookingDate: bookingDateDisplay,
+        startTime,
+        endTime,
+        durationHours,
+        rentAmountKES,
+        depositAmountKES,
+        overtimeHours,
+        overtimeFeeKES,
+        totalAmountKES,
+        paystackReference: reference,
+        paymentDate,
+        passCode,
+        specialRequests: formattedSpecialRequests,
+        wifiNetwork: 'PaperStreet-CBD-5G',
+        wifiPass: 'PaperStreet2026!',
+      }
+      await dispatchBookingEmails(emailData)
+    } catch (emailErr) {
+      console.error('[Paystack Verify Email Dispatch Exception]', emailErr)
+    }
+
+    // 7. Return complete confirmed reservation details
     return NextResponse.json({
       success: true,
       booking: {
@@ -279,7 +382,7 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
         serviceTitle,
         tierName,
         location,
-        bookingDate,
+        bookingDate: bookingDateDisplay,
         startTime,
         endTime,
         durationHours,
@@ -303,3 +406,4 @@ async function verifyAndProcessBooking(reference: string, fallbackMetadata?: any
     )
   }
 }
+

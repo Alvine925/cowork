@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Coworking Spaces for NGOs in Kisumu',
     description: 'Flexible workspace and office solutions for NGOs, development agencies, and humanitarian organisations operating in Kisumu and Western Kenya.',
-    url: 'https://paperstreet.africa/coworking-ngo-kisumu',
+    url: 'https://paperstreet.co.ke/coworking-ngo-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/coworking-ngo-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/coworking-ngo-kisumu' },
 }
 
 export default function CoworkingNGOKisumuPage() {

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Lakeside corporate presence at Kisumu CBD Commercial Center. Western Kenya business address, regional mail handling, meeting room, and flexible desks.',
   keywords: ['Kisumu virtual office', 'coworking Kisumu CBD', 'business address Kisumu'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations/kisumu',
+    canonical: 'https://paperstreet.co.ke/locations/kisumu',
   },
 };
 

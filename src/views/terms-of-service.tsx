@@ -263,8 +263,8 @@ export default function TermsOfServicePage() {
             For formal legal inquiries, contract notifications, or compliance submissions, contact:
           </p>
           <ul className="list-none pl-0 space-y-2 text-[#2b4c3b]/80 font-mono text-sm">
-            <li><strong>Legal Desk:</strong> legal@paperstreet.africa</li>
-            <li><strong>Client Support:</strong> hello@paperstreet.africa</li>
+            <li><strong>Legal Desk:</strong> legal@paperstreet.co.ke</li>
+            <li><strong>Client Support:</strong> hello@paperstreet.co.ke</li>
             <li><strong>Kisumu Commercial Center:</strong> Oginga Odinga Street, Kisumu CBD, Kenya</li>
             <li><strong>Nairobi Commercial Center:</strong> Westlands Business Park, Waiyaki Way, Nairobi, Kenya</li>
           </ul>

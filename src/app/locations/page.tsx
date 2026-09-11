@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Prime flexible workspace and business address locations across Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret.',
   keywords: ['coworking locations Kenya', 'virtual office Nairobi', 'workspace Mombasa', 'office Kisumu'],
   alternates: {
-    canonical: 'https://paperstreet.africa/locations',
+    canonical: 'https://paperstreet.co.ke/locations',
   },
 };
 

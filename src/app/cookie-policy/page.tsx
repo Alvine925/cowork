@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Learn how Paper Street uses necessary and analytical cookies to improve your workspace experience.',
   keywords: ['Paper Street cookie policy'],
   alternates: {
-    canonical: 'https://paperstreet.africa/cookie-policy',
+    canonical: 'https://paperstreet.co.ke/cookie-policy',
   },
 };
 

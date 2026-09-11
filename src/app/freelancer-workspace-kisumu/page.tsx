@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Best Workspace Options for Freelancers in Kisumu',
     description: 'Every workspace option available for freelancers and independent professionals in Kisumu — from day passes to dedicated desks and virtual offices.',
-    url: 'https://paperstreet.africa/freelancer-workspace-kisumu',
+    url: 'https://paperstreet.co.ke/freelancer-workspace-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/freelancer-workspace-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/freelancer-workspace-kisumu' },
 }
 
 export default function FreelancerWorkspaceKisumuPage() {

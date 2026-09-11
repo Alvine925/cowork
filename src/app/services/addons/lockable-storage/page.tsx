@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     'overnight equipment security',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/addons/lockable-storage',
+    canonical: 'https://paperstreet.co.ke/services/addons/lockable-storage',
   },
   openGraph: {
     title: 'Lockable Storage Pedestal & Security | Paper Street Kisumu',
     description:
       'Secure under-desk steel mobile pedestal with personal keys and 24/7 CCTV surveillance to safely store laptops, monitors, and sensitive documents overnight in Kisumu.',
-    url: 'https://paperstreet.africa/services/addons/lockable-storage',
+    url: 'https://paperstreet.co.ke/services/addons/lockable-storage',
     siteName: 'Paper Street',
     locale: 'en_KE',
     type: 'website',

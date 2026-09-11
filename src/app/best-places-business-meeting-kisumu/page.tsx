@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Best Places to Hold a Business Meeting in Kisumu',
     description: 'An honest comparison of business meeting venues in Kisumu — dedicated meeting rooms, hotels, and public spaces. What each option provides.',
-    url: 'https://paperstreet.africa/best-places-business-meeting-kisumu',
+    url: 'https://paperstreet.co.ke/best-places-business-meeting-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/best-places-business-meeting-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/best-places-business-meeting-kisumu' },
 }
 
 export default function BestPlacesBusinessMeetingKisumuPage() {

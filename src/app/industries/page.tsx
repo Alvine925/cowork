@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'consultant business address Nairobi',
   ],
   alternates: {
-    canonical: 'https://paperstreet.africa/industries',
+    canonical: 'https://paperstreet.co.ke/industries',
   },
 };
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Never miss important business correspondence. Paper Street receives, logs, stores, scans, and forwards your business mail securely in Kenya.',
   keywords: ['mail handling Kenya', 'business mail service Kenya', 'mail receipt Nairobi'],
   alternates: {
-    canonical: 'https://paperstreet.africa/services/mail-handling',
+    canonical: 'https://paperstreet.co.ke/services/mail-handling',
   },
 };
 

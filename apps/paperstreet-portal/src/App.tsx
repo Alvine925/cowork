@@ -61,9 +61,9 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   role: 'member',
-  setRole: () => {},
-  signOut: async () => {},
-  signInWithDemo: () => {},
+  setRole: () => { },
+  signOut: async () => { },
+  signInWithDemo: () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -147,10 +147,10 @@ function formatDate(value?: string | null) {
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('en-KE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(date);
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
 }
 
 function formatMoney(value?: number | null) {
@@ -177,13 +177,12 @@ function StatusPill({ status }: { status: string }) {
   const isPending = status === 'pending' || status === 'pending_payment';
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono-app text-[10px] font-bold uppercase tracking-[0.14em] ${
-        isGood
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono-app text-[10px] font-bold uppercase tracking-[0.14em] ${isGood
           ? 'bg-[#DCEBE0] text-[#35624C]'
           : isPending
             ? 'bg-[#F2E7C8] text-[#80652D]'
             : 'bg-[#F4E1DD] text-[#8D352E]'
-      }`}
+        }`}
     >
       {isGood ? <CircleCheck size={12} /> : <Clock3 size={12} />}
       {status.replaceAll('_', ' ')}
@@ -198,18 +197,16 @@ function LogoLockup({ light = false }: { light?: boolean }) {
       className={`focus-ring inline-flex items-center gap-3 ${light ? 'text-[#F3EDDF]' : 'text-foreground'}`}
     >
       <span
-        className={`flex h-9 w-9 items-center justify-center rounded-xl font-serif-app text-lg font-bold ${
-          light ? 'bg-accent text-primary' : 'bg-primary text-accent'
-        }`}
+        className={`flex h-9 w-9 items-center justify-center rounded-xl font-serif-app text-lg font-bold ${light ? 'bg-accent text-primary' : 'bg-primary text-accent'
+          }`}
       >
         P
       </span>
       <span>
         <span className="block font-serif-app text-[15px] leading-none tracking-[-0.03em]">Paper Street</span>
         <span
-          className={`mt-1 block font-mono-app text-[8px] uppercase tracking-[0.22em] ${
-            light ? 'text-[#BFC9D2]' : 'text-muted-foreground'
-          }`}
+          className={`mt-1 block font-mono-app text-[8px] uppercase tracking-[0.22em] ${light ? 'text-[#BFC9D2]' : 'text-muted-foreground'
+            }`}
         >
           Nairobi · Workspace
         </span>
@@ -274,11 +271,10 @@ function ButtonLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`focus-ring inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${
-        variant === 'primary'
+      className={`focus-ring inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5 ${variant === 'primary'
           ? 'bg-primary text-primary-foreground shadow-sm hover:bg-[#1B3658]'
           : 'border border-border bg-card/70 text-foreground hover:bg-secondary'
-      } ${className}`}
+        } ${className}`}
     >
       {children}
     </Link>
@@ -346,18 +342,16 @@ function SignInPage() {
           <button
             type="button"
             onClick={() => setRole('member')}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${
-              role === 'member' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${role === 'member' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <UserCheck size={14} /> Member Account
           </button>
           <button
             type="button"
             onClick={() => setRole('client')}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${
-              role === 'client' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${role === 'client' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <Building2 size={14} /> Client Account
           </button>
@@ -488,18 +482,16 @@ function SignUpPage() {
           <button
             type="button"
             onClick={() => setRole('member')}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${
-              role === 'member' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${role === 'member' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <UserCheck size={14} /> Member (Virtual/Cowork)
           </button>
           <button
             type="button"
             onClick={() => setRole('client')}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${
-              role === 'client' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition-all ${role === 'client' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <Building2 size={14} /> Client (Day Passes/Rooms)
           </button>
@@ -647,9 +639,8 @@ function PortalShell({ children }: { children: ReactNode }) {
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col bg-sidebar px-5 py-6 text-sidebar-foreground transition-transform duration-300 lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col bg-sidebar px-5 py-6 text-sidebar-foreground transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex items-center justify-between">
           <LogoLockup light />
@@ -667,18 +658,16 @@ function PortalShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => switchRole('member')}
-            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-              role === 'member' ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-[#91A0AF] hover:text-white'
-            }`}
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${role === 'member' ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-[#91A0AF] hover:text-white'
+              }`}
           >
             Member
           </button>
           <button
             type="button"
             onClick={() => switchRole('client')}
-            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-              role === 'client' ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-[#91A0AF] hover:text-white'
-            }`}
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${role === 'client' ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-[#91A0AF] hover:text-white'
+              }`}
           >
             Client
           </button>
@@ -696,11 +685,10 @@ function PortalShell({ children }: { children: ReactNode }) {
                   key={href}
                   href={href}
                   onClick={closeAndNavigate}
-                  className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition-colors ${
-                    active
+                  className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition-colors ${active
                       ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground'
                       : 'text-[#BFC9D2] hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'
-                  }`}
+                    }`}
                 >
                   <Icon size={17} strokeWidth={active ? 2 : 1.6} />
                   {label}
@@ -888,9 +876,8 @@ function MetricCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-5 shadow-sm ${
-        tone === 'navy' ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border bg-card'
-      }`}
+      className={`rounded-2xl border p-5 shadow-sm ${tone === 'navy' ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border bg-card'
+        }`}
     >
       <div className="flex items-start justify-between gap-3">
         <p className={`font-mono-app text-[9px] uppercase tracking-[0.17em] ${tone === 'navy' ? 'text-[#C2CCD5]' : 'text-muted-foreground'}`}>
@@ -1102,11 +1089,10 @@ function ClientBookingsPage() {
               <div
                 key={space.title}
                 onClick={() => { setSelectedService(space.title); setBooked(false); }}
-                className={`cursor-pointer rounded-2xl border p-5 transition-all ${
-                  selectedService === space.title
+                className={`cursor-pointer rounded-2xl border p-5 transition-all ${selectedService === space.title
                     ? 'border-primary bg-[#FBF8F0] shadow-md ring-1 ring-primary'
                     : 'border-card-border bg-card hover:bg-[#FAF7F2]'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold text-foreground text-base">{space.title}</h3>
@@ -1483,7 +1469,7 @@ function Support() {
         {requests.map(({ icon: Icon, title, detail, subject }) => (
           <a
             key={title}
-            href={`mailto:hello@paperstreet.africa?subject=${encodeURIComponent(subject)}`}
+            href={`mailto:hello@paperstreet.co.ke?subject=${encodeURIComponent(subject)}`}
             className="group rounded-2xl border border-card-border bg-card p-6 shadow-sm transition-transform hover:-translate-y-1"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E8D7AC] text-primary">
@@ -1505,10 +1491,10 @@ function Support() {
         </div>
         <div className="flex flex-col items-start gap-3 lg:items-end">
           <a
-            href="tel:+254709123456"
+            href="tel:0110486677"
             className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-primary hover:bg-[#E2C889]"
           >
-            <Headphones size={16} /> +254 709 123 456
+            <Headphones size={16} /> 0110486677
           </a>
         </div>
       </section>
@@ -1519,7 +1505,7 @@ function Support() {
 function Profile() {
   const { user, signOut, role } = useAuth();
   const name = user?.user_metadata?.full_name || 'Paper Street Member';
-  const email = user?.email || 'member@paperstreet.africa';
+  const email = user?.email || 'member@paperstreet.co.ke';
 
   return (
     <div className="animate-paper-rise space-y-8">

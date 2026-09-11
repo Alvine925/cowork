@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/data/blog-posts';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://paperstreet.africa';
+  const baseUrl = 'https://paperstreet.co.ke';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {

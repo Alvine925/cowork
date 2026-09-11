@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://paperstreet.africa/sitemap.xml
+Sitemap: https://paperstreet.co.ke/sitemap.xml

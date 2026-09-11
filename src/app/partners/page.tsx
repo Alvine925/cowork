@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Partner with Paper Street to help businesses access trusted virtual offices, coworking space, meeting rooms, and professional addresses across Kenya.',
   keywords: ['Paper Street partners', 'business partnerships Kenya', 'workspace partner Kenya'],
   alternates: {
-    canonical: 'https://paperstreet.africa/partners',
+    canonical: 'https://paperstreet.co.ke/partners',
   },
 };
 

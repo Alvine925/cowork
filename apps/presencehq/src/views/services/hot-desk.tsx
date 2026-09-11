@@ -9,7 +9,7 @@ export default function HotDeskPage() {
         eyebrow: 'Service',
         title: 'Hot Desk.',
         subtitle: 'Drop in and work from a professional environment whenever you need it.',
-        image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&q=80',
+        image: '/daypass.webp',
         description:
           'Our hot desk membership gives you access to a flexible, professional coworking environment. Perfect for entrepreneurs who need a change of scenery from home but don\'t require a permanent desk. Available during standard business hours.',
         features: [

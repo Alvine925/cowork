@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Virtual Office in Kisumu: Cost, Benefits and How It Works',
     description: 'A complete guide to virtual offices in Kisumu — cost, inclusions, BRS and KRA compliance, mail handling, and meeting room access.',
-    url: 'https://paperstreet.africa/virtual-office-kisumu-guide',
+    url: 'https://paperstreet.co.ke/virtual-office-kisumu-guide',
   },
-  alternates: { canonical: 'https://paperstreet.africa/virtual-office-kisumu-guide' },
+  alternates: { canonical: 'https://paperstreet.co.ke/virtual-office-kisumu-guide' },
 }
 
 export default function VirtualOfficeKisumuGuidePage() {

@@ -48,7 +48,7 @@ serve(async (req) => {
 
     let apiKey = Deno.env.get('BREVO_API_KEY') || Deno.env.get('SENDINBLUE_API_KEY') || ''
     let senderName = Deno.env.get('BREVO_SENDER_NAME') || 'Paper Street Support Desk'
-    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.africa'
+    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.co.ke'
     let adminEmail = Deno.env.get('ADMIN_EMAIL') || 'otienoalvine925@gmail.com'
 
     if (!apiKey || apiKey.includes('placeholder')) {

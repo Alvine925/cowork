@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'How Much Does Coworking Cost in Kisumu? 2025 Price Guide',
     description: 'Exact pricing for coworking in Kisumu: day passes, monthly hot desks, dedicated desks, private offices, and virtual office plans.',
-    url: 'https://paperstreet.africa/how-much-does-coworking-cost-in-kisumu',
+    url: 'https://paperstreet.co.ke/how-much-does-coworking-cost-in-kisumu',
   },
-  alternates: { canonical: 'https://paperstreet.africa/how-much-does-coworking-cost-in-kisumu' },
+  alternates: { canonical: 'https://paperstreet.co.ke/how-much-does-coworking-cost-in-kisumu' },
 }
 
 export default function CoworkingCostKisumuPage() {

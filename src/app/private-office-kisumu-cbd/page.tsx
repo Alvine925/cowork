@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Private Office in Kisumu CBD | Paper Street',
     description: 'Fully furnished, lockable private offices in Kisumu CBD. Enterprise internet, generator backup, commercial address. No deposit. From KES 28,000/month.',
-    url: 'https://paperstreet.africa/private-office-kisumu-cbd',
+    url: 'https://paperstreet.co.ke/private-office-kisumu-cbd',
   },
-  alternates: { canonical: 'https://paperstreet.africa/private-office-kisumu-cbd' },
+  alternates: { canonical: 'https://paperstreet.co.ke/private-office-kisumu-cbd' },
 }
 
 export default function PrivateOfficeKisumuCBDPage() {

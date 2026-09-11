@@ -9,8 +9,8 @@ export default function HotDeskPage() {
         eyebrow: 'Flexible Coworking',
         title: 'Hot Desk Day Passes.',
         subtitle: 'Drop in, plug in, and get into deep focus with dependable power backup and a quiet workspace in Kisumu.',
-        image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&q=80',
-        imageAlt: 'Bright, sunlit open-plan coworking space with ergonomic desks',
+        image: '/daypass.webp',
+        imageAlt: 'Paper Street coworking hot desk and day pass workspace in Kisumu',
         description:
           'A Paper Street Hot Desk gives you a quiet, productive workspace with complete daily flexibility. Drop into any available workstation in our open-plan space, connect to reliable internet, and work without long-term commitments.',
         audience: 'For independent creators, remote software engineers, visiting consultants, and hybrid professionals seeking a reliable workspace.',

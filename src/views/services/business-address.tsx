@@ -9,8 +9,8 @@ export default function BusinessAddressPage() {
         eyebrow: 'Regional Branch Presence',
         title: 'Business Address.',
         subtitle: 'Establish a local branch address and client contact point in Kisumu without the capital expense of a physical office.',
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&auto=format&q=80',
-        imageAlt: 'Prime commercial building in Kisumu commercial district',
+        image: '/business-address.webp',
+        imageAlt: 'Mega Plaza commercial building in Kisumu CBD commercial district',
         description:
           'For businesses, organizations, and consultants headquartered in other cities or abroad who want to expand their reach into Western Kenya. A Kisumu business address gives you an official local commercial address to receive client inquiries, tenders, and correspondence while building trust with local clients in the Lake Victoria economic basin.',
         audience: 'For established enterprises, national companies, NGOs, and consultants looking to create a regional branch presence and client contact point in Kisumu.',
