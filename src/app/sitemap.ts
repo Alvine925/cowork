@@ -2,141 +2,31 @@ import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/data/blog-posts';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://paperstreet.co.ke';
+  const baseUrl = 'https://www.paperstreet.co.ke';
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/locations`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/locations/kisumu`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/locations/nairobi`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/locations/mombasa`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/locations/nakuru`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/locations/eldoret`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/services/virtual-office`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/services/business-address`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/services/meeting-rooms`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/services/dedicated-desk`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/services/hot-desk`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/services/company-registration`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/services/mail-handling`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/services/mail-forwarding`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/services/business-expansion`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/faq`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
+    { url: `${baseUrl}`, lastModified: new Date() },
+    { url: `${baseUrl}/pricing`, lastModified: new Date() },
+    { url: `${baseUrl}/locations`, lastModified: new Date() },
+    { url: `${baseUrl}/locations/kisumu`, lastModified: new Date() },
+    { url: `${baseUrl}/locations/nairobi`, lastModified: new Date() },
+    { url: `${baseUrl}/locations/mombasa`, lastModified: new Date() },
+    { url: `${baseUrl}/locations/nakuru`, lastModified: new Date() },
+    { url: `${baseUrl}/locations/eldoret`, lastModified: new Date() },
+    { url: `${baseUrl}/services`, lastModified: new Date() },
+    { url: `${baseUrl}/services/virtual-office`, lastModified: new Date() },
+    { url: `${baseUrl}/services/business-address`, lastModified: new Date() },
+    { url: `${baseUrl}/services/meeting-rooms`, lastModified: new Date() },
+    { url: `${baseUrl}/services/dedicated-desk`, lastModified: new Date() },
+    { url: `${baseUrl}/services/hot-desk`, lastModified: new Date() },
+    { url: `${baseUrl}/services/company-registration`, lastModified: new Date() },
+    { url: `${baseUrl}/services/mail-handling`, lastModified: new Date() },
+    { url: `${baseUrl}/services/mail-forwarding`, lastModified: new Date() },
+    { url: `${baseUrl}/services/business-expansion`, lastModified: new Date() },
+    { url: `${baseUrl}/about`, lastModified: new Date() },
+    { url: `${baseUrl}/faq`, lastModified: new Date() },
+    { url: `${baseUrl}/contact`, lastModified: new Date() },
+    { url: `${baseUrl}/blog`, lastModified: new Date() },
   ];
 
   const kisumuLandingRoutes: MetadataRoute.Sitemap = [
@@ -421,15 +311,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ].map((slug) => ({
     url: `${baseUrl}/${slug}`,
     lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.98,
   }));
 
   const blogRoutes: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: post.slug.includes('kisumu') ? 0.95 : 0.8,
   }));
 
   return [...staticRoutes, ...kisumuLandingRoutes, ...blogRoutes];

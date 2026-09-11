@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 import { CookieBanner } from '@/components/layout/CookieBanner';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://paperstreet.co.ke'),
+  metadataBase: new URL('https://www.paperstreet.co.ke'),
   title: {
     default: 'Coworking Space & Virtual Office in Kenya | Paper Street',
     template: '%s | Paper Street',
