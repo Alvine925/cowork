@@ -7,15 +7,14 @@ import { supabase } from '@/lib/supabase'
 import {
   ArrowLeft,
   Check,
-  Building2,
-  Mail,
-  User,
-  Phone,
-  Calendar,
   Loader2,
-  FileText,
   Send,
 } from 'lucide-react'
+import CapacityOverlay from '@/components/ui/CapacityOverlay'
+import {
+  calcAnnualSaving,
+  kes,
+} from '@/lib/quote-email-templates'
 
 export type QuoteServiceSlug = 'virtual-office' | 'business-address' | 'dedicated-desk'
 
@@ -49,20 +48,20 @@ export const QUOTE_SERVICE_CONFIGS: Record<QuoteServiceSlug, QuotePackageConfig>
       {
         id: 'annual',
         name: 'Annual Commitment (12-Month Plan)',
-        rateDisplay: '',
-        monthlyRateKES: 8000,
+        rateDisplay: 'KES 9,000 / mo (1 Month Free)',
+        monthlyRateKES: 9000,
         commitmentPeriod: '12 Months (Annual Plan)',
-        subtext: 'Standard 1-year corporate membership agreement · Zero security deposit',
+        subtext: 'Billed annually at KES 108,000 (1 Month Free) · Zero security deposit',
         depositAmountKES: 0,
         isPopular: true,
       },
       {
         id: 'monthly',
         name: 'Monthly Rolling Contract',
-        rateDisplay: '',
+        rateDisplay: 'KES 10,000 / mo',
         monthlyRateKES: 10000,
         commitmentPeriod: 'Monthly Rolling (1 Month Notice)',
-        subtext: 'Flexible month-to-month membership agreement',
+        subtext: 'Flexible month-to-month membership agreement · 1-Month refundable deposit',
         depositAmountKES: 10000,
       },
     ],
@@ -85,20 +84,20 @@ export const QUOTE_SERVICE_CONFIGS: Record<QuoteServiceSlug, QuotePackageConfig>
       {
         id: 'annual',
         name: 'Annual Commitment (12-Month Plan)',
-        rateDisplay: '',
-        monthlyRateKES: 3500,
+        rateDisplay: 'KES 4,500 / mo (1 Month Free)',
+        monthlyRateKES: 4500,
         commitmentPeriod: '12 Months (Annual Plan)',
-        subtext: 'Standard 1-year registered address agreement · Zero security deposit',
+        subtext: 'Billed annually at KES 54,000 (1 Month Free) · Zero security deposit',
         depositAmountKES: 0,
         isPopular: true,
       },
       {
         id: 'monthly',
         name: 'Monthly Rolling Contract',
-        rateDisplay: '',
+        rateDisplay: 'KES 5,000 / mo',
         monthlyRateKES: 5000,
         commitmentPeriod: 'Monthly Rolling (1 Month Notice)',
-        subtext: 'Flexible month-to-month registered address agreement',
+        subtext: 'Flexible month-to-month registered address agreement · Refundable deposit required',
         depositAmountKES: 10000,
       },
     ],
@@ -120,20 +119,20 @@ export const QUOTE_SERVICE_CONFIGS: Record<QuoteServiceSlug, QuotePackageConfig>
       {
         id: 'annual',
         name: 'Annual Commitment (12-Month Plan)',
-        rateDisplay: '',
+        rateDisplay: 'KES 18,000 / mo (1 Month Free)',
         monthlyRateKES: 18000,
         commitmentPeriod: '12 Months (Annual Plan)',
-        subtext: 'Standard 1-year resident desk agreement · Priority workspace allocation',
+        subtext: 'Billed annually at KES 216,000 (1 Month Free) · Zero security deposit',
         depositAmountKES: 0,
         isPopular: true,
       },
       {
         id: 'monthly',
         name: 'Monthly Rolling Contract',
-        rateDisplay: '',
+        rateDisplay: 'KES 20,000 / mo',
         monthlyRateKES: 20000,
         commitmentPeriod: 'Monthly Rolling (1 Month Notice)',
-        subtext: 'Flexible month-to-month resident workstation agreement',
+        subtext: 'Flexible month-to-month resident workstation agreement · 1-Month refundable deposit',
         depositAmountKES: 20000,
       },
     ],
@@ -178,8 +177,8 @@ function computeEndDate(startStr: string, months: number): string {
 export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { initialSlug?: QuoteServiceSlug }) {
   const router = useRouter()
 
-  // Use the specific service config for this page (No mixing!)
   const config = QUOTE_SERVICE_CONFIGS[initialSlug] || QUOTE_SERVICE_CONFIGS['virtual-office']
+  const isAtCapacity = initialSlug === 'dedicated-desk'
 
   const [selectedTierId, setSelectedTierId] = useState<string>(config.tiers[0]?.id || 'annual')
   const [durationMonths, setDurationMonths] = useState<number>(selectedTierId === 'annual' ? 12 : 1)
@@ -198,7 +197,6 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
 
   const [teamSize, setTeamSize] = useState(1)
 
-  // Handle tier switch updating duration & end date
   const handleTierChange = (tierId: string) => {
     setSelectedTierId(tierId)
     const newMonths = tierId === 'annual' ? 12 : 1
@@ -206,19 +204,16 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
     setEndDate(computeEndDate(startDate, newMonths))
   }
 
-  // Handle duration change
   const handleDurationChange = (months: number) => {
     setDurationMonths(months)
     setEndDate(computeEndDate(startDate, months))
   }
 
-  // Handle start date change
   const handleStartDateChange = (newStart: string) => {
     setStartDate(newStart)
     setEndDate(computeEndDate(newStart, durationMonths))
   }
 
-  // Client Details
   const [companyName, setCompanyName] = useState('')
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
@@ -230,14 +225,23 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
 
   const activeTier = config.tiers.find((t) => t.id === selectedTierId) || config.tiers[0]
   const isAnnual = activeTier.id === 'annual'
-  const calculatedTotal = isAnnual
-    ? activeTier.monthlyRateKES * durationMonths * teamSize
-    : activeTier.monthlyRateKES * durationMonths * teamSize
+  const calculatedTotal = activeTier.monthlyRateKES * durationMonths * teamSize
   const calculatedDeposit = activeTier.depositAmountKES * teamSize
   const grandTotal = calculatedTotal + calculatedDeposit
+  const { standardAnnualValue, savingKES, discountPercent } = calcAnnualSaving(
+    config.slug,
+    activeTier.monthlyRateKES,
+    calculatedTotal,
+    durationMonths,
+    teamSize
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isAtCapacity) {
+      setErrorMessage('Dedicated Desk workstations are currently operating at full capacity.')
+      return
+    }
     setErrorMessage(null)
 
     if (!clientName.trim() || !clientEmail.trim() || !clientPhone.trim()) {
@@ -299,28 +303,22 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
         console.warn('[quote_requests DB Insert Notice]', dbErr)
       }
 
-      // Directly trigger Supabase Edge function for email dispatch
+      // Trigger email dispatch via API route (which invokes edge function with direct fallback)
       try {
-        const { error: fnError } = await supabase.functions.invoke('send-quote-email', {
-          body: quoteData,
-        })
-        if (fnError) {
-          console.warn('[Edge function dispatch notice]', fnError)
-          // Fallback to internal API route
-          await fetch('/api/quote/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(quoteData),
-          })
-        }
-      } catch (invokeErr) {
-        console.warn('[Edge invoke exception, calling fallback]', invokeErr)
         await fetch('/api/quote/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(quoteData),
         })
+      } catch (sendErr) {
+        console.warn('[Quote send exception]', sendErr)
       }
+
+      // Save to sessionStorage for instantaneous confirmation page display
+      try {
+        sessionStorage.setItem('paperstreet_latest_quote', JSON.stringify(quoteData))
+        sessionStorage.setItem(`paperstreet_quote_${quoteReference}`, JSON.stringify(quoteData))
+      } catch (_) {}
 
       // Redirect to dedicated success page
       const query = new URLSearchParams({
@@ -344,10 +342,14 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
     }
   }
 
-
-
   return (
     <main className="min-h-screen bg-[#FBFAF7] pt-28 pb-28 text-navy">
+      {isAtCapacity && (
+        <CapacityOverlay
+          service="dedicated-desk"
+          onSwitchService={(newSlug: string) => router.push(`/quote/${newSlug}`)}
+        />
+      )}
       <div className="container mx-auto px-6 md:px-12 max-w-3xl">
         
         {/* Navigation & Header */}
@@ -403,14 +405,17 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
                         onChange={() => handleTierChange(tier.id)}
                         className="mt-1 accent-navy"
                       />
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-xs text-navy">{tier.name}</span>
-                          {tier.isPopular && (
-                            <span className="font-mono text-[9px] uppercase font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2">
-                              Recommended
-                            </span>
-                          )}
+                      <div className="space-y-0.5 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-xs text-navy">{tier.name}</span>
+                            {tier.isPopular && (
+                              <span className="font-mono text-[9px] uppercase font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2">
+                                Recommended
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-mono text-xs font-semibold text-navy">{tier.rateDisplay}</span>
                         </div>
                         <p className="text-[11px] text-navy/60">{tier.subtext}</p>
                       </div>
@@ -497,7 +502,7 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
           {/* Section 3: Inclusions */}
           <div className="space-y-3 border-b border-navy/15 pb-6">
             <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 font-bold block">
-              Standard Inclusions with this Membership
+              Standard Inclusions with this Package
             </span>
             <div className="grid sm:grid-cols-2 gap-2 text-xs text-navy/80">
               {config.inclusions.map((inc, i) => (
@@ -586,24 +591,72 @@ export default function QuoteRequestView({ initialSlug = 'virtual-office' }: { i
             </div>
           </div>
 
+          {/* Live Financial Summary */}
+          <div className="bg-navy/[0.03] border border-navy/15 p-5 space-y-3 text-xs">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-navy/50 font-bold block">
+              Investment Breakdown (Live Calculation)
+            </span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-navy/80">
+                <span>Selected Service:</span>
+                <span className="font-semibold text-navy">{config.title} &mdash; {activeTier.name}</span>
+              </div>
+              <div className="flex justify-between text-navy/80">
+                <span>Monthly Equivalent:</span>
+                <span className="font-mono text-navy">{kes(activeTier.monthlyRateKES * teamSize)} / mo</span>
+              </div>
+              {savingKES > 0 && (
+                <>
+                  <div className="flex justify-between text-navy/60">
+                    <span>Standard Annual Value:</span>
+                    <span className="font-mono line-through">{kes(standardAnnualValue)}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-800 font-semibold">
+                    <span>Annual Commitment Discount ({discountPercent}% off):</span>
+                    <span className="font-mono">−{kes(savingKES)}</span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between text-navy/80">
+                <span>Service Fee ({durationMonths} months):</span>
+                <span className="font-mono font-semibold text-navy">{kes(calculatedTotal)}</span>
+              </div>
+              <div className="flex justify-between text-navy/80">
+                <span>Security Deposit:</span>
+                <span className="font-mono text-navy">
+                  {calculatedDeposit > 0 ? `${kes(calculatedDeposit)} (refundable)` : 'No deposit required (KES 0)'}
+                </span>
+              </div>
+              <div className="border-t border-navy/20 pt-2 flex justify-between text-sm font-bold text-navy">
+                <span>Total Initial Amount Payable:</span>
+                <span className="font-mono text-base">{kes(grandTotal)}</span>
+              </div>
+              {!isAnnual && durationMonths > 1 && (
+                <p className="text-[11px] text-navy/60 pt-1">
+                  Subsequent monthly payments: <strong>{kes(activeTier.monthlyRateKES * teamSize)}</strong> per month.
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Action Button */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
             <span className="text-[11px] text-navy/60">
-              An official PDF quotation will be sent to your email.
+              Your personalized quotation will be prepared and sent with a PDF attached.
             </span>
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-navy text-white text-xs font-semibold uppercase tracking-wider px-8 py-3.5 hover:bg-navy-600 transition-colors inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              disabled={isSubmitting || isAtCapacity}
+              className="bg-navy text-white text-xs font-semibold uppercase tracking-wider px-8 py-3.5 hover:bg-navy-600 transition-colors inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Sending Quote...
+                  <Loader2 size={14} className="animate-spin" /> Preparing Quote...
                 </>
               ) : (
                 <>
-                  <Send size={14} /> Send Me the Quote
+                  <Send size={14} /> Send Me the Quotation
                 </>
               )}
             </button>

@@ -13,6 +13,7 @@ import {
   getNairobiDate,
   CalculationResult,
 } from '@/lib/booking-rules-engine'
+import CapacityOverlay, { CapacityServiceSlug } from '@/components/ui/CapacityOverlay'
 import {
   ArrowLeft,
   ArrowRight,
@@ -61,9 +62,9 @@ export const INDIVIDUAL_SERVICE_CONFIGS: Record<ServiceSlug, IndividualServiceCo
       {
         id: 'annual',
         name: 'Annual Membership',
-        rateDisplay: 'KES 8,000 / mo',
-        subtext: 'Billed annually at KES 96,000 (Save KES 24,000/yr)',
-        rentAmountKES: 96000,
+        rateDisplay: 'KES 9,000 / mo',
+        subtext: 'Billed annually at KES 108,000 (1 Month Free)',
+        rentAmountKES: 108000,
         depositMonths: 0,
         depositAmountKES: 0,
         billingPeriod: '12 Months Paid Upfront',
@@ -99,10 +100,10 @@ export const INDIVIDUAL_SERVICE_CONFIGS: Record<ServiceSlug, IndividualServiceCo
     tiers: [
       {
         id: 'annual',
-        name: 'Annual Plan (Save 30%)',
-        rateDisplay: 'KES 3,500 / mo',
-        subtext: 'Billed annually at KES 42,000 (Save KES 18,000/yr)',
-        rentAmountKES: 42000,
+        name: 'Annual Plan (1 Month Free)',
+        rateDisplay: 'KES 4,500 / mo',
+        subtext: 'Billed annually at KES 54,000 (1 Month Free)',
+        rentAmountKES: 54000,
         depositMonths: 0,
         depositAmountKES: 0,
         billingPeriod: '12 Months Paid Upfront',
@@ -198,7 +199,7 @@ export const INDIVIDUAL_SERVICE_CONFIGS: Record<ServiceSlug, IndividualServiceCo
         id: 'annual',
         name: 'Annual Commitment (Best Rate)',
         rateDisplay: 'KES 18,000 / mo',
-        subtext: 'Billed annually at KES 216,000 (Save KES 24,000/yr)',
+        subtext: 'Billed annually at KES 216,000 (1 Month Free)',
         rentAmountKES: 216000,
         depositMonths: 0,
         depositAmountKES: 0,
@@ -317,6 +318,7 @@ export default function IndividualBookingPage({
 }: IndividualBookingPageProps) {
   const config = INDIVIDUAL_SERVICE_CONFIGS[slug] || INDIVIDUAL_SERVICE_CONFIGS['virtual-office']
   const isPhysical = isPhysicalBookableService(config.slug)
+  const isAtCapacity = ['hot-desk', 'meeting-rooms', 'dedicated-desk'].includes(config.slug)
 
   // State
   const [selectedTierId, setSelectedTierId] = useState<string>(() => {
@@ -884,6 +886,9 @@ export default function IndividualBookingPage({
 
   return (
     <div className={hideNavigation ? 'w-full text-navy' : 'min-h-screen bg-[#fbfaf7] pt-28 pb-28 text-navy'}>
+      {isAtCapacity && (
+        <CapacityOverlay service={config.slug as CapacityServiceSlug} />
+      )}
       <div className={hideNavigation ? 'w-full' : 'container mx-auto px-6 md:px-12 max-w-6xl'}>
         {/* Navigation Breadcrumb */}
         {!hideNavigation && (
@@ -1666,7 +1671,7 @@ export default function IndividualBookingPage({
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={submitting || (isPhysical && !calculation.engineResult.isValid)}
+                    disabled={submitting || isAtCapacity || (isPhysical && !calculation.engineResult.isValid)}
                     className="w-full bg-navy text-white py-4 text-xs uppercase tracking-[0.16em] font-semibold hover:bg-navy-600 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? (

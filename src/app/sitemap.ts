@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { blogPosts } from '@/data/blog-posts';
+import { MANAGED_OFFICE_PAGES } from '@/data/managed-office-pages-data';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.paperstreet.co.ke';
@@ -23,6 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/services/mail-handling`, lastModified: new Date() },
     { url: `${baseUrl}/services/mail-forwarding`, lastModified: new Date() },
     { url: `${baseUrl}/services/business-expansion`, lastModified: new Date() },
+    { url: `${baseUrl}/office-management`, lastModified: new Date() },
+    { url: `${baseUrl}/office-management/quote-request`, lastModified: new Date() },
     { url: `${baseUrl}/about`, lastModified: new Date() },
     { url: `${baseUrl}/faq`, lastModified: new Date() },
     { url: `${baseUrl}/contact`, lastModified: new Date() },
@@ -318,5 +321,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
   }));
 
-  return [...staticRoutes, ...kisumuLandingRoutes, ...blogRoutes];
+    const managedOfficeRoutes: MetadataRoute.Sitemap = MANAGED_OFFICE_PAGES.map((page) => ({
+    url: `${baseUrl}/${page.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: page.group === 1 ? 0.9 : 0.8,
+  }));
+
+  return [...staticRoutes, ...kisumuLandingRoutes, ...blogRoutes, ...managedOfficeRoutes];
 }

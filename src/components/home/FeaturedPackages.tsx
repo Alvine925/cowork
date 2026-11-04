@@ -55,7 +55,7 @@ export function FeaturedPackages() {
               className={`text-[11px] font-semibold uppercase tracking-wider transition-colors ${isAnnual ? 'text-white' : 'text-white/40 hover:text-white/70'
                 }`}
             >
-              Annual <span className="text-gold font-mono text-[9px]">(Save up to 30%)</span>
+              Annual <span className="text-gold font-mono text-[9px]">(1 Month Free)</span>
             </button>
           </div>
         </div>
@@ -78,12 +78,12 @@ export function FeaturedPackages() {
               <div className="mt-6 pt-4 border-t border-white/10">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-heading text-2xl text-white font-medium">
-                    KES {isAnnual ? '3,500' : '5,000'}
+                    KES {isAnnual ? '4,500' : '5,000'}
                   </span>
                   <span className="text-xs text-white/50">/ month</span>
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-white/40">
-                  {isAnnual ? 'Billed annually: KES 42,000 / yr' : 'Billed monthly on rolling basis'}
+                  {isAnnual ? 'Billed annually: KES 54,000 / yr (1 month free)' : 'Billed monthly on rolling basis'}
                 </p>
               </div>
 
@@ -135,12 +135,12 @@ export function FeaturedPackages() {
               <div className="mt-6 pt-4 border-t border-white/10">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-heading text-2xl text-gold font-medium">
-                    KES {isAnnual ? '8,000' : '10,000'}
+                    KES {isAnnual ? '9,000' : '10,000'}
                   </span>
                   <span className="text-xs text-white/50">/ month</span>
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-white/40">
-                  {isAnnual ? 'Billed annually: KES 96,000 / yr' : 'Billed monthly on rolling basis'}
+                  {isAnnual ? 'Billed annually: KES 108,000 / yr (1 month free)' : 'Billed monthly on rolling basis'}
                 </p>
               </div>
 
@@ -262,7 +262,7 @@ export function FeaturedPackages() {
                   <span className="text-xs text-white/50">/ month</span>
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-white/40">
-                  {isAnnual ? 'Billed annually: KES 216,000 / yr' : 'Billed monthly on rolling basis'}
+                  {isAnnual ? 'Billed annually: KES 216,000 / yr (1 month free)' : 'Billed monthly on rolling basis'}
                 </p>
               </div>
 

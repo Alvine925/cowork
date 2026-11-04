@@ -90,7 +90,7 @@ export default function TermsOfServicePage() {
           </h3>
           <ul className="list-disc pl-6 mb-6 space-y-3">
             <li>
-              <strong>Annual Upfront Subscriptions (Zero Security Deposit):</strong> Clients who subscribe to a 12-month annual plan and pay the full annual fee upfront enjoy a <strong>Zero Security Deposit (KES 0 deposit)</strong> benefit. The standard annual rate for the basic business address plan starts from KES 3,500 / month, billed as an upfront annual payment of KES 42,000 / year.
+              <strong>Annual Upfront Subscriptions (Zero Security Deposit):</strong> Clients who subscribe to a 12-month annual plan and pay the full annual fee upfront enjoy a <strong>Zero Security Deposit (KES 0 deposit)</strong> benefit. The standard annual rate for the basic business address plan starts from KES 4,500 / month, billed as an upfront annual payment of KES 54,000 / year (with 1 month free).
             </li>
             <li>
               <strong>Monthly Rolling Subscriptions (Two Months Refundable Security Deposit):</strong> Clients who choose flexible month-to-month billing must pay the first month subscription fee plus a mandatory <strong>Two Months Refundable Security Deposit</strong> prior to service activation (e.g., KES 5,000 first month + KES 10,000 refundable deposit = KES 15,000 total initial payment for a standard monthly address package).
@@ -107,7 +107,7 @@ export default function TermsOfServicePage() {
             Indicative Service Pricing Schedule:
           </h3>
           <ul className="list-disc pl-6 mb-6 space-y-3">
-            <li><strong>Virtual Business Address (Annual Upfront):</strong> Starts from KES 3,500 / month (billed annually at KES 42,000 / year with Zero Deposit).</li>
+            <li><strong>Virtual Business Address (Annual Upfront):</strong> Starts from KES 4,500 / month (billed annually at KES 54,000 / year with Zero Deposit).</li>
             <li><strong>Virtual Business Address (Monthly Rolling):</strong> Starts from KES 5,000 / month + 2 months refundable security deposit.</li>
             <li><strong>Virtual Office Pro (Digital Scanning & Boardrooms):</strong> Starts from KES 6,500 / month.</li>
             <li><strong>Coworking Day Pass:</strong> Starts from KES 1,000 / day.</li>

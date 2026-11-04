@@ -56,6 +56,8 @@ export function Footer() {
             <Link href="/services/meeting-rooms" className="text-xs text-white/40 hover:text-white transition-colors">Meeting Rooms</Link>
             <Link href="/services/dedicated-desk" className="text-xs text-white/40 hover:text-white transition-colors">Dedicated Desk</Link>
             <Link href="/services" className="text-xs text-gold/80 hover:text-gold transition-colors mt-1">View All Services &rarr;</Link>
+            <h4 className="text-xs uppercase tracking-[0.2em] text-white/30 mt-4 mb-1">Managed Offices</h4>
+            <Link href="/office-management" className="text-xs text-white/40 hover:text-white transition-colors">Office Management</Link>
           </div>
 
           <div className="flex flex-col gap-4">

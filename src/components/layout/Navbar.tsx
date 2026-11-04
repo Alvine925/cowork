@@ -19,6 +19,7 @@ const HUB_SERVICES = [
   { name: 'Dedicated Desk', href: '/services/dedicated-desk' },
   { name: 'Mail Handling', href: '/services/addons/mail-handling' },
   { name: 'Mail Forwarding', href: '/services/addons/mail-forwarding' },
+  { name: 'Office Management', href: '/office-management' },
   { name: 'All Services', href: '/services' },
 ]
 
@@ -219,6 +220,7 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
+            <Link href="/office-management" className={linkCls}>Office Management</Link>
             <Link href="/pricing" className={linkCls}>Pricing</Link>
             <Link href="/about" className={linkCls}>About</Link>
             <Link href="/faq" className={linkCls}>FAQ</Link>
@@ -307,6 +309,7 @@ export function Navbar() {
                 ))}
                 <div className="mt-4 border-t border-gray-50 pt-2">
                   {[
+                    { label: 'Office Management', href: '/office-management' },
                     { label: 'Pricing', href: '/pricing' },
                     { label: 'Locations', href: '/locations' },
                     { label: 'About', href: '/about' },

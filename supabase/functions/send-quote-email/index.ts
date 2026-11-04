@@ -7,17 +7,20 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-version',
 }
 
-interface QuoteData {
+interface QuotePayload {
   quoteReference: string
   serviceSlug: string
   serviceTitle: string
   tierName: string
   commitmentPeriod: string
+  durationMonths: number
   monthlyRateKES: number
   totalCommitmentKES: number
   depositAmountKES: number
   startDate: string
-  companyName: string
+  endDate?: string
+  teamSize?: number
+  companyName?: string
   clientName: string
   clientEmail: string
   clientPhone: string
@@ -25,205 +28,696 @@ interface QuoteData {
   inclusions?: string[]
 }
 
-/**
- * Creates clean, typography-based PDF quotation byte stream.
- */
-function createQuotePdf(data: QuoteData): string {
-  const s = (str: string | number) =>
-    String(str || '')
-      .replace(/[\\()]/g, '')
-      .replace(/[^\x20-\x7E]/g, '')
-      .substring(0, 80)
+const STANDARD_MONTHLY_RATES: Record<string, number> = {
+  'virtual-office': 10000,
+  'business-address': 5000,
+  'dedicated-desk': 20000,
+}
 
-  const ref = s(data.quoteReference)
-  const issueDate = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-  const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-  const monthlyStr = `KES ${data.monthlyRateKES.toLocaleString()}`
-  const totalStr = `KES ${data.totalCommitmentKES.toLocaleString()}`
+function kes(amount: number): string {
+  return `KES ${amount.toLocaleString('en-KE')}`
+}
 
-  let stream = `
-% ── HEADER ──────────────────────────────────────────────────────────
-0.06 0.18 0.32 rg
-BT /F1 18 Tf 50 800 Td (PAPER STREET WORKSPACES) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8 Tf 50 786 Td (CBD Commercial Center  ·  Oginga Odinga St  ·  Kisumu CBD, Kenya) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8 Tf 50 775 Td (Tel: 0110486677 / +254 110 486 677   |   hello@paperstreet.co.ke   |   www.paperstreet.co.ke) Tj ET
+function fmtDate(iso: string): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString('en-KE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  } catch {
+    return iso
+  }
+}
 
-% thick top rule
-0.06 0.18 0.32 RG
-2.0 w
-50 768 m 545 768 l S
+function esc(str: string | undefined | null): string {
+  if (!str) return ''
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
 
-% ── DOCUMENT TITLE & REFERENCE ──────────────────────────────────────
-0.06 0.18 0.32 rg
-BT /F1 13 Tf 50 748 Td (OFFICIAL MEMBERSHIP QUOTATION) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 733 Td (Quote Reference:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 135 733 Td (${ref}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 721 Td (Issue Date:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 135 721 Td (${s(issueDate)}) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 709 Td (Quotation Validity:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 135 709 Td (Valid for 30 Days (${s(validUntil)})) Tj ET
+/** Calculates standard annual value, actual savings, and discount percentage */
+function calcAnnualSaving(
+  serviceSlug: string,
+  monthlyRateKES: number,
+  totalCommitmentKES: number,
+  durationMonths: number,
+  teamSize = 1
+): { standardAnnualValue: number; savingKES: number; discountPercent: number } {
+  if (durationMonths !== 12) {
+    return { standardAnnualValue: totalCommitmentKES, savingKES: 0, discountPercent: 0 }
+  }
+  const standardMonthly = STANDARD_MONTHLY_RATES[serviceSlug] || monthlyRateKES
+  const standardAnnualValue = standardMonthly * 12 * teamSize
+  const savingKES = Math.max(0, standardAnnualValue - totalCommitmentKES)
+  const discountPercent = standardAnnualValue > 0 ? Math.round((savingKES / standardAnnualValue) * 100) : 0
+  return { standardAnnualValue, savingKES, discountPercent }
+}
 
-% thin rule
-0.78 0.82 0.87 RG
-0.5 w
-50 700 m 545 700 l S
+function serviceSubject(slug: string, companyName: string | undefined): string {
+  const org = companyName ? ` – ${companyName}` : ''
+  if (slug === 'virtual-office') return `Your Paper Street Quotation${org}`
+  if (slug === 'business-address') return `Your Business Address Quotation${org}`
+  if (slug === 'dedicated-desk') return `Your Dedicated Desk Quotation${org}`
+  if (slug === 'office-management') return `Your Managed Office Proposal${org}`
+  return `Your Paper Street Quotation${org}`
+}
 
-% ── PROPOSAL PREPARED FOR ──────────────────────────────────────────
-0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 686 Td (PROPOSAL PREPARED FOR) Tj ET
+function serviceIntroText(slug: string, tierName: string, inclusions: string[] = []): string {
+  const incList = inclusions.length > 0
+    ? `<ul style="margin: 10px 0 0 0; padding-left: 18px; font-size: 13px; color: #334155; line-height: 1.8;">${inclusions.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`
+    : ''
 
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 671 Td (Company / Entity:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 145 671 Td (${s(data.companyName || 'Corporate Client')}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 657 Td (Contact Person:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 657 Td (${s(data.clientName)}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 643 Td (Email:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 643 Td (${s(data.clientEmail)}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 629 Td (Phone / WhatsApp:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 629 Td (${s(data.clientPhone)}) Tj ET
-
-% thin rule
-0.78 0.82 0.87 RG
-0.5 w
-50 620 m 545 620 l S
-
-% ── PACKAGE SPECIFICATIONS ───────────────────────────────────────────
-0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 606 Td (MEMBERSHIP & FACILITY SPECIFICATIONS) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 591 Td (Workspace Package:) Tj ET
-0.06 0.18 0.32 rg
-BT /F1 8.5 Tf 145 591 Td (${s(data.serviceTitle)} - ${s(data.tierName)}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 577 Td (Billing Commitment:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 577 Td (${s(data.commitmentPeriod)}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 563 Td (Target Start Date:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 563 Td (${s(data.startDate)}) Tj ET
-
-0.40 0.47 0.56 rg
-BT /F2 8.5 Tf 50 549 Td (Facility Location:) Tj ET
-0.06 0.18 0.32 rg
-BT /F2 8.5 Tf 145 549 Td (CBD Commercial Center, Oginga Odinga St, Kisumu) Tj ET
-
-% ── FINANCIAL INVESTMENT LEDGER ───────────────────────────────────────
-0.06 0.18 0.32 RG
-1.0 w
-50 535 m 545 535 l S
-
-0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 523 Td (ITEMIZED INVESTMENT PROPOSAL) Tj ET
-BT /F1 7.5 Tf 420 523 Td (AMOUNT (KES)) Tj ET
-
-0.78 0.82 0.87 RG
-0.5 w
-50 514 m 545 514 l S
-
-% Row 1: Membership Base Rate
-0.20 0.25 0.33 rg
-BT /F1 8.5 Tf 50 498 Td (${s(data.serviceTitle)} (${s(data.tierName)})) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 7.5 Tf 50 486 Td (Standard Monthly Effective Rate: ${s(monthlyStr)}) Tj ET
-0.20 0.25 0.33 rg
-BT /F1 8.5 Tf 420 498 Td (${s(totalStr)}) Tj ET
-
-0.78 0.82 0.87 RG
-0.5 w
-50 476 m 545 476 l S
-`
-
-  let rowY = 460
-  if (data.depositAmountKES > 0) {
-    stream += `
-% Row 2: Security Deposit
-0.20 0.25 0.33 rg
-BT /F1 8.5 Tf 50 ${rowY} Td (Refundable Security Deposit) Tj ET
-0.40 0.47 0.56 rg
-BT /F2 7.5 Tf 50 ${rowY - 12} Td (Fully refundable upon termination of agreement) Tj ET
-0.20 0.25 0.33 rg
-BT /F1 8.5 Tf 420 ${rowY} Td (KES ${data.depositAmountKES.toLocaleString()}) Tj ET
-
-0.78 0.82 0.87 RG
-0.5 w
-50 ${rowY - 22} m 545 ${rowY - 22} l S
-`
-    rowY -= 36
+  if (slug === 'virtual-office') {
+    return `
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Your <strong>Virtual Office</strong> membership gives your business a professional commercial address on <strong>Oginga Odinga Street, Kisumu CBD</strong> — the same address used for company registration, banking KYC, KRA compliance and your day-to-day mail.
+      </p>
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Every letter and parcel received in your name is logged and scanned to a high-resolution PDF, then sent directly to your email. Your front desk is handled by our team, and you get monthly boardroom access included in the membership.
+      </p>
+      ${incList}
+    `
   }
 
-  const grandTotal = data.totalCommitmentKES + (data.depositAmountKES || 0)
-  const totalY = rowY - 10
+  if (slug === 'business-address') {
+    return `
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Your <strong>Business Address</strong> service gives your business an official, verifiable commercial address in <strong>Kisumu CBD</strong> for company incorporation, KRA registration, banking KYC and business correspondence — without the cost of renting physical office space.
+      </p>
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Physical mail received in your company's name is logged and you're notified immediately. The address is accepted by eCitizen BRS, the KRA and commercial banks.
+      </p>
+      ${incList}
+    `
+  }
 
-  stream += `
-% double rule above total
-0.06 0.18 0.32 RG
-1.5 w
-50 ${totalY} m 545 ${totalY} l S
+  if (slug === 'dedicated-desk') {
+    return `
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Your <strong>Dedicated Desk</strong> gives you a permanently assigned personal workstation that no one else uses. You can leave your monitors, equipment and stationery in place between visits, stored securely in your lockable pedestal unit.
+      </p>
+      <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+        Your membership includes the commercial business address, high-speed fibre internet, 100% generator power backup and monthly boardroom booking hours.
+      </p>
+      ${incList}
+    `
+  }
+
+  return `
+    <p style="font-size: 13px; color: #334155; line-height: 1.7; margin: 0 0 12px 0;">
+      We've prepared this quotation for <strong>${esc(tierName)}</strong> based on your selected package and requirements.
+    </p>
+    ${incList}
+  `
+}
+
+function commercialNote(
+  slug: string,
+  isAnnual: boolean,
+  durationMonths: number,
+  depositAmountKES: number,
+  savingKES: number,
+  discountPercent: number
+): string {
+  if (isAnnual && savingKES > 0) {
+    return `Your quotation includes the annual commitment discount (1 month free), saving you <strong>${kes(savingKES)}</strong> across your 12-month contract. Annual subscriptions also qualify for the zero-security-deposit arrangement, so no security deposit is required.`
+  }
+  if (isAnnual && depositAmountKES === 0) {
+    return `Your quotation reflects the annual commitment arrangement with no security deposit required.`
+  }
+  if (!isAnnual && depositAmountKES > 0) {
+    return `Your quotation includes a refundable security deposit of <strong>${kes(depositAmountKES)}</strong>, in addition to the monthly service fee. The deposit terms are outlined in your attached quotation and the deposit is fully refundable at the end of your contract.`
+  }
+  if (!isAnnual && depositAmountKES === 0) {
+    return `Your quotation reflects standard pricing for your selected service. No security deposit is required.`
+  }
+  return `Your quotation reflects the pricing applicable to your selected service and contract arrangement.`
+}
+
+function buildClientEmail(data: QuotePayload): string {
+  const {
+    quoteReference,
+    serviceSlug,
+    serviceTitle,
+    tierName,
+    durationMonths,
+    monthlyRateKES,
+    totalCommitmentKES,
+    depositAmountKES,
+    startDate,
+    teamSize = 1,
+    companyName,
+    clientName,
+    additionalRequirements,
+    inclusions = [],
+  } = data
+
+  const isAnnual = durationMonths === 12 && depositAmountKES === 0
+  const { standardAnnualValue, savingKES, discountPercent } = calcAnnualSaving(
+    serviceSlug,
+    monthlyRateKES,
+    totalCommitmentKES,
+    durationMonths,
+    teamSize
+  )
+  const grandTotal = totalCommitmentKES + depositAmountKES
+  const orgName = companyName || clientName
+  const issueDate = fmtDate(new Date().toISOString())
+  const expiryDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 30)
+    return fmtDate(d.toISOString())
+  })()
+
+  const noteText = commercialNote(serviceSlug, isAnnual, durationMonths, depositAmountKES, savingKES, discountPercent)
+  const introHtml = serviceIntroText(serviceSlug, tierName, inclusions)
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quotation – Paper Street</title>
+</head>
+<body style="margin:0; padding:0; background:#f5f5f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:620px; margin:32px auto; background:#ffffff;">
+
+    <!-- Header bar -->
+    <div style="background:#2b4c3b; padding:28px 36px 24px;">
+      <div style="font-size:22px; font-weight:800; letter-spacing:3px; color:#ffffff; text-transform:uppercase; margin-bottom:4px;">PAPER STREET</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.65); letter-spacing:1px; text-transform:uppercase;">Office Solutions &amp; Business Services</div>
+      <div style="margin-top:16px; display:inline-block; background:#ebff48; color:#2b4c3b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; padding:5px 12px;">QUOTATION</div>
+    </div>
+
+    <!-- Ref strip -->
+    <div style="background:#f8f8f4; border-bottom:1px solid #e8e8e0; padding:14px 36px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-family:monospace; font-size:13px; font-weight:700; color:#2b4c3b; letter-spacing:1px;">${esc(quoteReference)}</span>
+      <span style="font-size:11px; color:#64748b;">Issued ${issueDate} &nbsp;·&nbsp; Valid until ${expiryDate}</span>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:32px 36px;">
+
+      <!-- Greeting -->
+      <p style="font-size:15px; color:#2b4c3b; font-weight:600; margin:0 0 6px 0;">Dear ${esc(clientName)},</p>
+      <p style="font-size:13px; color:#334155; line-height:1.7; margin:0 0 20px 0;">
+        Thank you for considering Paper Street for your business needs. We've prepared a quotation for
+        <strong>${esc(orgName)}'s ${esc(serviceTitle)}</strong>,
+        based on the package and requirements you selected.
+      </p>
+
+      <!-- Service description -->
+      <div style="border-left:3px solid #ebff48; padding:0 0 0 16px; margin-bottom:28px;">
+        ${introHtml}
+      </div>
+
+      <!-- Financial summary -->
+      <div style="margin-bottom:28px;">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#64748b; border-bottom:1px solid #e8e8e0; padding-bottom:8px; margin-bottom:0;">Quotation Summary</div>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b; width:55%;">Service</td>
+            <td style="padding:10px 0; color:#2b4c3b; font-weight:600; text-align:right;">${esc(serviceTitle)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Plan</td>
+            <td style="padding:10px 0; color:#2b4c3b; text-align:right;">${esc(tierName)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Contract term</td>
+            <td style="padding:10px 0; color:#2b4c3b; text-align:right;">${durationMonths} month${durationMonths > 1 ? 's' : ''}</td>
+          </tr>
+          ${startDate ? `<tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Service start date</td>
+            <td style="padding:10px 0; color:#2b4c3b; text-align:right;">${esc(fmtDate(startDate))}</td>
+          </tr>` : ''}
+          ${teamSize > 1 ? `<tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Workstations</td>
+            <td style="padding:10px 0; color:#2b4c3b; text-align:right;">${teamSize}</td>
+          </tr>` : ''}
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Monthly equivalent</td>
+            <td style="padding:10px 0; color:#2b4c3b; font-family:monospace; text-align:right;">${kes(monthlyRateKES)}${teamSize > 1 ? ' × ' + teamSize : ''} / mo</td>
+          </tr>
+          ${savingKES > 0 ? `
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Standard annual value</td>
+            <td style="padding:10px 0; color:#64748b; font-family:monospace; text-align:right; text-decoration:line-through;">${kes(standardAnnualValue)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#16a34a;">Annual commitment discount (${discountPercent}% off)</td>
+            <td style="padding:10px 0; color:#16a34a; font-family:monospace; font-weight:600; text-align:right;">−${kes(savingKES)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#2b4c3b; font-weight:600;">Discounted annual service fee</td>
+            <td style="padding:10px 0; color:#2b4c3b; font-weight:600; font-family:monospace; text-align:right;">${kes(totalCommitmentKES)}</td>
+          </tr>` : `
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#2b4c3b; font-weight:600;">Service fee</td>
+            <td style="padding:10px 0; color:#2b4c3b; font-weight:600; font-family:monospace; text-align:right;">${kes(totalCommitmentKES)}</td>
+          </tr>`}
+          ${depositAmountKES > 0 ? `
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Refundable security deposit</td>
+            <td style="padding:10px 0; color:#2b4c3b; font-family:monospace; text-align:right;">${kes(depositAmountKES)}</td>
+          </tr>` : `
+          <tr style="border-bottom:1px solid #f1f1ec;">
+            <td style="padding:10px 0; color:#64748b;">Security deposit</td>
+            <td style="padding:10px 0; color:#16a34a; font-family:monospace; text-align:right;">No security deposit required (KES 0)</td>
+          </tr>`}
+          <tr style="background:#2b4c3b;">
+            <td style="padding:14px 12px; color:#ebff48; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.5px;">Total initial amount payable</td>
+            <td style="padding:14px 12px; color:#ebff48; font-weight:800; font-size:16px; font-family:monospace; text-align:right;">${kes(grandTotal)}</td>
+          </tr>
+        </table>
+        ${!isAnnual && durationMonths > 1 ? `<p style="font-size:11px; color:#64748b; margin:8px 0 0 0;">Subsequent monthly payments: <strong>${kes(monthlyRateKES)}${teamSize > 1 ? ' × ' + teamSize : ''}</strong> per month.</p>` : ''}
+      </div>
+
+      <!-- Commercial note -->
+      <div style="background:#f8f8f4; border-left:3px solid #2b4c3b; padding:14px 16px; margin-bottom:28px; font-size:12.5px; color:#334155; line-height:1.6;">
+        ${noteText}
+      </div>
+
+      <!-- Attachment note -->
+      <p style="font-size:13px; color:#334155; line-height:1.7; margin:0 0 20px 0;">
+        Please find your detailed quotation attached, including the service specifications, investment breakdown, applicable terms and next steps.
+      </p>
+
+      <!-- Closing -->
+      <p style="font-size:13px; color:#334155; line-height:1.7; margin:0 0 6px 0;">
+        Should you wish to proceed or have any questions about the proposal, simply reply to this email or contact our team. We'll be happy to assist.
+      </p>
+      <p style="font-size:13px; color:#334155; margin:0 0 28px 0;">We look forward to working with you.</p>
+
+      ${additionalRequirements ? `
+      <div style="border-top:1px solid #e8e8e0; padding-top:16px; margin-bottom:28px;">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#64748b; margin-bottom:6px;">Your Requirements Note</div>
+        <p style="font-size:12.5px; color:#334155; line-height:1.6; margin:0; font-style:italic;">"${esc(additionalRequirements)}"</p>
+      </div>` : ''}
+
+    </div>
+
+    <!-- Signature -->
+    <div style="border-top:1px solid #e8e8e0; background:#f8f8f4; padding:20px 36px;">
+      <p style="font-size:12px; color:#2b4c3b; font-weight:700; margin:0 0 4px 0;">Paper Street Team</p>
+      <p style="font-size:11.5px; color:#64748b; margin:0 0 2px 0;">Phone / WhatsApp: <a href="tel:+254110486677" style="color:#2b4c3b; text-decoration:none; font-weight:600;">+254 110 486 677</a></p>
+      <p style="font-size:11.5px; color:#64748b; margin:0 0 2px 0;">Email: <a href="mailto:hello@paperstreet.co.ke" style="color:#2b4c3b; text-decoration:none;">hello@paperstreet.co.ke</a></p>
+      <p style="font-size:11.5px; color:#64748b; margin:0;"><a href="https://paperstreet.co.ke" style="color:#2b4c3b; text-decoration:none;">https://paperstreet.co.ke</a></p>
+    </div>
+
+  </div>
+</body>
+</html>`
+}
+
+function buildAdminEmail(data: QuotePayload, adminEmail: string): string {
+  const {
+    quoteReference, serviceTitle, tierName,
+    durationMonths, monthlyRateKES, totalCommitmentKES, depositAmountKES,
+    startDate, teamSize = 1, companyName, clientName, clientEmail, clientPhone,
+    additionalRequirements,
+  } = data
+
+  const grandTotal = totalCommitmentKES + depositAmountKES
+  const { savingKES, discountPercent } = calcAnnualSaving(
+    data.serviceSlug,
+    monthlyRateKES,
+    totalCommitmentKES,
+    durationMonths,
+    teamSize
+  )
+  const orgName = companyName || clientName
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:30px 20px; background:#f5f5f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e0e0d8;">
+    <div style="background:#2b4c3b; padding:20px 28px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:#ebff48; margin-bottom:4px;">NEW QUOTATION REQUEST</div>
+      <div style="font-size:18px; font-weight:300; color:#ffffff;">${esc(orgName)} — ${esc(serviceTitle)}</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-top:4px; font-family:monospace;">${esc(quoteReference)}</div>
+    </div>
+    <div style="padding:24px 28px;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b; width:40%;">Company / Contact:</td><td style="padding:8px 0; color:#2b4c3b; font-weight:600;">${esc(orgName)} / ${esc(clientName)}</td></tr>
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Email:</td><td style="padding:8px 0;"><a href="mailto:${esc(clientEmail)}" style="color:#2b4c3b; font-weight:600;">${esc(clientEmail)}</a></td></tr>
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Phone:</td><td style="padding:8px 0;"><a href="tel:${esc(clientPhone)}" style="color:#2b4c3b; font-weight:600;">${esc(clientPhone)}</a></td></tr>
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Service:</td><td style="padding:8px 0; color:#2b4c3b;">${esc(serviceTitle)} — ${esc(tierName)}</td></tr>
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Duration:</td><td style="padding:8px 0; color:#2b4c3b;">${durationMonths} months${startDate ? ' from ' + fmtDate(startDate) : ''}</td></tr>
+        ${teamSize > 1 ? `<tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Workstations:</td><td style="padding:8px 0; color:#2b4c3b;">${teamSize}</td></tr>` : ''}
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Service fee:</td><td style="padding:8px 0; color:#2b4c3b; font-family:monospace;">${kes(totalCommitmentKES)}</td></tr>
+        ${savingKES > 0 ? `<tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Annual saving:</td><td style="padding:8px 0; color:#16a34a; font-family:monospace; font-weight:600;">−${kes(savingKES)} (${discountPercent}%)</td></tr>` : ''}
+        <tr style="border-bottom:1px solid #f0f0e8;"><td style="padding:8px 0; color:#64748b;">Deposit:</td><td style="padding:8px 0; color:#2b4c3b; font-family:monospace;">${depositAmountKES > 0 ? kes(depositAmountKES) + ' (refundable)' : 'None required'}</td></tr>
+        <tr style="background:#2b4c3b;"><td style="padding:12px 8px; color:#ebff48; font-weight:700;">Total Initial:</td><td style="padding:12px 8px; color:#ebff48; font-weight:800; font-family:monospace;">${kes(grandTotal)}</td></tr>
+      </table>
+      ${additionalRequirements ? `<div style="background:#f8f8f4; padding:12px; border-left:3px solid #2b4c3b; font-size:12.5px; color:#334155; line-height:1.6; margin-bottom:16px;"><strong>Client note:</strong> ${esc(additionalRequirements)}</div>` : ''}
+      <div style="border-top:1px solid #e0e0d8; padding-top:14px; display:flex; gap:20px;">
+        <a href="mailto:${esc(clientEmail)}?subject=RE: Paper Street Quotation ${esc(quoteReference)}" style="color:#2b4c3b; font-weight:700; font-size:12px; text-decoration:underline;">Reply via Email →</a>
+        <a href="https://wa.me/${clientPhone.replace(/[^0-9]/g, '')}" style="color:#166534; font-weight:700; font-size:12px; text-decoration:underline;">WhatsApp →</a>
+      </div>
+    </div>
+    <div style="border-top:1px solid #e0e0d8; padding:12px 28px; font-size:11px; color:#94a3b8;">
+      Automated from Paper Street Quotation Engine — record saved to <code>quote_requests</code> table.
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+function safe(str: string | undefined | null, maxLen = 72): string {
+  if (!str) return ''
+  return str
+    .replace(/[\\()]/g, '')
+    .replace(/[^\x20-\x7E]/g, '')
+    .substring(0, maxLen)
+}
+
+function row(
+  label: string,
+  value: string,
+  y: number,
+  labelColor = '0.40 0.47 0.56',
+  valueColor = '0.17 0.30 0.23',
+  bold = false
+): string {
+  const font = bold ? '/F1' : '/F2'
+  return `
+${labelColor} rg
+BT ${font} 8.5 Tf 50 ${y} Td (${safe(label)}) Tj ET
+${valueColor} rg
+BT ${bold ? '/F1' : '/F2'} 8.5 Tf 300 ${y} Td (${safe(value)}) Tj ET
+`
+}
+
+function hRule(y: number, light = false): string {
+  const color = light ? '0.88 0.88 0.85' : '0.17 0.30 0.23'
+  return `${color} RG\n0.5 w\n50 ${y} m 545 ${y} l S\n`
+}
+
+function buildPdf(data: QuotePayload): string {
+  const {
+    quoteReference,
+    serviceSlug,
+    serviceTitle,
+    tierName,
+    durationMonths,
+    monthlyRateKES,
+    totalCommitmentKES,
+    depositAmountKES,
+    startDate,
+    endDate,
+    teamSize = 1,
+    companyName,
+    clientName,
+    clientEmail,
+    clientPhone,
+    inclusions = [],
+  } = data
+
+  const isAnnual = durationMonths === 12 && depositAmountKES === 0
+  const { standardAnnualValue, savingKES, discountPercent } = calcAnnualSaving(
+    serviceSlug,
+    monthlyRateKES,
+    totalCommitmentKES,
+    durationMonths,
+    teamSize
+  )
+  const grandTotal = totalCommitmentKES + depositAmountKES
+  const orgName = safe(companyName || clientName)
+  const issueDate = safe(fmtDate(new Date().toISOString()))
+  const expiryDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 30)
+    return safe(fmtDate(d.toISOString()))
+  })()
+  const startFmt = startDate ? safe(fmtDate(startDate)) : ''
+  const endFmt = endDate ? safe(fmtDate(endDate)) : ''
+
+  let ops = ''
+
+  // ── Clean, generous dark green header band (from y=736 to 842 = 106pt high) ──
+  ops += `
+% ── Dark green header band ──
+0.17 0.30 0.23 rg
+0 736 595 106 re f
+
+% Brand name & category in header band
+1 1 1 rg
+BT /F1 18 Tf 50 804 Td (PAPER STREET) Tj ET
+0.92 1.00 0.28 rg
+BT /F1 8 Tf 195 804 Td (OFFICE SOLUTIONS & BUSINESS SERVICES) Tj ET
+
+% QUOTATION badge (cleanly inside green band)
+0.92 1.00 0.28 rg
+50 772 80 18 re f
+0.17 0.30 0.23 rg
+BT /F1 8 Tf 58 778 Td (QUOTATION) Tj ET
+
+% Contact info line (inside green band)
+0.85 0.90 0.88 rg
+BT /F2 7.5 Tf 50 750 Td (+254 110 486 677   |   hello@paperstreet.co.ke   |   paperstreet.co.ke) Tj ET
+
+% Right side info (all inside green band)
+1 1 1 rg
+BT /F2 8 Tf 350 778 Td (Quotation Ref:) Tj ET
+0.92 1.00 0.28 rg
+BT /F1 8.5 Tf 420 778 Td (${safe(quoteReference)}) Tj ET
+
+0.85 0.90 0.88 rg
+BT /F2 7.5 Tf 350 762 Td (Issued: ${issueDate}) Tj ET
+BT /F2 7.5 Tf 350 750 Td (Valid until: ${expiryDate} (30 days)) Tj ET
+
+% Accent yellow rule at bottom of header band
+0.92 1.00 0.28 RG
+2 w
+0 736 m 595 736 l S
 0.5 w
-50 ${totalY + 3} m 545 ${totalY + 3} l S
-
-% total row
-0.06 0.18 0.32 rg
-BT /F1 9.5 Tf 50 ${totalY - 16} Td (ESTIMATED INITIAL INVESTMENT) Tj ET
-BT /F1 10.5 Tf 420 ${totalY - 16} Td (KES ${grandTotal.toLocaleString()}) Tj ET
-
-% rule below total
-0.06 0.18 0.32 RG
-1.5 w
-50 ${totalY - 26} m 545 ${totalY - 26} l S
-
-% ── NEXT STEPS & ONBOARDING ──────────────────────────────────────────
-0.06 0.18 0.32 rg
-BT /F1 7.5 Tf 50 ${totalY - 50} Td (ONBOARDING & ACTIVATION NEXT STEPS) Tj ET
-0.20 0.25 0.33 rg
-BT /F2 8 Tf 50 ${totalY - 65} Td (1. A Paper Street Client Relationship Executive will contact you to confirm setup specifics.) Tj ET
-BT /F2 8 Tf 50 ${totalY - 78} Td (2. Submit company registration documents (CR12 / Certificate of Incorporation) for KYC verification.) Tj ET
-BT /F2 8 Tf 50 ${totalY - 91} Td (3. Official Service Agreement execution and instant issuance of Proof of Address / Access Pass.) Tj ET
-
-% ── FOOTER ───────────────────────────────────────────────────────────
-0.78 0.82 0.87 RG
-0.5 w
-50 80 m 545 80 l S
-
-0.40 0.47 0.56 rg
-BT /F2 7.5 Tf 135 66 Td (Paper Street Workspaces  ·  CBD Commercial Center, Kisumu CBD, Kenya) Tj ET
-BT /F2 7.5 Tf 120 54 Td (For enquiries contact hello@paperstreet.co.ke or call 0110486677) Tj ET
 `
 
-  const streamContent = stream.trim()
-  const encoder = new TextEncoder()
-  const streamBytes = encoder.encode(streamContent)
-  const streamLength = streamBytes.length
+  // ── Body content starts cleanly below y=736 ──────────────────────────────
+  let y = 708
 
-  const pdfHeader = `%PDF-1.4
+  // ── Prepared for ─────────────────────────────────────────────────────────
+  ops += `
+0.17 0.30 0.23 rg
+BT /F1 7.5 Tf 50 ${y} Td (PREPARED FOR) Tj ET
+`
+  y -= 15
+  ops += `
+0.17 0.30 0.23 rg
+BT /F1 12 Tf 50 ${y} Td (${orgName}) Tj ET
+`
+  y -= 14
+  ops += `
+0.40 0.47 0.56 rg
+BT /F2 8 Tf 50 ${y} Td (Contact: ${safe(clientName)}   |   ${safe(clientEmail)}   |   ${safe(clientPhone)}) Tj ET
+`
+  y -= 10
+
+  ops += hRule(y, true)
+  y -= 16
+
+  // ── Service proposal ─────────────────────────────────────────────────────
+  ops += `
+0.17 0.30 0.23 rg
+BT /F1 7.5 Tf 50 ${y} Td (YOUR PROPOSED SOLUTION) Tj ET
+`
+  y -= 14
+  ops += row('Service', safe(serviceTitle), y)
+  y -= 13; ops += hRule(y - 2, true)
+  y -= 12
+  ops += row('Plan', safe(tierName), y)
+  y -= 13; ops += hRule(y - 2, true)
+  y -= 12
+  ops += row('Contract term', `${durationMonths} month${durationMonths > 1 ? 's' : ''}`, y)
+  if (startFmt) {
+    y -= 13; ops += hRule(y - 2, true)
+    y -= 12
+    ops += row('Start date', startFmt, y)
+  }
+  if (endFmt) {
+    y -= 13; ops += hRule(y - 2, true)
+    y -= 12
+    ops += row('End date', endFmt, y)
+  }
+  if (teamSize > 1) {
+    y -= 13; ops += hRule(y - 2, true)
+    y -= 12
+    ops += row('Workstations', String(teamSize), y)
+  }
+  y -= 8
+
+  ops += hRule(y)
+  y -= 16
+
+  // ── Financial breakdown ───────────────────────────────────────────────────
+  ops += `
+0.17 0.30 0.23 rg
+BT /F1 7.5 Tf 50 ${y} Td (INVESTMENT BREAKDOWN) Tj ET
+`
+  y -= 14
+
+  // Monthly rate
+  const rateLabel = teamSize > 1 ? `Monthly rate (x${teamSize})` : 'Monthly equivalent'
+  const rateVal = teamSize > 1
+    ? `${kes(monthlyRateKES)} x ${teamSize} = ${kes(monthlyRateKES * teamSize)}/mo`
+    : `${kes(monthlyRateKES)}/mo`
+  ops += row(rateLabel, rateVal, y)
+  y -= 13; ops += hRule(y - 2, true)
+
+  // Annual saving (1 month free)
+  if (savingKES > 0) {
+    y -= 12
+    ops += row('Standard annual value', kes(standardAnnualValue), y, '0.40 0.47 0.56', '0.40 0.47 0.56')
+    y -= 13; ops += hRule(y - 2, true)
+    y -= 12
+    ops += row(`Annual commitment discount (1 month free)`, `-${kes(savingKES)}`, y, '0.09 0.63 0.26', '0.09 0.63 0.26', true)
+    y -= 13; ops += hRule(y - 2, true)
+    y -= 12
+    ops += row('Discounted annual service fee', kes(totalCommitmentKES), y, '0.17 0.30 0.23', '0.17 0.30 0.23', true)
+    y -= 13; ops += hRule(y - 2, true)
+  } else {
+    y -= 12
+    ops += row('Service fee', kes(totalCommitmentKES), y, '0.17 0.30 0.23', '0.17 0.30 0.23', true)
+    y -= 13; ops += hRule(y - 2, true)
+  }
+
+  // Deposit
+  y -= 12
+  if (depositAmountKES > 0) {
+    ops += row('Refundable security deposit', kes(depositAmountKES), y)
+  } else {
+    ops += row('Security deposit', 'No deposit required (KES 0)', y, '0.40 0.47 0.56', '0.09 0.63 0.26')
+  }
+  y -= 8
+
+  // Total row — green band
+  ops += `
+0.17 0.30 0.23 rg
+50 ${y - 18} 495 20 re f
+0.92 1.00 0.28 rg
+BT /F1 8 Tf 56 ${y - 11} Td (TOTAL INITIAL AMOUNT PAYABLE) Tj ET
+BT /F1 10 Tf 350 ${y - 11} Td (${safe(kes(grandTotal))}) Tj ET
+`
+  y -= 30
+
+  // Monthly note
+  if (!isAnnual && durationMonths > 1) {
+    ops += `
+0.40 0.47 0.56 rg
+BT /F2 7.5 Tf 50 ${y} Td (Subsequent monthly payments: ${safe(kes(monthlyRateKES))} per month.) Tj ET
+`
+    y -= 10
+  }
+  y -= 6
+  ops += hRule(y)
+  y -= 16
+
+  // ── Inclusions ────────────────────────────────────────────────────────────
+  if (inclusions.length > 0) {
+    ops += `
+0.17 0.30 0.23 rg
+BT /F1 7 Tf 50 ${y} Td (INCLUDED IN YOUR SERVICE) Tj ET
+`
+    y -= 13
+    for (const inc of inclusions.slice(0, 8)) {
+      ops += `
+0.17 0.30 0.23 rg
+BT /F2 7.5 Tf 52 ${y} Td (-  ${safe(inc, 90)}) Tj ET
+`
+      y -= 11
+      if (y < 100) break
+    }
+    y -= 4
+    ops += hRule(y)
+    y -= 16
+  }
+
+  // ── Next steps ────────────────────────────────────────────────────────────
+  if (y > 150) {
+    ops += `
+0.17 0.30 0.23 rg
+BT /F1 7 Tf 50 ${y} Td (HOW TO GET STARTED) Tj ET
+`
+    y -= 13
+
+    const steps = serviceSlug === 'virtual-office' || serviceSlug === 'business-address'
+      ? [
+          '1.  Review this quotation and confirm your acceptance.',
+          '2.  Complete the service agreement (sent by our team).',
+          '3.  Submit onboarding documents: Director ID, KRA PIN, CR12.',
+          '4.  Complete the initial payment.',
+          '5.  Paper Street activates your service and issues your Proof of Address.',
+        ]
+      : serviceSlug === 'dedicated-desk'
+      ? [
+          '1.  Review this quotation and confirm your acceptance.',
+          '2.  Complete the workspace membership agreement.',
+          '3.  Submit your KYC documents.',
+          '4.  Complete the initial payment.',
+          '5.  Your workstation is allocated and access is confirmed.',
+        ]
+      : [
+          '1.  Review and accept this quotation.',
+          '2.  Complete the applicable service agreement.',
+          '3.  Submit any required documents.',
+          '4.  Complete the initial payment.',
+          '5.  Paper Street proceeds with service activation.',
+        ]
+
+    for (const step of steps) {
+      if (y < 100) break
+      ops += `
+0.40 0.47 0.56 rg
+BT /F2 8 Tf 52 ${y} Td (${safe(step, 95)}) Tj ET
+`
+      y -= 12
+    }
+    y -= 4
+  }
+
+  // ── Commercial conditions ─────────────────────────────────────────────────
+  if (y > 120) {
+    ops += hRule(y)
+    y -= 12
+    ops += `
+0.40 0.47 0.56 rg
+BT /F2 7 Tf 50 ${y} Td (Quotation valid for 30 days. Full service terms and agreement provided separately. Contact hello@paperstreet.co.ke) Tj ET
+`
+    y -= 10
+    ops += `
+BT /F2 7 Tf 50 ${y} Td (or +254 110 486 677 with any questions regarding this proposal.) Tj ET
+`
+  }
+
+  // ── Footer band ───────────────────────────────────────────────────────────
+  ops += `
+0.17 0.30 0.23 rg
+0 20 595 36 re f
+0.85 0.90 0.88 rg
+BT /F2 7.5 Tf 50 36 Td (Paper Street  |  hello@paperstreet.co.ke  |  +254 110 486 677  |  paperstreet.co.ke) Tj ET
+0.92 1.00 0.28 rg
+BT /F2 7.5 Tf 50 26 Td (Office Solutions & Business Services  |  Kisumu, Kenya) Tj ET
+`
+
+  // ── Build PDF binary ──────────────────────────────────────────────────────
+  const encoder = new TextEncoder()
+  const streamBytes = encoder.encode(ops.trim())
+  const streamLen = streamBytes.length
+
+  const pdfStr = `%PDF-1.4
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
 2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
 3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >> endobj
-4 0 obj << /Length ${streamLength} >>
+4 0 obj << /Length ${streamLen} >>
 stream
-${streamContent}
+${ops.trim()}
 endstream
 endobj
 5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj
@@ -234,15 +728,15 @@ xref
 0000000009 00000 n\r
 0000000058 00000 n\r
 0000000115 00000 n\r
-0000000244 00000 n\r
-0000000350 00000 n\r
-0000000424 00000 n\r
+0000000266 00000 n\r
+0000000400 00000 n\r
+0000000474 00000 n\r
 trailer << /Size 7 /Root 1 0 R >>
 startxref
-503
+550
 %%EOF`
 
-  const pdfBytes = encoder.encode(pdfHeader)
+  const pdfBytes = encoder.encode(pdfStr)
   let binary = ''
   for (let i = 0; i < pdfBytes.byteLength; i++) {
     binary += String.fromCharCode(pdfBytes[i])
@@ -250,11 +744,10 @@ startxref
   return btoa(binary)
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+// ── Edge Function handler ─────────────────────────────────────────────────────
 
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -263,46 +756,31 @@ serve(async (req) => {
   }
 
   try {
-    const payload: QuoteData = await req.json()
-    const {
-      quoteReference,
-      serviceSlug,
-      serviceTitle,
-      tierName,
-      commitmentPeriod,
-      monthlyRateKES,
-      totalCommitmentKES,
-      depositAmountKES,
-      startDate,
-      companyName,
-      clientName,
-      clientEmail,
-      clientPhone,
-      additionalRequirements,
-    } = payload
+    const payload: QuotePayload = await req.json()
+    const { quoteReference, clientEmail, clientName, companyName, serviceSlug } = payload
 
     if (!quoteReference || !clientEmail || !clientName) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required quote fields' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      return new Response(JSON.stringify({ error: 'Missing required quote fields' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
     }
 
+    // Credentials
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Brevo Credentials from Supabase Secrets
-    const apiKey = Deno.env.get('BREVO_API_KEY') || ''
-    const senderName = Deno.env.get('BREVO_SENDER_NAME') || 'Paper Street Workspaces'
-    const senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || ''
-    const adminEmail = Deno.env.get('ADMIN_EMAIL') || 'otienoalvine925@gmail.com'
+    let apiKey = Deno.env.get('BREVO_API_KEY') || Deno.env.get('SENDINBLUE_API_KEY') || ''
+    let senderName = Deno.env.get('BREVO_SENDER_NAME') || 'Paper Street'
+    let senderEmail = Deno.env.get('BREVO_SENDER_EMAIL') || 'hello@paperstreet.co.ke'
+    let adminEmail = Deno.env.get('ADMIN_EMAIL') || 'otienoalvine925@gmail.com'
 
-    if (!apiKey) {
+    if (!apiKey || apiKey.includes('placeholder')) {
       const { data: settings } = await supabase.from('system_settings').select('key, value')
       if (settings) {
         for (const s of settings) {
-          if (s.key === 'brevo_api_key' || s.key === 'brevo_key') apiKey = s.value
+          if (s.key === 'brevo_api_key') apiKey = s.value
           if (s.key === 'brevo_sender_name') senderName = s.value
           if (s.key === 'brevo_sender_email') senderEmail = s.value
           if (s.key === 'admin_email') adminEmail = s.value
@@ -310,236 +788,78 @@ serve(async (req) => {
       }
     }
 
-    // Insert or update in quote_requests table
-    try {
-      await supabase.from('quote_requests').insert([
-        {
-          quote_reference: quoteReference,
-          service_slug: serviceSlug,
-          service_title: serviceTitle,
-          tier_name: tierName,
-          commitment_period: commitmentPeriod,
-          duration_months: 1,
-          start_date: startDate,
-          end_date: startDate,
-          monthly_rate_kes: monthlyRateKES,
-          total_commitment_kes: totalCommitmentKES,
-          deposit_amount_kes: depositAmountKES,
-          team_size: 1,
-          company_name: companyName || null,
-          client_name: clientName,
-          client_email: clientEmail,
-          client_phone: clientPhone,
-          additional_requirements: additionalRequirements || null,
-          status: 'quote_sent',
-          email_sent: true,
-          email_sent_at: new Date().toISOString(),
-        },
-      ])
-    } catch (dbErr) {
-      console.warn('[quote_requests DB Insert Warning]', dbErr)
-    }
+    // Build email and PDF
+    const clientHtml = buildClientEmail(payload)
+    const adminHtml = buildAdminEmail(payload, adminEmail)
+    const pdfBase64 = buildPdf(payload)
+    const subject = serviceSubject(serviceSlug, companyName)
+    const pdfFilename = `PaperStreet_Quotation_${quoteReference}.pdf`
 
-    // Generate clean flat PDF quotation
-    const pdfBase64 = createQuotePdf(payload)
-    const grandTotal = totalCommitmentKES + (depositAmountKES || 0)
-    const orgName = companyName ? companyName : 'your organization'
+    let clientSuccess = false
+    let adminSuccess = false
 
-    // Personalized Sales Pitch based on package
-    let valueProposition = ''
-    if (serviceSlug === 'virtual-office') {
-      valueProposition = `
-        At Paper Street, we empower market-leading businesses like <strong>${orgName}</strong> with an esteemed, fully compliant corporate presence in the heart of Kisumu CBD on Oginga Odinga Street. Your membership delivers verified registered office credibility under Section 47 of the Companies Act 2015, daily mail digitization scanned directly to your email, and executive boardroom access with 100% generator power uptime to host your high-value clients and investors.
-      `
-    } else if (serviceSlug === 'business-address') {
-      valueProposition = `
-        Establish verified legal credibility and immediate compliance for <strong>${orgName}</strong>. Our commercial address on Oginga Odinga Street is legally vetted for eCitizen BRS company incorporation, KRA PIN tax compliance, and commercial banking KYC, giving your enterprise a genuine commercial footprint in Western Kenya without unnecessary physical overhead.
-      `
+    if (apiKey && !apiKey.includes('placeholder')) {
+      // Client email with PDF attachment
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: clientEmail, name: clientName }],
+            subject,
+            htmlContent: clientHtml,
+            attachment: [{ name: pdfFilename, content: pdfBase64 }],
+          }),
+        })
+        clientSuccess = res.ok
+        if (!res.ok) console.error('[send-quote-email] client error:', await res.text())
+      } catch (e) {
+        console.error('[send-quote-email] client exception:', e)
+      }
+
+      // Admin alert (no PDF attachment)
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: adminEmail, name: 'Paper Street Admin' }],
+            subject: `[NEW QUOTE] ${payload.serviceTitle} — ${companyName || clientName} (${quoteReference})`,
+            htmlContent: adminHtml,
+          }),
+        })
+        adminSuccess = res.ok
+        if (!res.ok) console.error('[send-quote-email] admin error:', await res.text())
+      } catch (e) {
+        console.error('[send-quote-email] admin exception:', e)
+      }
     } else {
-      valueProposition = `
-        Elevate the daily productivity of <strong>${orgName}</strong> with a permanent, reserved personal workstation. Enjoy lockable storage, commercial CBD business address, 100% automatic standby power generator backup, dual-carrier high-speed fibre internet, and monthly executive boardroom credits to drive your business forward.
-      `
+      console.log('[send-quote-email] No live Brevo key — simulated send to:', clientEmail, adminEmail)
+      clientSuccess = true
+      adminSuccess = true
     }
 
-    // Build Personalized Client Email HTML
-    const clientHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Official Membership Quotation - Paper Street</title>
-</head>
-<body style="margin: 0; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2D52; background-color: #FBFAF7; line-height: 1.6;">
-  <div style="max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; padding: 40px 32px;">
-
-    <!-- Brand Header -->
-    <div style="border-bottom: 2px solid #0F2D52; padding-bottom: 20px; margin-bottom: 28px;">
-      <div style="font-size: 24px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #0F2D52;">PAPER STREET</div>
-      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; margin-top: 4px;">Commercial Center &middot; Oginga Odinga St &middot; Kisumu CBD, Kenya</div>
-      <div style="margin-top: 12px;">
-        <span style="display: inline-block; background: #0F2D52; color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px;">OFFICIAL MEMBERSHIP QUOTATION</span>
-      </div>
-    </div>
-
-    <!-- Quotation Reference Banner -->
-    <div style="background: #0F2D52; color: #ffffff; padding: 18px 22px; margin-bottom: 28px;">
-      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #93c5fd; font-weight: 600;">Official Quotation Reference</div>
-      <div style="font-family: monospace; font-size: 24px; font-weight: 700; letter-spacing: 2px; margin-top: 4px;">${quoteReference}</div>
-      <div style="font-size: 11px; color: #cbd5e1; margin-top: 6px;">Valid for 30 calendar days &middot; PDF Proposal attached to this email.</div>
-    </div>
-
-    <!-- Personalized Salutation & Sales Pitch -->
-    <div style="margin-bottom: 28px;">
-      <p style="font-size: 16px; margin: 0 0 12px 0; color: #0F2D52; font-weight: 700;">Dear ${clientName},</p>
-      <p style="font-size: 13.5px; margin: 0 0 14px 0; color: #334155; line-height: 1.7;">
-        Thank you for selecting Paper Street Workspaces. We are delighted to present this tailored corporate proposal for <strong>${serviceTitle} (${tierName})</strong> prepared specifically for <strong>${orgName}</strong>.
-      </p>
-      <div style="background: #f8fafc; border-left: 3px solid #0F2D52; padding: 14px 16px; font-size: 13px; color: #1e293b; line-height: 1.7;">
-        ${valueProposition.trim()}
-      </div>
-    </div>
-
-    <!-- Itemized Quotation Summary Table -->
-    <div style="border: 1px solid #e2e8f0; margin-bottom: 28px;">
-      <div style="background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0F2D52;">Investment &amp; Specification Summary</div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B; width: 40%;">Organization:</td><td style="padding: 10px 18px; color: #0F2D52; font-weight: 600;">${orgName}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Contact Person:</td><td style="padding: 10px 18px; color: #0F2D52;">${clientName} (${clientPhone})</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Package Selected:</td><td style="padding: 10px 18px; color: #0F2D52; font-weight: 600;">${serviceTitle} &mdash; ${tierName}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Contract Commitment:</td><td style="padding: 10px 18px; color: #0F2D52; font-weight: 600;">${commitmentPeriod}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Target Start Date:</td><td style="padding: 10px 18px; color: #0F2D52;">${startDate}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Monthly Rate:</td><td style="padding: 10px 18px; color: #0F2D52; font-family: monospace; font-weight: 600;">KES ${monthlyRateKES.toLocaleString()} / mo</td></tr>
-        ${depositAmountKES > 0 ? `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 18px; color: #64748B;">Refundable Security Deposit:</td><td style="padding: 10px 18px; color: #0F2D52; font-family: monospace;">KES ${depositAmountKES.toLocaleString()}</td></tr>` : ''}
-        <tr style="background: #f8fafc;"><td style="padding: 12px 18px; color: #0F2D52; font-weight: 700; text-transform: uppercase; font-size: 12px;">Total Initial Investment:</td><td style="padding: 12px 18px; color: #0F2D52; font-weight: 700; font-size: 16px; font-family: monospace;">KES ${grandTotal.toLocaleString()}</td></tr>
-      </table>
-    </div>
-
-    <!-- Onboarding Process -->
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px 18px; margin-bottom: 28px; font-size: 12.5px; color: #334155; line-height: 1.6;">
-      <strong style="color: #0F2D52; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Onboarding &amp; Agreement Execution:</strong>
-      1. <strong>Relationship Specialist Contact:</strong> A Paper Street membership executive will contact you directly within 2 business hours.<br>
-      2. <strong>KYC Verification:</strong> Submit corporate documents (Director ID, KRA PIN, Certificate of Incorporation / CR12).<br>
-      3. <strong>Instant Activation:</strong> Upon agreement execution, your official Proof of Address certificate and access badges are issued immediately.
-    </div>
-
-    <!-- Complete 13 Terms of Service Sections -->
-    <div style="border: 1px solid #cbd5e1; margin-bottom: 28px;">
-      <div style="background: #f1f5f9; padding: 12px 18px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0F2D52;">
-        Paper Street Terms of Service &amp; Regulatory Framework
-      </div>
-      <div style="padding: 16px 18px; font-size: 11.5px; color: #334155; line-height: 1.6;">
-        <p style="margin: 0 0 10px 0;"><strong>1. About Paper Street and These Terms:</strong> Paper Street operates commercial coworking spaces, private office suites, meeting rooms, and virtual office business address services across Kenya, including our flagship commercial facilities at Kisumu CBD Commercial Center on Oginga Odinga Street in Kisumu CBD and Westlands in Nairobi. By subscribing to a Paper Street plan, completing an onboarding agreement, using our website, or accessing any of our physical premises or virtual services, you agree to be bound by these Terms of Service.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>2. Scope of Services Provided:</strong> Paper Street offers Virtual Office &amp; Business Address on Oginga Odinga St under Section 47 Companies Act 2015, eCitizen BRS incorporation, KRA PIN registration, and banking KYC; Mail Handling &amp; Digitization (300 DPI PDF scans); Executive Meeting Rooms (4-6 pax with 4K displays); Coworking Desks; Private Office Suites; and Front-Desk Concierge Services (8:00 AM to 6:00 PM, Mon-Fri).</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>3. Onboarding and Statutory KYC Compliance:</strong> In compliance with POCAMLA, service activation requires clear copies of director National ID / Passport, KRA PIN certificates, Certificate of Incorporation, current CR12 (issued within 90 days), and proof of physical residential address within 14 calendar days of plan initiation.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>4. Subscription Plans, Pricing &amp; Security Deposit Policy:</strong> Annual upfront plans (12 months) enjoy a Zero Security Deposit benefit. Monthly rolling contracts require a mandatory Two Months Refundable Security Deposit prior to activation. Deposits are refunded exactly 30 calendar days following contract conclusion, subject to clearance and certified proof from BRS (Form CR9 and updated CR12) confirming legal change of registered office address away from Paper Street premises.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>5. Legal Address Authorization &amp; Restrictions on Use:</strong> A valid subscription grants a limited, non-exclusive, revocable license to utilize the designated commercial address. It does not create any tenancy or leasehold title. Upon contract expiry or termination, you must immediately cease displaying the address and file Form CR9 with BRS within 30 days. Unauthorized use carries a penalty of KES 15,000 per month plus statutory reporting.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>6. Permitted vs Prohibited Activities:</strong> Services and premises may be used solely for legitimate, lawful commercial purposes. Unauthorized activities include illegal/fraudulent schemes, unlicensed deposit-taking, pyramid schemes, cybercrime violations, or handling hazardous/contraband materials. Immediate termination and reporting applies to violations.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>7. Mail, Parcel Intake &amp; Storage Protocols:</strong> Standard letters and packages are held free of storage charge for up to 30 calendar days. Items uncollected after 30 days incur KES 50/day. Items uncollected after 90 days will be returned to sender or disposed of without liability. Virtual Office Pro mail is scanned to PDF (300 DPI) within 1 business day. Custody liability is limited to KES 5,000 per parcel or declared value (lower).</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>8. Meeting Room &amp; Workspace Code of Conduct:</strong> Meeting rooms must be cancelled at least 24 hours in advance to receive credit. Cancellations under 24 hours are charged in full. Meeting suites are strictly 4-6 pax capacity. Members are responsible for proper equipment care and acoustic consideration.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>9. Payment Terms, Billing Cycles &amp; Grace Periods:</strong> Invoices are issued electronically (M-Pesa Till, RTGS/EFT, Visa/Mastercard; no cash). Due on the 1st of each cycle. 7-day grace period before service suspension. Accounts in default beyond 30 days are permanently terminated with deposit forfeiture.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>10. Binding Contract Commitments, Early Departure &amp; Legal Action:</strong> The Client commits to the full financial obligation for the entirety of the agreed contract term. In the event of early departure or voluntary non-use, the Client remains legally obligated for all subscription fees for the remaining contracted period. Paper Street reserves the right to initiate debt recovery, report defaults to CRBs, and commence formal legal proceedings in the courts of Kenya.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>11. Limitation of Liability and Indemnification:</strong> Paper Street is not liable for indirect, incidental, or consequential damages. Aggregate liability is strictly capped at subscription fees paid in the preceding three (3) months. The Client indemnifies Paper Street from unlawful use or tax defaults.</p>
-        
-        <p style="margin: 0 0 10px 0;"><strong>12. Governing Law and Dispute Resolution:</strong> Governed by the Laws of the Republic of Kenya. Disputes shall first undergo 30-day good-faith negotiations, followed by binding mediation under the Nairobi Centre for International Arbitration (NCIA) before any court litigation.</p>
-        
-        <p style="margin: 0;"><strong>13. Legal Contact &amp; Corporate Notices:</strong> Legal Desk: legal@paperstreet.co.ke &middot; Client Support: hello@paperstreet.co.ke &middot; Kisumu Commercial Center: Oginga Odinga Street, Kisumu CBD &middot; Nairobi Commercial Center: Westlands Business Park, Waiyaki Way, Nairobi.</p>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="border-top: 1px solid #E2E8F0; padding-top: 20px; font-size: 11px; color: #94A3B8; text-align: center; line-height: 1.6;">
-      <p style="margin: 0 0 4px 0; font-weight: 600; color: #64748B;">Paper Street Workspaces</p>
-      <p style="margin: 0 0 4px 0;">CBD Commercial Center, Oginga Odinga Street, Kisumu CBD, Kenya</p>
-      <p style="margin: 0;">Tel: 0110486677 / +254 110 486 677 &nbsp;|&nbsp; hello@paperstreet.co.ke &nbsp;|&nbsp; www.paperstreet.co.ke</p>
-    </div>
-
-  </div>
-</body>
-</html>`
-
-    // Send Client Email via Brevo
-    if (apiKey) {
-      await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-          'api-key': apiKey,
-        },
-        body: JSON.stringify({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: clientEmail, name: clientName }],
-          subject: `Official Membership Quotation [${quoteReference}] - ${serviceTitle} | Paper Street`,
-          htmlContent: clientHtml,
-          attachment: [
-            {
-              name: `PaperStreet_Quotation_${quoteReference}.pdf`,
-              content: pdfBase64,
-            },
-          ],
-        }),
-      })
-
-      // Send Admin Alert
-      const adminHtml = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: sans-serif; color: #0F2D52; padding: 20px; background: #fbfaf7;">
-  <div style="max-width: 600px; background: #fff; border: 1px solid #cbd5e1; padding: 30px;">
-    <h2 style="margin: 0 0 10px; color: #0F2D52;">New Membership Quotation Generated</h2>
-    <p style="font-size: 14px; color: #475569; margin: 0 0 20px;">A client has generated a formal quote request. Human follow-up required.</p>
-    
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Quote Reference:</td><td style="padding: 8px 0; font-weight: bold; color: #0F2D52;">${quoteReference}</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Company Name:</td><td style="padding: 8px 0; font-weight: bold; color: #0F2D52;">${companyName || 'N/A'}</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Contact Person:</td><td style="padding: 8px 0; font-weight: bold; color: #0F2D52;">${clientName}</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Email:</td><td style="padding: 8px 0; color: #0F2D52;">${clientEmail}</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Phone:</td><td style="padding: 8px 0; color: #0F2D52; font-weight: bold;">${clientPhone}</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Service &amp; Tier:</td><td style="padding: 8px 0; color: #0F2D52;">${serviceTitle} (${tierName})</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Commitment:</td><td style="padding: 8px 0; color: #0F2D52;">${commitmentPeriod} (Start: ${startDate})</td></tr>
-      <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Estimated Total:</td><td style="padding: 8px 0; font-weight: bold; color: #0F2D52;">KES ${grandTotal.toLocaleString()}</td></tr>
-      ${additionalRequirements ? `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748B;">Specific Notes:</td><td style="padding: 8px 0; color: #0F2D52;">${additionalRequirements}</td></tr>` : ''}
-    </table>
-
-    <div style="background: #f8fafc; padding: 12px; border-left: 3px solid #0F2D52; font-size: 12px;">
-      Action: Call or email the client to initiate onboarding and agreement signing.
-    </div>
-  </div>
-</body>
-</html>`
-
-      await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-          'api-key': apiKey,
-        },
-        body: JSON.stringify({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: adminEmail, name: 'Paper Street Sales Lead' }],
-          subject: `[LEAD QUOTE] ${serviceTitle} - ${companyName || clientName} (${quoteReference})`,
-          htmlContent: adminHtml,
-        }),
-      })
+    // Update quote_requests email status
+    try {
+      await supabase
+        .from('quote_requests')
+        .update({
+          email_sent: clientSuccess,
+          email_sent_at: clientSuccess ? new Date().toISOString() : null,
+        })
+        .eq('quote_reference', quoteReference)
+    } catch (e) {
+      console.warn('[send-quote-email] DB update warning:', e)
     }
 
-    return new Response(JSON.stringify({ success: true, quoteReference }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return new Response(
+      JSON.stringify({ success: true, quoteReference, clientSuccess, adminSuccess }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    )
   } catch (err: any) {
+    console.error('[send-quote-email] Exception:', err)
     return new Response(JSON.stringify({ error: err.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

@@ -1814,3 +1814,284 @@ export async function sendBookingReminderEmail(booking: {
 }
 
 
+
+
+export interface OfficeManagementInquiryData {
+  requestId?: string
+  businessName: string
+  contactName: string
+  email: string
+  phone: string
+  location: string
+  employees: string
+  requirements: string
+  facilities?: string
+  startDate?: string
+  contractDuration?: string
+  additionalInfo?: string
+}
+
+/**
+ * Builds user acknowledgement email HTML for Office Management proposal request.
+ */
+export function buildOfficeManagementClientEmail(data: OfficeManagementInquiryData): string {
+  const refCode = data.requestId ? `OM-${data.requestId.slice(0, 8).toUpperCase()}` : 'PS-OM'
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Office Management Proposal Request Received - Paper Street</title>
+</head>
+<body style="margin: 0; padding: 40px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2D52; background-color: #ffffff; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Top Header -->
+    <div style="border-bottom: 2px solid #0F2D52; padding-bottom: 16px; margin-bottom: 28px;">
+      <div style="font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #0F2D52; margin: 0;">
+        PAPER STREET
+      </div>
+      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; margin-top: 4px;">
+        Fully Managed Office Solutions &middot; Kenya
+      </div>
+    </div>
+
+    <!-- Title & Tracking -->
+    <div style="margin-bottom: 24px;">
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #64748B; margin-bottom: 4px;">
+        PROPOSAL REQUEST RECEIVED &middot; <span style="color: #0F2D52; font-family: monospace;">${refCode}</span>
+      </div>
+      <div style="font-size: 22px; font-weight: 300; color: #0F2D52; margin: 0 0 12px 0;">
+        Your office proposal request is in motion.
+      </div>
+      <p style="font-size: 13.5px; color: #334155; margin: 0; line-height: 1.6;">
+        Dear ${data.contactName}, thank you for contacting Paper Street. We have received your detailed requirements for <strong>${data.businessName}</strong> in <strong>${data.location}</strong>. Our dedicated workspace team will review your specifications and reach out to you directly with more details, shortlisted premises options, and a tailored proposal within 1 business day.
+      </p>
+    </div>
+
+    <!-- Specifications Table -->
+    <div style="border-top: 1px solid #0F2D52; border-bottom: 1px solid #0F2D52; padding: 6px 0; margin-bottom: 28px;">
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; padding: 8px 0 4px 0;">
+        YOUR OFFICE SPECIFICATIONS
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B; width: 35%;">Business Name:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600;">${data.businessName}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Contact Person:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600;">${data.contactName}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Preferred Location:</td>
+          <td style="padding: 10px 0; color: #0F2D52; font-weight: 600;">${data.location}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Team Size / Employees:</td>
+          <td style="padding: 10px 0; color: #0F2D52;">${data.employees}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Contract Duration:</td>
+          <td style="padding: 10px 0; color: #0F2D52;">${data.contractDuration || '12 or 24 months'}</td>
+        </tr>
+        ${data.startDate ? `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B;">Expected Start Date:</td>
+          <td style="padding: 10px 0; color: #0F2D52;">${data.startDate}</td>
+        </tr>
+        ` : ''}
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B; vertical-align: top;">Office Requirements:</td>
+          <td style="padding: 10px 0; color: #1e293b; line-height: 1.5;">${data.requirements}</td>
+        </tr>
+        ${data.facilities ? `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 0; color: #64748B; vertical-align: top;">Required Facilities:</td>
+          <td style="padding: 10px 0; color: #1e293b; line-height: 1.5;">${data.facilities}</td>
+        </tr>
+        ` : ''}
+        ${data.additionalInfo ? `
+        <tr>
+          <td style="padding: 10px 0; color: #64748B; vertical-align: top;">Additional Notes:</td>
+          <td style="padding: 10px 0; color: #1e293b; line-height: 1.5;">${data.additionalInfo}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    <!-- What Happens Next -->
+    <div style="margin-bottom: 28px;">
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748B; margin-bottom: 10px;">
+        WHAT HAPPENS NEXT
+      </div>
+      <div style="font-size: 13px; color: #334155; line-height: 1.6;">
+        <p style="margin: 0 0 8px 0;"><strong>1. Brief Review:</strong> Our team assesses your location, layout and facility needs.</p>
+        <p style="margin: 0 0 8px 0;"><strong>2. Discovery Conversation:</strong> A Paper Street relationship manager will reach out within 1 business day to clarify commercial specifics.</p>
+        <p style="margin: 0;"><strong>3. Tailored Proposal:</strong> We present shortlisted premises options, proposed furnishing plans, and transparent 12/24-month contract pricing.</p>
+      </div>
+    </div>
+
+    <!-- Direct Contact Line -->
+    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; font-size: 12.5px; color: #334155; line-height: 1.6;">
+      <strong style="color: #0F2D52;">Questions or immediate updates?</strong> Contact our workspace team directly on phone or WhatsApp at <strong style="color: #0F2D52;">0110486677 (+254 110 486 677)</strong> or reply directly to this email.
+    </div>
+
+    <!-- Footer -->
+    <div style="font-size: 11px; color: #94A3B8; line-height: 1.6;">
+      <div style="font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Paper Street Workspaces</div>
+      <div>Commercial Center &middot; Kisumu CBD, Kenya &middot; hello@paperstreet.co.ke &middot; www.paperstreet.co.ke</div>
+    </div>
+
+  </div>
+</body>
+</html>
+`
+}
+
+/**
+ * Builds admin notification email HTML for incoming Office Management proposal requests.
+ */
+export function buildOfficeManagementAdminEmail(data: OfficeManagementInquiryData): string {
+  const refCode = data.requestId ? `OM-${data.requestId.slice(0, 8).toUpperCase()}` : 'PS-OM'
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Office Management Request - Paper Street Admin</title>
+</head>
+<body style="margin: 0; padding: 40px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2D52; background-color: #ffffff; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Top Header -->
+    <div style="border-bottom: 2px solid #0F2D52; padding-bottom: 16px; margin-bottom: 24px;">
+      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #64748B; margin-bottom: 4px;">
+        NEW MANAGED OFFICE PROPOSAL REQUEST &middot; <span style="font-family: monospace; color: #0F2D52;">${refCode}</span>
+      </div>
+      <div style="font-size: 22px; font-weight: 300; color: #0F2D52; margin: 0;">
+        ${data.businessName} &mdash; ${data.contactName}
+      </div>
+    </div>
+
+    <!-- Info Table -->
+    <div style="border-bottom: 1px solid #0F2D52; padding-bottom: 12px; margin-bottom: 20px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B; width: 35%;">Business Name:</td>
+          <td style="padding: 8px 0; color: #0F2D52; font-weight: 600;">${data.businessName}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Contact Person:</td>
+          <td style="padding: 8px 0; color: #0F2D52; font-weight: 600;">${data.contactName}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Email Address:</td>
+          <td style="padding: 8px 0; color: #0F2D52;"><a href="mailto:${data.email}" style="color: #0F2D52; font-weight: 600;">${data.email}</a></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Phone / WhatsApp:</td>
+          <td style="padding: 8px 0; color: #0F2D52; font-weight: 600;"><a href="tel:${data.phone}" style="color: #0F2D52;">${data.phone}</a></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Preferred Location:</td>
+          <td style="padding: 8px 0; color: #0F2D52; font-weight: 600;">${data.location}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Team Size:</td>
+          <td style="padding: 8px 0; color: #0F2D52; font-weight: 600;">${data.employees} employees</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Contract Duration:</td>
+          <td style="padding: 8px 0; color: #0F2D52;">${data.contractDuration || 'Not specified'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B;">Expected Start Date:</td>
+          <td style="padding: 8px 0; color: #0F2D52;">${data.startDate || 'Not specified'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B; vertical-align: top;">Office Requirements:</td>
+          <td style="padding: 8px 0; color: #0F2D52; line-height: 1.5;">${data.requirements}</td>
+        </tr>
+        ${data.facilities ? `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px 0; color: #64748B; vertical-align: top;">Facilities Required:</td>
+          <td style="padding: 8px 0; color: #0F2D52; line-height: 1.5;">${data.facilities}</td>
+        </tr>
+        ` : ''}
+        ${data.additionalInfo ? `
+        <tr>
+          <td style="padding: 8px 0; color: #64748B; vertical-align: top;">Additional Info:</td>
+          <td style="padding: 8px 0; color: #0F2D52; line-height: 1.5;">${data.additionalInfo}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    <!-- Quick Action -->
+    <div style="font-size: 13px; color: #334155; line-height: 1.6; margin-bottom: 24px;">
+      <a href="mailto:${data.email}?subject=RE: Office Management Proposal - ${encodeURIComponent(data.businessName)}" style="display: inline-block; background-color: #0F2D52; color: #ffffff; padding: 10px 18px; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">
+        Reply to Client &rarr;
+      </a>
+      <a href="https://wa.me/${data.phone.replace(/[^0-9]/g, '')}" style="display: inline-block; margin-left: 10px; background-color: #25D366; color: #ffffff; padding: 10px 18px; text-decoration: none; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">
+        WhatsApp Client &rarr;
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="font-size: 11px; color: #94A3B8;">
+      <div>Paper Street Admin Notifications &middot; Automated Dispatch</div>
+    </div>
+
+  </div>
+</body>
+</html>
+`
+}
+
+/**
+ * Dispatches Office Management emails: user acknowledgement and admin alert.
+ */
+export async function dispatchOfficeManagementEmails(data: OfficeManagementInquiryData): Promise<{
+  clientSuccess: boolean
+  adminSuccess: boolean
+}> {
+  const config = await getSystemConfig()
+  const adminEmail = config.adminEmail || 'otienoalvine925@gmail.com'
+
+  let clientSuccess = false
+  let adminSuccess = false
+
+  // 1. Send acknowledgement to client
+  if (data.email) {
+    try {
+      const clientHtml = buildOfficeManagementClientEmail(data)
+      const clientRes = await sendBrevoEmail({
+        to: [{ email: data.email, name: data.contactName }],
+        subject: `Office Management Proposal Request Received [${data.businessName}] | Paper Street`,
+        htmlContent: clientHtml,
+      })
+      clientSuccess = clientRes.success
+    } catch (e) {
+      console.warn('[dispatchOfficeManagementEmails] Client email exception:', e)
+    }
+  }
+
+  // 2. Send notification to admin
+  try {
+    const adminHtml = buildOfficeManagementAdminEmail(data)
+    const adminRes = await sendBrevoEmail({
+      to: [{ email: adminEmail, name: 'Paper Street Admin' }],
+      subject: `[NEW OFFICE MANAGEMENT REQUEST] ${data.businessName} (${data.contactName}) · ${data.location}`,
+      htmlContent: adminHtml,
+    })
+    adminSuccess = adminRes.success
+  } catch (e) {
+    console.warn('[dispatchOfficeManagementEmails] Admin email exception:', e)
+  }
+
+  return { clientSuccess, adminSuccess }
+}
+

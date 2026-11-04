@@ -7,12 +7,13 @@ import { ArrowRight, ArrowLeft, Check, Shield, Building2, Clock } from 'lucide-r
 const CORE_BOOKING_SERVICES = [
   {
     slug: 'virtual-office',
+    isAtCapacity: false,
     group: 'priority' as const,
     href: '/quote/virtual-office',
     ctaText: 'Get Quote',
     title: 'Virtual Office',
     tag: 'Priority · Flagship',
-    annualRate: 'KES 8,000 / mo',
+    annualRate: 'KES 9,000 / mo',
     monthlyRate: 'KES 10,000 / mo (+ 1 mo deposit)',
     shortDesc: 'Comprehensive business presence with commercial address on Oginga Odinga St, digital mail PDF scanning, and monthly boardroom hours.',
     features: [
@@ -25,12 +26,13 @@ const CORE_BOOKING_SERVICES = [
   },
   {
     slug: 'business-address',
+    isAtCapacity: false,
     group: 'priority' as const,
     href: '/quote/business-address',
     ctaText: 'Get Quote',
     title: 'Business Address',
     tag: 'Priority · Registration',
-    annualRate: 'KES 3,500 / mo',
+    annualRate: 'KES 4,500 / mo',
     monthlyRate: 'KES 5,000 / mo (+ 2 mo deposit)',
     shortDesc: 'Dedicated commercial address for eCitizen company incorporation, KRA PIN registration, and corporate banking KYC.',
     features: [
@@ -42,6 +44,7 @@ const CORE_BOOKING_SERVICES = [
   },
   {
     slug: 'hot-desk',
+    isAtCapacity: true,
     group: 'priority' as const,
     href: '/book/hot-desk',
     ctaText: 'Book Day Pass',
@@ -59,6 +62,7 @@ const CORE_BOOKING_SERVICES = [
   },
   {
     slug: 'dedicated-desk',
+    isAtCapacity: true,
     group: 'hub' as const,
     href: '/quote/dedicated-desk',
     ctaText: 'Get Quote',
@@ -76,6 +80,7 @@ const CORE_BOOKING_SERVICES = [
   },
   {
     slug: 'meeting-rooms',
+    isAtCapacity: true,
     group: 'hub' as const,
     href: '/book/meeting-rooms',
     ctaText: 'Book Room',
@@ -104,9 +109,16 @@ function ServiceRows({ services }: { services: typeof CORE_BOOKING_SERVICES }) {
           <div className="lg:col-span-4 space-y-2">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-navy/40 font-bold">0{index + 1}</span>
-              <span className="bg-navy text-white text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold">
-                {service.tag}
-              </span>
+              {service.isAtCapacity ? (
+                <span className="bg-navy text-gold text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block animate-pulse" />
+                  At Capacity
+                </span>
+              ) : (
+                <span className="bg-navy text-white text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold">
+                  {service.tag}
+                </span>
+              )}
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-navy">{service.title}</h2>
             <p className="text-xs text-navy/65 leading-relaxed pt-1">{service.shortDesc}</p>
@@ -137,9 +149,13 @@ function ServiceRows({ services }: { services: typeof CORE_BOOKING_SERVICES }) {
           <div className="lg:col-span-4 flex items-center lg:justify-end self-center">
             <Link
               href={service.href}
-              className="bg-navy text-white px-8 py-3.5 text-xs uppercase tracking-wider font-semibold hover:bg-navy-600 transition-colors inline-flex items-center gap-2"
+              className={`px-8 py-3.5 text-xs uppercase tracking-wider font-semibold transition-colors inline-flex items-center gap-2 ${
+                service.isAtCapacity
+                  ? 'bg-navy/10 text-navy hover:bg-navy hover:text-white border border-navy/20'
+                  : 'bg-navy text-white hover:bg-navy-600'
+              }`}
             >
-              {service.ctaText} <ArrowRight size={13} />
+              {service.isAtCapacity ? 'Waitlist & Capacity' : service.ctaText} <ArrowRight size={13} />
             </Link>
           </div>
         </div>

@@ -343,6 +343,8 @@ function ActionLink({ href, children, inverse = false, testId }: { href: string;
 }
 
 const FEATURE_ADDON_LINKS: Record<string, string> = {
+  'Office Management': '/office-management',
+  'Managed Office Solutions': '/office-management',
   'Mail & Package Receiving': '/services/addons/mail-handling',
   'Digital Mail Scanning': '/services/addons/mail-handling',
   'Mail Handling & Physical Reception': '/services/addons/mail-handling',

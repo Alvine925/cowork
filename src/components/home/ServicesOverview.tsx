@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import Link from 'next/link'
@@ -19,6 +19,9 @@ const ADDON_HREF_MAP: Record<string, string> = {
   'Ergonomic Desk': '/services/hot-desk',
   'Power Backup': '/services/hot-desk',
   'Quiet Phone Booths': '/services/hot-desk',
+  'Office Sourcing': '/office-management',
+  'Furnishing & Equipment': '/office-management',
+  'Internet & Utilities': '/office-management',
 }
 
 type ServiceCard = {
@@ -91,6 +94,20 @@ const HUB_SERVICES: ServiceCard[] = [
     image: '/dedicated-desk.webp',
     desc: 'Your personal permanent workstation with lockable storage and monthly meeting room hours. Set up your monitors and work with consistency.',
     includedAddons: ['Reserved Personal Desk', 'Lockable Storage', 'Meeting Room Hours'],
+  },
+]
+
+const MANAGED_SERVICES: ServiceCard[] = [
+  {
+    number: '06',
+    name: 'Office Management',
+    tag: 'Managed · Annual Contract',
+    href: '/office-management',
+    bookHref: '/office-management/quote-request',
+    ctaText: 'Request Proposal',
+    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&auto=format&q=80',
+    desc: 'Fully managed office solutions for businesses that need a professional workspace without handling the setup and daily operations themselves.',
+    includedAddons: ['Office Sourcing', 'Furnishing & Equipment', 'Internet & Utilities'],
   },
 ]
 
@@ -256,6 +273,26 @@ export function ServicesOverview() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl">
             {HUB_SERVICES.map((service) => (
+              <ServiceTile key={service.number} service={service} />
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-12 border-t border-navy/10 mb-20">
+          <div className="mb-10 max-w-2xl">
+            <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-navy font-bold">
+              <span className="w-2.5 h-1 bg-navy shrink-0 inline-block" />
+              Managed Offices
+            </span>
+            <h3 className="mt-2 font-heading text-xl md:text-2xl font-light text-navy">
+              A fully managed office built around your business
+            </h3>
+            <p className="mt-2 text-xs md:text-sm text-navy/65 leading-relaxed">
+              Paper Street sources, furnishes, and manages office spaces on behalf of businesses that want a physical office without handling setup and daily operations.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl">
+            {MANAGED_SERVICES.map((service) => (
               <ServiceTile key={service.number} service={service} />
             ))}
           </div>

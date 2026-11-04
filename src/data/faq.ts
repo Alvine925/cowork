@@ -49,7 +49,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: 'What does Virtual Office cost?',
-        a: 'KES 8,000 per month on annual billing (KES 96,000 per year, no security deposit under current terms). KES 10,000 per month on monthly billing, plus a one-month deposit (KES 10,000).',
+        a: 'KES 9,000 per month on annual billing (KES 108,000 per year with 1 month free, no security deposit). KES 10,000 per month on monthly billing, plus a one-month deposit (KES 10,000).',
       },
       {
         q: 'Can I put the address on my website, invoices, and letterhead?',
@@ -80,7 +80,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: 'What does Business Address cost?',
-        a: 'KES 3,500 per month on annual billing (KES 42,000 per year). KES 5,000 per month on monthly billing, plus a two-month deposit (KES 10,000).',
+        a: 'KES 4,500 per month on annual billing (KES 54,000 per year with 1 month free). KES 5,000 per month on monthly billing, plus a two-month deposit (KES 10,000).',
       },
       {
         q: 'Is mail scanned on Business Address?',

@@ -71,6 +71,19 @@ const slides = [
     primary: { label: 'Virtual Office Details', href: '/services/virtual-office' },
     secondary: { label: 'Talk to Us', href: '/contact' },
   },
+  {
+    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&q=80',
+    eyebrow: 'OFFICE MANAGEMENT',
+    heading: (
+      <>
+        Your Office. Fully Managed.{' '}
+        <span className="text-gold italic">Ready for Business.</span>
+      </>
+    ),
+    body: 'We find, furnish and manage office spaces around your business requirements. From premises and furniture to internet, utilities and maintenance, we take care of the details.',
+    primary: { label: 'Explore Office Management', href: '/office-management' },
+    secondary: { label: 'Request a Proposal', href: '/office-management/quote-request' },
+  },
 ]
 
 const AUTOPLAY_MS = 4500
@@ -157,7 +170,7 @@ export function Hero() {
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
                 <Link
                   href={slide.primary.href}
                   className="bg-gold text-navy px-6 py-3 text-[11px] tracking-widest font-bold hover:bg-white hover:text-navy transition-colors uppercase text-center"
@@ -170,6 +183,14 @@ export function Hero() {
                 >
                   {slide.secondary.label}
                 </Link>
+                {slide.primary.href !== '/office-management' && (
+                  <Link
+                    href="/office-management"
+                    className="border border-white/40 text-white px-6 py-3 text-[11px] tracking-widest font-semibold hover:border-white hover:bg-white/10 transition-colors uppercase text-center"
+                  >
+                    Office Management
+                  </Link>
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
